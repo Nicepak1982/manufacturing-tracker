@@ -1,0 +1,1145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manufacturing Issue Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #ffffff;
+        }
+
+        .header {
+            background: linear-gradient(to right, #4a90e2, #5b9ee3, #6caae4, #7db6e5, #8ec2e6);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            font-size: 11px;
+        }
+
+        .sync-status {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            padding: 8px 15px;
+            background: rgba(255,255,255,0.9);
+            border-radius: 20px;
+            font-size: 10px;
+            font-weight: bold;
+            z-index: 1000;
+        }
+
+        .sync-status.synced { color: #28a745; }
+        .sync-status.syncing { color: #ffc107; }
+        .sync-status.error { color: #dc3545; }
+
+        .navigation {
+            background-color: #f8f9fa;
+            padding: 12px 20px;
+            text-align: center;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .nav-btn {
+            display: inline-block;
+            padding: 12px 25px;
+            margin: 0 2px;
+            font-size: 11px;
+            font-weight: bold;
+            color: #495057;
+            background-color: #f8f9fa;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .nav-btn.active {
+            background-color: #ffffff;
+            color: #4a90e2;
+        }
+
+        .content {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 30px;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 15px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            font-size: 11px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        input[type="text"], select, textarea {
+            width: 100%;
+            padding: 10px;
+            font-size: 10px;
+            font-family: 'Segoe UI', sans-serif;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            background-color: #f8f9fa;
+        }
+
+        .autocomplete-container {
+            position: relative;
+        }
+
+        .autocomplete-suggestions {
+            position: absolute;
+            background: white;
+            border: 1px solid #dee2e6;
+            border-top: none;
+            max-height: 200px;
+            overflow-y: auto;
+            width: 100%;
+            z-index: 100;
+            display: none;
+        }
+
+        .autocomplete-item {
+            padding: 8px 10px;
+            cursor: pointer;
+            font-size: 10px;
+        }
+
+        .autocomplete-item:hover {
+            background-color: #f8f9fa;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            font-size: 11px;
+            font-weight: bold;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin: 5px;
+        }
+
+        .btn-primary { background-color: #4a90e2; }
+        .btn-primary:hover { background-color: #3a7bc8; }
+        .btn-success { background-color: #28a745; }
+        .btn-success:hover { background-color: #218838; }
+        .btn-purple { background-color: #6f42c1; }
+        .btn-purple:hover { background-color: #5a32a3; }
+        .btn-danger { background-color: #dc3545; }
+        .btn-danger:hover { background-color: #c82333; }
+        .btn-warning { background-color: #ffc107; color: #000; }
+        .btn-warning:hover { background-color: #e0a800; }
+        .btn-secondary { background-color: #6c757d; }
+        .btn-secondary:hover { background-color: #5a6268; }
+
+        .actions-display {
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            padding: 15px;
+            min-height: 100px;
+            margin-bottom: 15px;
+        }
+
+        .action-item {
+            padding: 8px;
+            margin-bottom: 5px;
+            font-size: 10px;
+        }
+
+        .results-area {
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            padding: 20px;
+            min-height: 300px;
+            margin: 15px 0;
+            font-size: 10px;
+            line-height: 1.6;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background-color: #ffffff;
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            font-size: 14px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+
+        .button-group {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .history-item {
+            padding: 15px;
+            border-bottom: 1px solid #dee2e6;
+            font-size: 10px;
+        }
+
+        .history-title {
+            font-weight: bold;
+            color: #4a90e2;
+            margin-bottom: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            .content {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="sync-status" class="sync-status">Not Connected</div>
+
+    <div class="header">
+        <h1>Manufacturing Issue Tracker</h1>
+        <p>AI-Powered Problem Solving & Work Instructions</p>
+    </div>
+
+    <div class="navigation">
+        <button class="nav-btn active" onclick="switchTab('log')">Log New Issue</button>
+        <button class="nav-btn" onclick="switchTab('search')">Search Previous Issues</button>
+        <button class="nav-btn" onclick="switchTab('history')">Issue History</button>
+        <button class="nav-btn" onclick="switchTab('settings')">Cloud Sync</button>
+    </div>
+
+    <div class="content">
+        <!-- Log Tab -->
+        <div id="log-tab" class="tab-content active">
+            <div class="section-title">Log New Issue</div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Production Line:</label>
+                    <div class="autocomplete-container">
+                        <input type="text" id="log-line" autocomplete="off">
+                        <div id="log-line-suggestions" class="autocomplete-suggestions"></div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Machine/Equipment Name:</label>
+                    <div class="autocomplete-container">
+                        <input type="text" id="log-machine" autocomplete="off">
+                        <div id="log-machine-suggestions" class="autocomplete-suggestions"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Issue Description:</label>
+                <div class="autocomplete-container">
+                    <input type="text" id="log-failure" autocomplete="off">
+                    <div id="log-failure-suggestions" class="autocomplete-suggestions"></div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Solutions Attempted:</label>
+                <div class="actions-display" id="actions-display">
+                    <em style="color: #6c757d;">No actions added yet</em>
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button class="btn btn-primary" onclick="addAction()">Add Action Taken</button>
+                <button class="btn btn-success" onclick="logIssue()">Log Issue</button>
+            </div>
+        </div>
+
+        <!-- Search Tab -->
+        <div id="search-tab" class="tab-content">
+            <div class="section-title">Search Previous Issues</div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Production Line:</label>
+                    <div class="autocomplete-container">
+                        <input type="text" id="search-line" autocomplete="off">
+                        <div id="search-line-suggestions" class="autocomplete-suggestions"></div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Machine/Equipment Name:</label>
+                    <div class="autocomplete-container">
+                        <input type="text" id="search-machine" autocomplete="off">
+                        <div id="search-machine-suggestions" class="autocomplete-suggestions"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Enter issue description or keyword:</label>
+                <div style="display: flex; gap: 10px;">
+                    <div class="autocomplete-container" style="flex: 1;">
+                        <input type="text" id="search-query" autocomplete="off">
+                        <div id="search-query-suggestions" class="autocomplete-suggestions"></div>
+                    </div>
+                    <button class="btn btn-success" onclick="searchIssues()">Search</button>
+                </div>
+            </div>
+
+            <div class="results-area" id="search-results">
+                <em style="color: #6c757d;">Enter search criteria and click Search</em>
+            </div>
+
+            <div class="button-group" id="view-history-btn" style="display: none;">
+                <button class="btn btn-purple" onclick="viewFullHistory()">View Full History</button>
+            </div>
+
+            <div class="button-group">
+                <button class="btn btn-purple" onclick="showAIAssist()">AI Troubleshooting Assist</button>
+            </div>
+        </div>
+
+        <!-- History Tab -->
+        <div id="history-tab" class="tab-content">
+            <div class="section-title">Issue History</div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Production Line:</label>
+                    <select id="history-line-filter" onchange="updateHistoryMachines()">
+                        <option value="">All Lines</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Machine:</label>
+                    <select id="history-machine-filter" onchange="loadHistory()">
+                        <option value="">All Machines</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="results-area" id="history-results" style="max-height: 500px; overflow-y: auto;"></div>
+        </div>
+
+        <!-- Settings Tab -->
+        <div id="settings-tab" class="tab-content">
+            <div class="section-title">Cloud Sync Settings</div>
+            
+            <div class="form-group">
+                <label>Google Drive Integration:</label>
+                <button class="btn btn-primary" onclick="connectGoogleDrive()">Connect Google Drive</button>
+                <button class="btn btn-secondary" onclick="disconnectGoogleDrive()" style="display: none;" id="disconnect-btn">Disconnect</button>
+            </div>
+
+            <div class="form-group">
+                <label>Sync Status:</label>
+                <div id="settings-status" style="padding: 15px; background: #f8f9fa; border-radius: 4px; font-size: 10px;">
+                    Not connected to cloud storage
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Manual Sync:</label>
+                <button class="btn btn-success" onclick="manualSync()">Sync Now</button>
+            </div>
+
+            <div class="form-group">
+                <label>Data Management:</label>
+                <button class="btn btn-warning" onclick="exportData()">Export Data (JSON)</button>
+                <button class="btn btn-secondary" onclick="document.getElementById('import-file').click()">Import Data</button>
+                <input type="file" id="import-file" accept=".json" style="display: none;" onchange="importData(event)">
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Action Modal -->
+    <div id="action-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">Describe an action taken:</div>
+            <div class="autocomplete-container">
+                <input type="text" id="action-input" placeholder="Enter action..." autocomplete="off">
+                <div id="action-suggestions" class="autocomplete-suggestions"></div>
+            </div>
+            <div class="button-group">
+                <button class="btn btn-success" onclick="setActionStatus('Corrected')">Corrected</button>
+                <button class="btn btn-danger" onclick="setActionStatus('Not Corrected')">Did Not Correct</button>
+                <button class="btn btn-warning" onclick="setActionStatus('Unsure')">Unsure</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Assist Modal -->
+    <div id="ai-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">AI Troubleshooting Assistant</div>
+            <div class="form-group">
+                <label>Production Line:</label>
+                <input type="text" id="ai-line" autocomplete="off">
+            </div>
+            <div class="form-group">
+                <label>Machine/Equipment Name:</label>
+                <input type="text" id="ai-machine" autocomplete="off">
+            </div>
+            <div class="form-group">
+                <label>Issue Description and Steps taken:</label>
+                <textarea id="ai-issue" rows="6" placeholder="Describe the issue and what you've tried..."></textarea>
+            </div>
+            <div class="button-group">
+                <button class="btn btn-success" onclick="generateAISolution()">Analyze & Get Solution</button>
+                <button class="btn btn-secondary" onclick="closeModal('ai-modal')">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // IndexedDB Setup
+        let db;
+        const DB_NAME = 'ManufacturingTracker';
+        const DB_VERSION = 1;
+        const STORE_NAME = 'logs';
+
+        // Google Drive Configuration
+        const CLIENT_ID = '549790895953-t6fqu05fhb97g0jss8mjp3h1tlo6fqed.apps.googleusercontent.com';
+        const API_KEY = 'AIzaSyCe-dm9BuuJbR5bKTDPg004UOr3_YIX7B4';
+        const DISCOVERY_DOCS = ["https://www.googleapis.com/discovery/v1/apis/drive/v3/rest"];
+        const SCOPES = 'https://www.googleapis.com/auth/drive.file';
+        let gapi, googleAuth;
+
+        // State
+        let currentActions = [];
+        let searchResults = [];
+        let allLogs = [];
+
+        // Initialize IndexedDB
+        function initDB() {
+            const request = indexedDB.open(DB_NAME, DB_VERSION);
+            
+            request.onerror = () => {
+                console.error('Database failed to open');
+            };
+            
+            request.onsuccess = () => {
+                db = request.result;
+                loadAllLogs();
+            };
+            
+            request.onupgradeneeded = (e) => {
+                db = e.target.result;
+                if (!db.objectStoreNames.contains(STORE_NAME)) {
+                    const objectStore = db.createObjectStore(STORE_NAME, { keyPath: 'id', autoIncrement: true });
+                    objectStore.createIndex('production_line', 'production_line', { unique: false });
+                    objectStore.createIndex('machine', 'machine', { unique: false });
+                    objectStore.createIndex('failure', 'failure', { unique: false });
+                    objectStore.createIndex('timestamp', 'timestamp', { unique: false });
+                }
+            };
+        }
+
+        // Load all logs from IndexedDB
+        function loadAllLogs() {
+            const transaction = db.transaction([STORE_NAME], 'readonly');
+            const objectStore = transaction.objectStore(STORE_NAME);
+            const request = objectStore.getAll();
+            
+            request.onsuccess = () => {
+                allLogs = request.result;
+                updateAllAutocomplete();
+                loadHistory();
+            };
+        }
+
+        // Save log entry
+        function saveLog(entry) {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([STORE_NAME], 'readwrite');
+                const objectStore = transaction.objectStore(STORE_NAME);
+                const request = objectStore.add(entry);
+                
+                request.onsuccess = () => {
+                    loadAllLogs();
+                    resolve();
+                };
+                request.onerror = reject;
+            });
+        }
+
+        // Get unique values with filtering
+        function getUniqueValues(field, filters = {}) {
+            let filtered = allLogs;
+            
+            if (filters.production_line) {
+                filtered = filtered.filter(log => 
+                    log.production_line.toLowerCase() === filters.production_line.toLowerCase()
+                );
+            }
+            if (filters.machine) {
+                filtered = filtered.filter(log => 
+                    log.machine.toLowerCase() === filters.machine.toLowerCase()
+                );
+            }
+            if (filters.failure) {
+                filtered = filtered.filter(log => 
+                    log.failure.toLowerCase() === filters.failure.toLowerCase()
+                );
+            }
+            
+            const values = [...new Set(filtered.map(log => log[field]))];
+            return values.sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+        }
+
+        // Autocomplete functionality
+        function setupAutocomplete(inputId, suggestionsId, getOptions) {
+            const input = document.getElementById(inputId);
+            const suggestions = document.getElementById(suggestionsId);
+            
+            input.addEventListener('input', () => {
+                const value = input.value.toLowerCase();
+                const options = getOptions();
+                
+                if (!value || options.length === 0) {
+                    suggestions.style.display = 'none';
+                    return;
+                }
+                
+                const filtered = options.filter(opt => 
+                    opt.toLowerCase().includes(value)
+                );
+                
+                if (filtered.length === 0) {
+                    suggestions.style.display = 'none';
+                    return;
+                }
+                
+                suggestions.innerHTML = filtered.map(opt => 
+                    `<div class="autocomplete-item" onclick="selectAutocomplete('${inputId}', '${opt.replace(/'/g, "\\'")}')">${opt}</div>`
+                ).join('');
+                suggestions.style.display = 'block';
+            });
+            
+            input.addEventListener('blur', () => {
+                setTimeout(() => suggestions.style.display = 'none', 200);
+            });
+        }
+
+        function selectAutocomplete(inputId, value) {
+            document.getElementById(inputId).value = value;
+            updateDependentFields(inputId);
+        }
+
+        function updateDependentFields(inputId) {
+            if (inputId === 'log-line') {
+                setupAutocomplete('log-machine', 'log-machine-suggestions', () => 
+                    getUniqueValues('machine', { production_line: document.getElementById('log-line').value })
+                );
+                setupAutocomplete('log-failure', 'log-failure-suggestions', () => 
+                    getUniqueValues('failure', { 
+                        production_line: document.getElementById('log-line').value,
+                        machine: document.getElementById('log-machine').value
+                    })
+                );
+            } else if (inputId === 'log-machine') {
+                setupAutocomplete('log-failure', 'log-failure-suggestions', () => 
+                    getUniqueValues('failure', { 
+                        production_line: document.getElementById('log-line').value,
+                        machine: document.getElementById('log-machine').value
+                    })
+                );
+            }
+            
+            if (inputId === 'search-line') {
+                setupAutocomplete('search-machine', 'search-machine-suggestions', () => 
+                    getUniqueValues('machine', { production_line: document.getElementById('search-line').value })
+                );
+                setupAutocomplete('search-query', 'search-query-suggestions', () => 
+                    getUniqueValues('failure', { 
+                        production_line: document.getElementById('search-line').value,
+                        machine: document.getElementById('search-machine').value
+                    })
+                );
+            } else if (inputId === 'search-machine') {
+                setupAutocomplete('search-query', 'search-query-suggestions', () => 
+                    getUniqueValues('failure', { 
+                        production_line: document.getElementById('search-line').value,
+                        machine: document.getElementById('search-machine').value
+                    })
+                );
+            }
+        }
+
+        function updateAllAutocomplete() {
+            // Log tab
+            setupAutocomplete('log-line', 'log-line-suggestions', () => getUniqueValues('production_line'));
+            setupAutocomplete('log-machine', 'log-machine-suggestions', () => getUniqueValues('machine'));
+            setupAutocomplete('log-failure', 'log-failure-suggestions', () => getUniqueValues('failure'));
+            
+            // Search tab
+            setupAutocomplete('search-line', 'search-line-suggestions', () => getUniqueValues('production_line'));
+            setupAutocomplete('search-machine', 'search-machine-suggestions', () => getUniqueValues('machine'));
+            setupAutocomplete('search-query', 'search-query-suggestions', () => getUniqueValues('failure'));
+            
+            // History filters
+            const lineFilter = document.getElementById('history-line-filter');
+            lineFilter.innerHTML = '<option value="">All Lines</option>' + 
+                getUniqueValues('production_line').map(line => 
+                    `<option value="${line}">${line}</option>`
+                ).join('');
+        }
+
+        // Tab switching - FIXED
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+            
+            document.getElementById(tab + '-tab').classList.add('active');
+            
+            // Find and activate the correct nav button
+            const buttons = document.querySelectorAll('.nav-btn');
+            buttons.forEach(btn => {
+                if (btn.textContent.includes('Log New') && tab === 'log') btn.classList.add('active');
+                if (btn.textContent.includes('Search') && tab === 'search') btn.classList.add('active');
+                if (btn.textContent.includes('History') && tab === 'history') btn.classList.add('active');
+                if (btn.textContent.includes('Cloud') && tab === 'settings') btn.classList.add('active');
+            });
+            
+            if (tab === 'history') {
+                loadHistory();
+            }
+        }
+
+        // Add action
+        function addAction() {
+            const line = document.getElementById('log-line').value.trim();
+            const machine = document.getElementById('log-machine').value.trim();
+            const failure = document.getElementById('log-failure').value.trim();
+            
+            // Setup action autocomplete
+            setupAutocomplete('action-input', 'action-suggestions', () => 
+                getUniqueValues('action', { production_line: line, machine: machine, failure: failure })
+            );
+            
+            document.getElementById('action-modal').style.display = 'block';
+            document.getElementById('action-input').value = '';
+            document.getElementById('action-input').focus();
+        }
+
+        function setActionStatus(status) {
+            const action = document.getElementById('action-input').value.trim();
+            if (!action) {
+                alert('Please enter an action');
+                return;
+            }
+            
+            currentActions.push({
+                action: action,
+                status: status,
+                timestamp: new Date().toISOString()
+            });
+            
+            updateActionsDisplay();
+            closeModal('action-modal');
+            
+            if (confirm('Would you like to log another action?')) {
+                addAction();
+            }
+        }
+
+        function updateActionsDisplay() {
+            const display = document.getElementById('actions-display');
+            if (currentActions.length === 0) {
+                display.innerHTML = '<em style="color: #6c757d;">No actions added yet</em>';
+                return;
+            }
+            
+            display.innerHTML = currentActions.map(act => {
+                const emoji = act.status === 'Corrected' ? '✅' : (act.status === 'Not Corrected' ? '❌' : '❓');
+                return `<div class="action-item">${emoji} ${act.action}</div>`;
+            }).join('');
+        }
+
+        // Log issue
+        async function logIssue() {
+            const line = document.getElementById('log-line').value.trim();
+            const machine = document.getElementById('log-machine').value.trim();
+            const failure = document.getElementById('log-failure').value.trim();
+            
+            if (!line) {
+                alert('Please enter a production line');
+                return;
+            }
+            if (!machine) {
+                alert('Please enter a machine/equipment name');
+                return;
+            }
+            if (!failure || currentActions.length === 0) {
+                alert('Please enter an issue description and at least one action');
+                return;
+            }
+            
+            for (const act of currentActions) {
+                await saveLog({
+                    production_line: line,
+                    machine: machine,
+                    failure: failure,
+                    action: act.action,
+                    status: act.status,
+                    timestamp: act.timestamp
+                });
+            }
+            
+            alert('Issue logged successfully!');
+            document.getElementById('log-line').value = '';
+            document.getElementById('log-machine').value = '';
+            document.getElementById('log-failure').value = '';
+            currentActions = [];
+            updateActionsDisplay();
+            
+            // Trigger cloud sync
+            autoSync();
+        }
+
+        // Search issues
+        function searchIssues() {
+            const line = document.getElementById('search-line').value.trim();
+            const machine = document.getElementById('search-machine').value.trim();
+            const query = document.getElementById('search-query').value.trim().toLowerCase();
+            
+            const resultsDiv = document.getElementById('search-results');
+            const viewBtn = document.getElementById('view-history-btn');
+            
+            if (!line) {
+                resultsDiv.innerHTML = '<em style="color: #dc3545;">Please select a production line first</em>';
+                viewBtn.style.display = 'none';
+                return;
+            }
+            
+            if (!machine) {
+                resultsDiv.innerHTML = '<em style="color: #dc3545;">Please select a machine/equipment first</em>';
+                viewBtn.style.display = 'none';
+                return;
+            }
+            
+            let filtered = allLogs.filter(log => 
+                log.production_line.toLowerCase() === line.toLowerCase() &&
+                log.machine.toLowerCase() === machine.toLowerCase()
+            );
+            
+            if (filtered.length === 0) {
+                resultsDiv.innerHTML = `<em style="color: #dc3545;">No issues found for ${line} - ${machine}</em>`;
+                viewBtn.style.display = 'none';
+                return;
+            }
+            
+            if (!query) {
+                resultsDiv.innerHTML = '<em style="color: #dc3545;">Please enter a search term</em>';
+                viewBtn.style.display = 'none';
+                return;
+            }
+            
+            // Find exact matches first, then partial
+            let matches = filtered.filter(log => log.failure.toLowerCase() === query);
+            if (matches.length === 0) {
+                matches = filtered.filter(log => log.failure.toLowerCase().includes(query));
+            }
+            
+            if (matches.length === 0) {
+                resultsDiv.innerHTML = `<em style="color: #dc3545;">No issues found matching "${query}" for ${line} - ${machine}</em>`;
+                viewBtn.style.display = 'none';
+                return;
+            }
+            
+            searchResults = matches;
+            
+            // Count actions with weighting
+            const actionCounter = {};
+            matches.forEach(entry => {
+                const weight = entry.status === 'Corrected' ? 2 : 1;
+                actionCounter[entry.action] = (actionCounter[entry.action] || 0) + weight;
+            });
+            
+            const topActions = Object.entries(actionCounter)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 3)
+                .map(([action]) => action);
+            
+            let html = '<div style="font-weight: bold; color: #4a90e2; margin-bottom: 10px;">Most Likely Solutions:</div>';
+            html += `<div style="margin-bottom: 15px;">Line: ${line} | Machine: ${machine}</div>`;
+            
+            topActions.forEach((action, i) => {
+                html += `<div style="margin-bottom: 10px;">${i + 1}. ${action}</div>`;
+            });
+            
+            resultsDiv.innerHTML = html;
+            viewBtn.style.display = 'block';
+        }
+
+        function viewFullHistory() {
+            if (searchResults.length === 0) return;
+            
+            const line = searchResults[0].production_line;
+            const machine = searchResults[0].machine;
+            
+            const sorted = searchResults.sort((a, b) => {
+                const statusOrder = { 'Corrected': 0, 'Unsure': 1, 'Not Corrected': 2 };
+                if (statusOrder[a.status] !== statusOrder[b.status]) {
+                    return statusOrder[a.status] - statusOrder[b.status];
+                }
+                return new Date(b.timestamp) - new Date(a.timestamp);
+            });
+            
+            let html = `<div style="background: #4a90e2; color: white; padding: 15px; margin: -30px -30px 20px -30px; border-radius: 8px 8px 0 0;">
+                <div style="font-size: 14px; font-weight: bold;">Detailed Issue History</div>
+                <div style="font-size: 11px; margin-top: 5px;">Line: ${line} | Machine: ${machine}</div>
+            </div>`;
+            
+            sorted.forEach((entry, i) => {
+                const emoji = entry.status === 'Corrected' ? '✅' : (entry.status === 'Not Corrected' ? '❌' : '❓');
+                const date = new Date(entry.timestamp).toLocaleString();
+                html += `<div class="history-item">
+                    <div style="font-weight: bold; color: #4a90e2;">${i + 1}. ${entry.action}</div>
+                    <div>Status: ${emoji} ${entry.status}</div>
+                    <div>Logged: ${date}</div>
+                </div>`;
+            });
+            
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.style.display = 'block';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    ${html}
+                    <div class="button-group">
+                        <button class="btn btn-secondary" onclick="this.closest('.modal').remove()">Close</button>
+                    </div>
+                </div>
+            `;
+            modal.onclick = (e) => {
+                if (e.target === modal) modal.remove();
+            };
+            document.body.appendChild(modal);
+        }
+
+        // Load history
+        function loadHistory() {
+            const lineFilter = document.getElementById('history-line-filter').value;
+            const machineFilter = document.getElementById('history-machine-filter').value;
+            
+            let filtered = allLogs;
+            
+            if (lineFilter) {
+                filtered = filtered.filter(log => log.production_line === lineFilter);
+            }
+            if (machineFilter) {
+                filtered = filtered.filter(log => log.machine === machineFilter);
+            }
+            
+            const resultsDiv = document.getElementById('history-results');
+            
+            if (filtered.length === 0) {
+                resultsDiv.innerHTML = '<em style="color: #6c757d;">No issues logged yet</em>';
+                return;
+            }
+            
+            const sorted = filtered.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            
+            let html = '';
+            sorted.forEach((entry, i) => {
+                const emoji = entry.status === 'Corrected' ? '✅' : (entry.status === 'Not Corrected' ? '❌' : '❓');
+                const date = new Date(entry.timestamp).toLocaleString();
+                html += `<div class="history-item">
+                    <div class="history-title">${i + 1}. [${entry.production_line}] [${entry.machine}] ${entry.failure}</div>
+                    <div>Action: ${entry.action}</div>
+                    <div>Status: ${emoji} ${entry.status}</div>
+                    <div>Logged: ${date}</div>
+                </div>`;
+            });
+            
+            resultsDiv.innerHTML = html;
+        }
+
+        function updateHistoryMachines() {
+            const line = document.getElementById('history-line-filter').value;
+            const machineFilter = document.getElementById('history-machine-filter');
+            
+            if (!line) {
+                machineFilter.innerHTML = '<option value="">All Machines</option>' +
+                    getUniqueValues('machine').map(m => `<option value="${m}">${m}</option>`).join('');
+            } else {
+                machineFilter.innerHTML = '<option value="">All Machines</option>' +
+                    getUniqueValues('machine', { production_line: line }).map(m => 
+                        `<option value="${m}">${m}</option>`
+                    ).join('');
+            }
+            
+            loadHistory();
+        }
+
+        // AI Assistant
+        function showAIAssist() {
+            document.getElementById('ai-modal').style.display = 'block';
+        }
+
+        function generateAISolution() {
+            closeModal('ai-modal');
+            
+            alert('AI integration placeholder.\n\nTo enable real AI assistance:\n1. Sign up for Claude API or OpenAI API\n2. Add your API key in the code\n3. The system will send issue details to AI for analysis');
+            
+            showExampleSOP();
+        }
+
+        function showExampleSOP() {
+            const sopContent = `STANDARD OPERATING PROCEDURE
+
+Document Information
+Document Type: Standard Operating Procedure
+Version: 1.0
+Status: Active
+
+1. Purpose
+This Standard Operating Procedure provides a structured methodology for diagnosing and correcting stack separation issues that occur during transitions between single-lane and dual-lane operation in the stacker system.
+
+2. Safety Considerations
+WARNING: Ensure machine is in safe operating mode before performing any adjustments. Follow all lockout/tagout procedures where applicable.
+
+3. Troubleshooting Procedure
+
+Step 1: Initial Observation and Documentation
+Objective: Identify the specific location and nature of stack separation
+
+Actions:
+• Operate the machine in the problematic mode (1-to-2 lane or 2-to-1 lane transition)
+• Observe and document where stack separation begins
+• Record observations via video documentation for reference
+
+[Additional steps would follow...]
+
+End of Procedure
+Follow all steps systematically for best results. Document all changes made during troubleshooting.`;
+
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.style.display = 'block';
+            modal.innerHTML = `
+                <div class="modal-content" style="max-width: 800px;">
+                    <div style="background: linear-gradient(to right, #28a745, #32b350); color: white; padding: 20px; margin: -30px -30px 20px -30px; border-radius: 8px 8px 0 0;">
+                        <h2>AI-Generated Troubleshooting Guide</h2>
+                        <p style="font-size: 11px; margin-top: 5px;">Standard Operating Procedure</p>
+                    </div>
+                    <div style="white-space: pre-wrap; font-size: 10px; line-height: 1.8; max-height: 500px; overflow-y: auto;">${sopContent}</div>
+                    <div class="button-group">
+                        <button class="btn btn-secondary" onclick="this.closest('.modal').remove()">Close</button>
+                    </div>
+                </div>
+            `;
+            modal.onclick = (e) => {
+                if (e.target === modal) modal.remove();
+            };
+            document.body.appendChild(modal);
+        }
+
+        // Cloud Sync Functions
+        function connectGoogleDrive() {
+            if (typeof gapi === 'undefined') {
+                alert('Google API not loaded. Please refresh the page and try again.');
+                return;
+            }
+            
+            gapi.load('client:auth2', initGoogleAPI);
+        }
+
+        function initGoogleAPI() {
+            gapi.client.init({
+                apiKey: API_KEY,
+                clientId: CLIENT_ID,
+                discoveryDocs: DISCOVERY_DOCS,
+                scope: SCOPES
+            }).then(() => {
+                googleAuth = gapi.auth2.getAuthInstance();
+                googleAuth.signIn().then(() => {
+                    updateSyncStatus('Connected', 'synced');
+                    document.getElementById('disconnect-btn').style.display = 'inline-block';
+                    autoSync();
+                }).catch(err => {
+                    console.error('Sign-in error:', err);
+                    updateSyncStatus('Connection Failed', 'error');
+                });
+            }).catch(err => {
+                console.error('API init error:', err);
+                alert('Failed to initialize Google API. Check your credentials.');
+            });
+        }
+
+        function disconnectGoogleDrive() {
+            if (googleAuth) {
+                googleAuth.signOut();
+                updateSyncStatus('Not Connected', 'error');
+                document.getElementById('disconnect-btn').style.display = 'none';
+            }
+        }
+
+        function updateSyncStatus(message, type) {
+            const status = document.getElementById('sync-status');
+            status.textContent = message;
+            status.className = 'sync-status ' + type;
+            
+            const settingsStatus = document.getElementById('settings-status');
+            settingsStatus.textContent = message;
+        }
+
+        async function autoSync() {
+            if (!googleAuth || !googleAuth.isSignedIn.get()) return;
+            
+            updateSyncStatus('Syncing...', 'syncing');
+            
+            try {
+                const data = JSON.stringify(allLogs);
+                const file = new Blob([data], { type: 'application/json' });
+                const metadata = {
+                    name: 'manufacturing_tracker_data.json',
+                    mimeType: 'application/json'
+                };
+                
+                const form = new FormData();
+                form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+                form.append('file', file);
+                
+                const response = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+                    method: 'POST',
+                    headers: new Headers({ 'Authorization': 'Bearer ' + googleAuth.currentUser.get().getAuthResponse().access_token }),
+                    body: form
+                });
+                
+                if (response.ok) {
+                    updateSyncStatus('Synced', 'synced');
+                } else {
+                    updateSyncStatus('Sync Failed', 'error');
+                }
+            } catch (error) {
+                console.error('Sync error:', error);
+                updateSyncStatus('Sync Failed', 'error');
+            }
+        }
+
+        function manualSync() {
+            autoSync();
+        }
+
+        // Export/Import
+        function exportData() {
+            const data = JSON.stringify(allLogs, null, 2);
+            const blob = new Blob([data], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `manufacturing_tracker_${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+        }
+
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const imported = JSON.parse(e.target.result);
+                    
+                    if (confirm(`Import ${imported.length} records? This will add to existing data.`)) {
+                        imported.forEach(entry => {
+                            delete entry.id;
+                            const transaction = db.transaction([STORE_NAME], 'readwrite');
+                            const objectStore = transaction.objectStore(STORE_NAME);
+                            objectStore.add(entry);
+                        });
+                        
+                        setTimeout(() => {
+                            loadAllLogs();
+                            alert('Data imported successfully!');
+                        }, 500);
+                    }
+                } catch (error) {
+                    alert('Error importing data: Invalid JSON file');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        // Close modals on outside click
+        window.onclick = (e) => {
+            if (e.target.classList.contains('modal')) {
+                e.target.style.display = 'none';
+            }
+        };
+
+        // Initialize on load
+        window.onload = () => {
+            initDB();
+        };
+    </script>
+    <script src="https://apis.google.com/js/api.js"></script>
+</body>
+</html>
