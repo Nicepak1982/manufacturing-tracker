@@ -272,6 +272,51 @@
         .suggestion-item:hover {
             background: #f8f9fa;
         }
+
+        /* Action Modal Styling */
+        #action-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            max-width: 600px;
+            width: 90%;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            animation: modalSlideIn 0.3s ease;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .action-buttons button {
+            flex: 1;
+        }
     </style>
 </head>
 <body>
@@ -279,7 +324,7 @@
         <div class="header">
             <h1>🏭 Manufacturing Issue Tracker</h1>
             <p>Equipment Failure & Maintenance System</p>
-            <div class="version">v7.0 - Cloud Sync</div>
+            <div class="version">v7.5 - Cloud Sync</div>
         </div>
 
         <div id="sync-status" class="sync-status"></div>
@@ -326,23 +371,15 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="solutions">Solutions Attempted (Optional)</label>
-                    <input type="text" id="solutions" class="form-control" placeholder="What have you tried so far?" list="solutions-suggestions" autocomplete="off">
-                    <datalist id="solutions-suggestions"></datalist>
-                    <small id="solutions-help" style="color: #666; font-size: 12px;">Start typing or select from previous solutions for this machine</small>
+                    <label>Actions Taken *</label>
+                    <div id="actions-display" style="background: #f8f9fa; border: 2px solid #dee2e6; border-radius: 8px; padding: 15px; min-height: 80px;">
+                        <p style="color: #999; text-align: center; margin: 20px 0;">No actions added yet. Click "Add Action" below to begin.</p>
+                    </div>
+                    <small style="color: #666; font-size: 12px;">You must add at least one action taken to resolve the issue</small>
                 </div>
 
-                <div class="form-group" id="effectiveness-group" style="display: none;">
-                    <label for="effectiveness">Did the solution correct the problem? *</label>
-                    <select id="effectiveness" class="form-control">
-                        <option value="">Select...</option>
-                        <option value="corrected">Yes - Problem Corrected</option>
-                        <option value="not-corrected">No - Problem Not Corrected</option>
-                        <option value="unsure">Unsure</option>
-                    </select>
-                </div>
-
-                <button type="submit" class="btn btn-primary">Submit Issue</button>
+                <button type="button" class="btn btn-primary" onclick="showAddActionModal()">➕ Add Action Taken</button>
+                <button type="submit" class="btn btn-success" id="submit-issue-btn" style="display: none;">Submit Issue</button>
                 <button type="button" class="btn btn-success" onclick="loadFromCloud()">🔄 Refresh from Cloud</button>
             </form>
         </div>
@@ -436,6 +473,39 @@
 
             <div id="generated-instruction"></div>
         </div>
+
+        <!-- Add Action Modal -->
+        <div id="action-modal" onclick="handleModalClick(event)">
+            <div class="modal-content" onclick="event.stopPropagation()">
+                <h3 style="margin-bottom: 20px; color: #2c3e50;">Add Action Taken</h3>
+                
+                <div class="form-group">
+                    <label for="action-input">Describe the action taken: *</label>
+                    <input type="text" id="action-input" class="form-control" placeholder="What did you try?" list="action-suggestions" autocomplete="off">
+                    <datalist id="action-suggestions"></datalist>
+                    <small id="action-help" style="color: #666; font-size: 12px;">Start typing or select from previous actions</small>
+                </div>
+
+                <div class="form-group">
+                    <label>Did this action correct the problem? *</label>
+                    <div class="action-buttons">
+                        <button type="button" class="btn btn-success" onclick="addActionWithStatus('corrected')">
+                            ✅ Yes - Corrected
+                        </button>
+                        <button type="button" class="btn" onclick="addActionWithStatus('not-corrected')" style="background: #dc3545; color: white;">
+                            ❌ No - Not Corrected
+                        </button>
+                        <button type="button" class="btn btn-warning" onclick="addActionWithStatus('unsure')">
+                            ❓ Unsure
+                        </button>
+                    </div>
+                </div>
+
+                <div style="margin-top: 20px; text-align: right;">
+                    <button type="button" class="btn" onclick="closeActionModal()" style="background: #6c757d; color: white;">Cancel</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -445,12 +515,13 @@
         
         // ====== DATA STORAGE ======
         let issues = [];
+        let currentActions = []; // Track actions being added for current issue
         const machinesByLine = {
-            'RX500': ['Heat Sealer 1', 'Heat Sealer 2', 'Bag Former', 'Zipper Applicator', 'Conveyor Belt 1', 'Conveyor Belt 2'],
-            'RX300': ['Heat Sealer', 'Bag Former', 'Conveyor Belt'],
-            'JBFlex': ['Flex Sealer', 'Film Unwinder', 'Conveyor'],
-            'L80': ['Sealer', 'Cutter', 'Conveyor'],
-            'HH': ['Header Machine', 'Punch System', 'Conveyor']
+            'RX500': ['Unwind', 'Festoon', 'Forming Table', 'Pull Station', 'Saw House', 'Diverter', 'Conveyor', 'Lidder', 'Wrapper', 'Case Erector', 'Case Packer', 'Weight Checker', 'Palletizer', 'Printer (Wrapper)', 'Printer (Case)'],
+            'RX300': ['Unwind', 'Forming Table', 'Pull Station', 'Saw House', 'Doubler', 'Wig-Wag', 'Diverter', 'Conveyor', 'Wrapper', 'Lidder', 'Case Erector', 'Case Packer', 'Weight Checker', 'Palletizer', 'Printer (Wrapper)', 'Printer (Case)', 'Bundler'],
+            'HH': ['Unwind', 'Forming Table', 'Pull Station', 'Saw House', 'Stacker', 'Conveyor', 'Wrapper', 'Lidder', 'Case Erector', 'Case Packer', 'Weight Checker', 'Palletizer', 'Printer (Wrapper)', 'Printer (Case)'],
+            'JBFlex': ['Unwind', 'Forming Table', 'Pull Station', 'Saw House', 'Stacker', 'Diverter', 'Conveyor', 'Wrapper', 'Lidder', 'Case Erector', 'Case Packer', 'Weight Checker', 'Palletizer', 'Printer (Wrapper)', 'Printer (Case)'],
+            'L80': ['Unwind 1', 'Unwind 2', 'Drum 1', 'Drum 2', 'Stacker 1', 'Stacker 2', 'Conveyor', 'Wrapper', 'Lidder']
         };
 
         // ====== INITIALIZATION ======
@@ -459,21 +530,6 @@
             loadFromCloud();
             updateHistoryMachineOptions();
             displayHistory(issues);
-            
-            // Show effectiveness field when solutions are entered
-            const solutionsInput = document.getElementById('solutions');
-            solutionsInput.addEventListener('input', function() {
-                const effectivenessGroup = document.getElementById('effectiveness-group');
-                const effectivenessSelect = document.getElementById('effectiveness');
-                if (this.value.trim().length > 0) {
-                    effectivenessGroup.style.display = 'block';
-                    effectivenessSelect.required = true;
-                } else {
-                    effectivenessGroup.style.display = 'none';
-                    effectivenessSelect.required = false;
-                    effectivenessSelect.value = '';
-                }
-            });
         });
 
         // ====== CLOUD SYNC FUNCTIONS ======
@@ -625,14 +681,11 @@
             const machine = document.getElementById('machine').value;
             
             const descriptionHelp = document.getElementById('description-help');
-            const solutionsHelp = document.getElementById('solutions-help');
             
             // Only update if both line and machine are selected
             if (!line || !machine) {
                 document.getElementById('description-suggestions').innerHTML = '';
-                document.getElementById('solutions-suggestions').innerHTML = '';
                 descriptionHelp.textContent = 'Select line and machine to see previous issues';
-                solutionsHelp.textContent = 'Select line and machine to see previous solutions';
                 return;
             }
             
@@ -650,19 +703,6 @@
                 }
             });
             
-            // Extract unique solutions
-            const solutions = new Set();
-            relevantIssues.forEach(issue => {
-                if (issue.solutions && issue.solutions.trim()) {
-                    // Normalize solution text
-                    const normalized = issue.solutions.trim()
-                        .replace(/[.,!?;:]+$/, '')  // Remove trailing punctuation
-                        .replace(/\s+/g, ' ')        // Normalize spaces
-                        .trim();
-                    solutions.add(normalized);
-                }
-            });
-            
             // Update description datalist
             const descriptionList = document.getElementById('description-suggestions');
             descriptionList.innerHTML = '';
@@ -672,15 +712,6 @@
                 descriptionList.appendChild(option);
             });
             
-            // Update solutions datalist
-            const solutionsList = document.getElementById('solutions-suggestions');
-            solutionsList.innerHTML = '';
-            solutions.forEach(sol => {
-                const option = document.createElement('option');
-                option.value = sol;
-                solutionsList.appendChild(option);
-            });
-            
             // Update helper text with counts
             if (descriptions.size > 0) {
                 descriptionHelp.innerHTML = `<strong style="color: #28a745;">✓ ${descriptions.size} previous issue${descriptions.size !== 1 ? 's' : ''} available</strong> - Start typing or click ▼ to select`;
@@ -688,15 +719,9 @@
                 descriptionHelp.textContent = 'No previous issues found for this machine - enter a new description';
             }
             
-            if (solutions.size > 0) {
-                solutionsHelp.innerHTML = `<strong style="color: #28a745;">✓ ${solutions.size} previous solution${solutions.size !== 1 ? 's' : ''} available</strong> - Start typing or click ▼ to select`;
-            } else {
-                solutionsHelp.textContent = 'No previous solutions found for this machine - enter a new solution';
-            }
-            
             // Log for debugging
-            if (descriptions.size > 0 || solutions.size > 0) {
-                console.log(`Loaded ${descriptions.size} previous issue descriptions and ${solutions.size} previous solutions for ${line} - ${machine}`);
+            if (descriptions.size > 0) {
+                console.log(`Loaded ${descriptions.size} previous issue descriptions for ${line} - ${machine}`);
             }
         }
 
@@ -736,38 +761,198 @@
             }
         }
 
+        // ====== ACTION MANAGEMENT ======
+        function showAddActionModal() {
+            // Update action suggestions based on current selections
+            const line = document.getElementById('line').value;
+            const machine = document.getElementById('machine').value;
+            const description = document.getElementById('description').value;
+            
+            if (!line || !machine || !description) {
+                alert('Please fill in Production Line, Machine, and Issue Description first.');
+                return;
+            }
+            
+            // Load previous actions for suggestions
+            const relevantIssues = issues.filter(issue => 
+                issue.line === line && 
+                issue.machine.toLowerCase() === machine.toLowerCase()
+            );
+            
+            const actions = new Set();
+            relevantIssues.forEach(issue => {
+                if (issue.solutions && issue.solutions.trim()) {
+                    actions.add(issue.solutions.trim());
+                }
+            });
+            
+            const actionSuggestions = document.getElementById('action-suggestions');
+            actionSuggestions.innerHTML = '';
+            actions.forEach(action => {
+                const option = document.createElement('option');
+                option.value = action;
+                actionSuggestions.appendChild(option);
+            });
+            
+            // Clear input and show modal
+            document.getElementById('action-input').value = '';
+            document.getElementById('action-modal').style.display = 'flex';
+            document.getElementById('action-input').focus();
+            
+            // Add keyboard support
+            document.addEventListener('keydown', handleModalKeydown);
+        }
+        
+        function handleModalKeydown(e) {
+            if (e.key === 'Escape') {
+                closeActionModal();
+            }
+        }
+        
+        function handleModalClick(e) {
+            if (e.target.id === 'action-modal') {
+                closeActionModal();
+            }
+        }
+        
+        function closeActionModal() {
+            document.getElementById('action-modal').style.display = 'none';
+            document.getElementById('action-input').value = '';
+            document.removeEventListener('keydown', handleModalKeydown);
+        }
+        
+        function addActionWithStatus(status) {
+            const actionInput = document.getElementById('action-input');
+            const action = actionInput.value.trim();
+            
+            if (!action) {
+                alert('Please describe the action taken.');
+                return;
+            }
+            
+            // Map status to match Python version naming
+            const statusMap = {
+                'corrected': 'Corrected',
+                'not-corrected': 'Not Corrected',
+                'unsure': 'Unsure'
+            };
+            
+            // Add action to current actions array
+            currentActions.push({
+                action: action,
+                status: statusMap[status],
+                timestamp: new Date().toISOString()
+            });
+            
+            // Update display
+            updateActionsDisplay();
+            
+            // Close modal
+            closeActionModal();
+            
+            // Ask if they want to add another action
+            setTimeout(() => {
+                const addAnother = confirm('Action added successfully!\n\nWould you like to add another action?');
+                if (addAnother) {
+                    showAddActionModal();
+                } else {
+                    // Show submit button now that we have at least one action
+                    document.getElementById('submit-issue-btn').style.display = 'inline-block';
+                }
+            }, 100);
+        }
+        
+        function updateActionsDisplay() {
+            const display = document.getElementById('actions-display');
+            
+            if (currentActions.length === 0) {
+                display.innerHTML = '<p style="color: #999; text-align: center; margin: 20px 0;">No actions added yet. Click "Add Action" below to begin.</p>';
+            } else {
+                let html = '<div style="padding: 5px;">';
+                currentActions.forEach((act, index) => {
+                    const statusEmoji = act.status === 'Corrected' ? '✅' : 
+                                       act.status === 'Not Corrected' ? '❌' : '❓';
+                    const statusColor = act.status === 'Corrected' ? '#28a745' : 
+                                       act.status === 'Not Corrected' ? '#dc3545' : '#ffc107';
+                    
+                    html += `
+                        <div style="background: white; border-left: 4px solid ${statusColor}; padding: 12px; margin-bottom: 10px; border-radius: 5px;">
+                            <div style="display: flex; justify-content: space-between; align-items: start;">
+                                <div style="flex: 1;">
+                                    <strong>${index + 1}. ${act.action}</strong>
+                                    <div style="margin-top: 5px; font-size: 14px; color: #666;">
+                                        Status: ${statusEmoji} <span style="color: ${statusColor}; font-weight: bold;">${act.status}</span>
+                                    </div>
+                                </div>
+                                <button onclick="removeAction(${index})" style="background: #dc3545; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 12px;">Remove</button>
+                            </div>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+                display.innerHTML = html;
+            }
+        }
+        
+        function removeAction(index) {
+            if (confirm('Are you sure you want to remove this action?')) {
+                currentActions.splice(index, 1);
+                updateActionsDisplay();
+                
+                // Hide submit button if no actions remain
+                if (currentActions.length === 0) {
+                    document.getElementById('submit-issue-btn').style.display = 'none';
+                }
+            }
+        }
+
         // ====== FORM SUBMISSION ======
         async function submitIssue(event) {
             event.preventDefault();
             
-            const solutionsText = document.getElementById('solutions').value.trim();
-            const effectiveness = document.getElementById('effectiveness').value;
-            
-            // Validate effectiveness if solutions provided
-            if (solutionsText && !effectiveness) {
-                alert('Please indicate if the solution corrected the problem');
+            // Validate that at least one action has been added
+            if (currentActions.length === 0) {
+                alert('Please add at least one action taken before submitting.');
                 return;
             }
             
-            const issue = {
-                id: Date.now().toString(),
-                timestamp: new Date().toISOString(),
-                operator: document.getElementById('operator').value,
-                line: document.getElementById('line').value,
-                machine: document.getElementById('machine').value,
-                description: document.getElementById('description').value,
-                solutions: solutionsText,
-                effectiveness: effectiveness || null
-            };
+            const operator = document.getElementById('operator').value;
+            const line = document.getElementById('line').value;
+            const machine = document.getElementById('machine').value;
+            const description = document.getElementById('description').value;
             
-            issues.push(issue);
+            // Create a separate issue entry for each action (matching Python version)
+            const newIssues = [];
+            for (const act of currentActions) {
+                const issue = {
+                    id: Date.now().toString() + '-' + Math.random().toString(36).substr(2, 9),
+                    timestamp: act.timestamp,
+                    operator: operator,
+                    line: line,
+                    machine: machine,
+                    description: description,
+                    solutions: act.action,
+                    effectiveness: act.status.toLowerCase().replace(' ', '-')
+                };
+                
+                newIssues.push(issue);
+                issues.push(issue);
+            }
+            
             saveLocalData();
             
-            await syncToCloud(issue);
+            // Sync all new issues to cloud
+            for (const issue of newIssues) {
+                await syncToCloud(issue);
+            }
             
-            alert('Issue logged successfully!');
+            alert('Issue logged successfully with ' + currentActions.length + ' action(s)!');
+            
+            // Reset form and actions
             document.getElementById('issue-form').reset();
-            document.getElementById('effectiveness-group').style.display = 'none';
+            currentActions = [];
+            updateActionsDisplay();
+            document.getElementById('submit-issue-btn').style.display = 'none';
         }
 
         // ====== SEARCH FUNCTIONS ======
