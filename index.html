@@ -279,7 +279,7 @@
         <div class="header">
             <h1>🏭 Manufacturing Issue Tracker</h1>
             <p>Equipment Failure & Maintenance System</p>
-            <div class="version">v6.1 - Cloud Sync</div>
+            <div class="version">v6.0 - Cloud Sync</div>
         </div>
 
         <div id="sync-status" class="sync-status"></div>
@@ -314,18 +314,22 @@
 
                 <div class="form-group">
                     <label for="machine">Machine/Equipment *</label>
-                    <input type="text" id="machine" class="form-control" required list="machine-list">
+                    <input type="text" id="machine" class="form-control" required list="machine-list" onchange="updateSuggestions()">
                     <datalist id="machine-list"></datalist>
                 </div>
 
                 <div class="form-group">
                     <label for="description">Issue Description *</label>
-                    <textarea id="description" class="form-control" rows="4" required placeholder="Describe the issue in detail..."></textarea>
+                    <input type="text" id="description" class="form-control" required placeholder="Describe the issue in detail..." list="description-suggestions" autocomplete="off">
+                    <datalist id="description-suggestions"></datalist>
+                    <small id="description-help" style="color: #666; font-size: 12px;">Start typing or select from previous issues for this machine</small>
                 </div>
 
                 <div class="form-group">
                     <label for="solutions">Solutions Attempted (Optional)</label>
-                    <textarea id="solutions" class="form-control" rows="3" placeholder="What have you tried so far?"></textarea>
+                    <input type="text" id="solutions" class="form-control" placeholder="What have you tried so far?" list="solutions-suggestions" autocomplete="off">
+                    <datalist id="solutions-suggestions"></datalist>
+                    <small id="solutions-help" style="color: #666; font-size: 12px;">Start typing or select from previous solutions for this machine</small>
                 </div>
 
                 <div class="form-group" id="effectiveness-group" style="display: none;">
@@ -437,7 +441,7 @@
     <script>
         // ====== CONFIGURATION ======
         // PASTE YOUR GOOGLE APPS SCRIPT URL HERE
-        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzQ8jZ3APEu2AZZWX1RAlhzdxZeNygrEJyMtBaIgZzYhUV0Hpmx54F-dGg4JhbbX6sB/exec';
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzcrIHHf7rf3_9x4T8v_y1lKUw92S7zWyNv0Z4rKYGpXbp3YfcZBoHHZWDrp4JCwtfV/exec';
         
         // ====== DATA STORAGE ======
         let issues = [];
@@ -457,7 +461,8 @@
             displayHistory(issues);
             
             // Show effectiveness field when solutions are entered
-            document.getElementById('solutions').addEventListener('input', function() {
+            const solutionsInput = document.getElementById('solutions');
+            solutionsInput.addEventListener('input', function() {
                 const effectivenessGroup = document.getElementById('effectiveness-group');
                 const effectivenessSelect = document.getElementById('effectiveness');
                 if (this.value.trim().length > 0) {
@@ -557,6 +562,9 @@
                     if (activeTab.includes('History')) {
                         displayHistory(issues);
                     }
+                    
+                    // Update suggestions if machine is already selected
+                    updateSuggestions();
                 } else {
                     throw new Error('Invalid response from server');
                 }
@@ -609,6 +617,86 @@
                     option.value = machine;
                     machineList.appendChild(option);
                 });
+            }
+        }
+
+        function updateSuggestions() {
+            const line = document.getElementById('line').value;
+            const machine = document.getElementById('machine').value;
+            
+            const descriptionHelp = document.getElementById('description-help');
+            const solutionsHelp = document.getElementById('solutions-help');
+            
+            // Only update if both line and machine are selected
+            if (!line || !machine) {
+                document.getElementById('description-suggestions').innerHTML = '';
+                document.getElementById('solutions-suggestions').innerHTML = '';
+                descriptionHelp.textContent = 'Select line and machine to see previous issues';
+                solutionsHelp.textContent = 'Select line and machine to see previous solutions';
+                return;
+            }
+            
+            // Filter issues for this specific line + machine
+            const relevantIssues = issues.filter(issue => 
+                issue.line === line && 
+                issue.machine.toLowerCase() === machine.toLowerCase()
+            );
+            
+            // Extract unique descriptions
+            const descriptions = new Set();
+            relevantIssues.forEach(issue => {
+                if (issue.description && issue.description.trim()) {
+                    descriptions.add(issue.description.trim());
+                }
+            });
+            
+            // Extract unique solutions
+            const solutions = new Set();
+            relevantIssues.forEach(issue => {
+                if (issue.solutions && issue.solutions.trim()) {
+                    // Normalize solution text
+                    const normalized = issue.solutions.trim()
+                        .replace(/[.,!?;:]+$/, '')  // Remove trailing punctuation
+                        .replace(/\s+/g, ' ')        // Normalize spaces
+                        .trim();
+                    solutions.add(normalized);
+                }
+            });
+            
+            // Update description datalist
+            const descriptionList = document.getElementById('description-suggestions');
+            descriptionList.innerHTML = '';
+            descriptions.forEach(desc => {
+                const option = document.createElement('option');
+                option.value = desc;
+                descriptionList.appendChild(option);
+            });
+            
+            // Update solutions datalist
+            const solutionsList = document.getElementById('solutions-suggestions');
+            solutionsList.innerHTML = '';
+            solutions.forEach(sol => {
+                const option = document.createElement('option');
+                option.value = sol;
+                solutionsList.appendChild(option);
+            });
+            
+            // Update helper text with counts
+            if (descriptions.size > 0) {
+                descriptionHelp.innerHTML = `<strong style="color: #28a745;">✓ ${descriptions.size} previous issue${descriptions.size !== 1 ? 's' : ''} available</strong> - Start typing or click ▼ to select`;
+            } else {
+                descriptionHelp.textContent = 'No previous issues found for this machine - enter a new description';
+            }
+            
+            if (solutions.size > 0) {
+                solutionsHelp.innerHTML = `<strong style="color: #28a745;">✓ ${solutions.size} previous solution${solutions.size !== 1 ? 's' : ''} available</strong> - Start typing or click ▼ to select`;
+            } else {
+                solutionsHelp.textContent = 'No previous solutions found for this machine - enter a new solution';
+            }
+            
+            // Log for debugging
+            if (descriptions.size > 0 || solutions.size > 0) {
+                console.log(`Loaded ${descriptions.size} previous issue descriptions and ${solutions.size} previous solutions for ${line} - ${machine}`);
             }
         }
 
@@ -707,11 +795,16 @@
             
             results.forEach(issue => {
                 if (issue.solutions && issue.solutions.trim()) {
-                    const solution = issue.solutions.trim().toLowerCase();
+                    // Normalize solution text for grouping
+                    const normalized = issue.solutions.trim()
+                        .toLowerCase()
+                        .replace(/[.,!?;:]+$/, '')  // Remove trailing punctuation
+                        .replace(/\s+/g, ' ')        // Normalize spaces
+                        .trim();
                     
-                    if (!solutionStats[solution]) {
-                        solutionStats[solution] = {
-                            text: issue.solutions.trim(),
+                    if (!solutionStats[normalized]) {
+                        solutionStats[normalized] = {
+                            text: issue.solutions.trim().replace(/[.,!?;:]+$/, ''), // Clean version for display
                             total: 0,
                             corrected: 0,
                             notCorrected: 0,
@@ -719,14 +812,14 @@
                         };
                     }
                     
-                    solutionStats[solution].total++;
+                    solutionStats[normalized].total++;
                     
                     if (issue.effectiveness === 'corrected') {
-                        solutionStats[solution].corrected++;
+                        solutionStats[normalized].corrected++;
                     } else if (issue.effectiveness === 'not-corrected') {
-                        solutionStats[solution].notCorrected++;
+                        solutionStats[normalized].notCorrected++;
                     } else if (issue.effectiveness === 'unsure') {
-                        solutionStats[solution].unsure++;
+                        solutionStats[normalized].unsure++;
                     }
                 }
             });
