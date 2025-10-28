@@ -192,18 +192,6 @@
             box-shadow: 0 5px 15px rgba(0,0,0,0.1);
         }
 
-        .status-badge {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: bold;
-        }
-
-        .status-pending { background: #fff3cd; color: #856404; }
-        .status-in-progress { background: #cce5ff; color: #004085; }
-        .status-resolved { background: #d4edda; color: #155724; }
-
         .work-instruction {
             background: linear-gradient(135deg, #e8f5e8, #f0f8f0);
             border: 2px solid #28a745;
@@ -336,27 +324,8 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="priority">Priority *</label>
-                    <select id="priority" class="form-control" required>
-                        <option value="low">Low</option>
-                        <option value="medium">Medium</option>
-                        <option value="high">High</option>
-                        <option value="critical">Critical</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
                     <label for="solutions">Solutions Attempted (Optional)</label>
                     <textarea id="solutions" class="form-control" rows="3" placeholder="What have you tried so far?"></textarea>
-                </div>
-
-                <div class="form-group">
-                    <label for="status">Status *</label>
-                    <select id="status" class="form-control" required>
-                        <option value="pending">Pending</option>
-                        <option value="in-progress">In Progress</option>
-                        <option value="resolved">Resolved</option>
-                    </select>
                 </div>
 
                 <button type="submit" class="btn btn-primary">Submit Issue</button>
@@ -417,16 +386,6 @@
                 </select>
             </div>
 
-            <div class="form-group">
-                <label>Filter by Status</label>
-                <select id="filter-status" class="form-control" onchange="filterHistory()">
-                    <option value="">All Statuses</option>
-                    <option value="pending">Pending</option>
-                    <option value="in-progress">In Progress</option>
-                    <option value="resolved">Resolved</option>
-                </select>
-            </div>
-
             <button class="btn btn-success" onclick="loadFromCloud()">🔄 Refresh from Cloud</button>
 
             <div id="history-list" class="history-list"></div>
@@ -434,7 +393,7 @@
 
         <!-- AI Work Instruction Tab -->
         <div id="ai-tab" class="tab-content">
-            <h2>🤖 Generate AI Work Instruction</h2>
+            <h2>🤖 AI Work Instruction Generator</h2>
             <p style="margin-bottom: 20px; color: #666;">Generate step-by-step troubleshooting instructions based on your issue.</p>
 
             <div class="form-group">
@@ -459,16 +418,6 @@
                 <textarea id="ai-issue" class="form-control" rows="4" required placeholder="Describe the issue..."></textarea>
             </div>
 
-            <div class="form-group">
-                <label for="ai-priority">Priority *</label>
-                <select id="ai-priority" class="form-control" required>
-                    <option value="low">Low</option>
-                    <option value="medium">Medium</option>
-                    <option value="high">High</option>
-                    <option value="critical">Critical</option>
-                </select>
-            </div>
-
             <button class="btn btn-success" onclick="generateWorkInstruction()">Generate Instructions</button>
 
             <div id="generated-instruction"></div>
@@ -478,7 +427,7 @@
     <script>
         // ====== CONFIGURATION ======
         // PASTE YOUR GOOGLE APPS SCRIPT URL HERE
-        const GOOGLE_SCRIPT_URL = 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE';
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzcrIHHf7rf3_9x4T8v_y1lKUw92S7zWyNv0Z4rKYGpXbp3YfcZBoHHZWDrp4JCwtfV/exec';
         
         // ====== DATA STORAGE ======
         let issues = [];
@@ -686,9 +635,7 @@
                 line: document.getElementById('line').value,
                 machine: document.getElementById('machine').value,
                 description: document.getElementById('description').value,
-                priority: document.getElementById('priority').value,
-                solutions: document.getElementById('solutions').value,
-                status: document.getElementById('status').value
+                solutions: document.getElementById('solutions').value
             };
             
             issues.push(issue);
@@ -736,15 +683,11 @@
                 <h3>Search Results (${results.length})</h3>
                 ${results.map(issue => `
                     <div class="issue-card">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                            <h4>${issue.line} - ${issue.machine}</h4>
-                            <span class="status-badge status-${issue.status}">${issue.status}</span>
-                        </div>
+                        <h4>${issue.line} - ${issue.machine}</h4>
                         <p><strong>Issue:</strong> ${issue.description}</p>
                         <p><strong>Solutions Tried:</strong> ${issue.solutions || 'None documented'}</p>
                         <p><strong>Date:</strong> ${new Date(issue.timestamp).toLocaleDateString()}</p>
                         <p><strong>Operator:</strong> ${issue.operator}</p>
-                        ${issue.status === 'resolved' ? '<p style="color: green; font-weight: bold;">✅ This solution worked!</p>' : ''}
                     </div>
                 `).join('')}
             `;
@@ -756,14 +699,12 @@
         function filterHistory() {
             const line = document.getElementById('filter-line').value;
             const machine = document.getElementById('filter-machine').value;
-            const status = document.getElementById('filter-status').value;
             
             const filtered = issues.filter(issue => {
                 const matchLine = !line || issue.line === line;
                 const matchMachine = !machine || issue.machine === machine;
-                const matchStatus = !status || issue.status === status;
                 
-                return matchLine && matchMachine && matchStatus;
+                return matchLine && matchMachine;
             });
             
             displayHistory(filtered);
@@ -785,14 +726,11 @@
                 <div class="issue-card">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                         <h4>${issue.line} - ${issue.machine}</h4>
-                        <div>
-                            <span class="status-badge status-${issue.status}">${issue.status}</span>
-                            <small style="margin-left: 10px; color: #666;">${new Date(issue.timestamp).toLocaleDateString()}</small>
-                        </div>
+                        <small style="color: #666;">${new Date(issue.timestamp).toLocaleDateString()}</small>
                     </div>
                     <p><strong>Issue:</strong> ${issue.description}</p>
                     <p><strong>Solutions Tried:</strong> ${issue.solutions || 'None documented'}</p>
-                    <p><strong>Operator:</strong> ${issue.operator} | <strong>Priority:</strong> ${issue.priority}</p>
+                    <p><strong>Operator:</strong> ${issue.operator}</p>
                 </div>
             `).join('');
             
@@ -804,148 +742,29 @@
             const line = document.getElementById('ai-line').value;
             const machine = document.getElementById('ai-machine').value;
             const issue = document.getElementById('ai-issue').value;
-            const priority = document.getElementById('ai-priority').value;
             
-            if (!line || !machine || !issue || !priority) {
+            if (!line || !machine || !issue) {
                 alert('Please fill in all required fields');
                 return;
             }
             
-            const instruction = {
-                line: line,
-                equipment: machine,
-                issue: issue,
-                priority: priority,
-                safety: generateSafetyRequirements(machine, issue),
-                steps: generateTroubleshootingSteps(machine, issue),
-                notes: generateAdditionalNotes(line, machine, issue),
-                estimatedTime: calculateEstimatedTime(5, priority)
-            };
-            
-            displayWorkInstruction(instruction);
-        }
-
-        function generateSafetyRequirements(machine, description) {
-            const requirements = [
-                "Verify machine is in safe operating mode before beginning",
-                "Wear appropriate Personal Protective Equipment (PPE)"
-            ];
-            
-            if (machine.toLowerCase().includes('heat') || machine.toLowerCase().includes('sealer')) {
-                requirements.push("Allow equipment to cool before contact - minimum 10 minutes");
-                requirements.push("Use heat-resistant gloves when handling hot components");
-            }
-            
-            if (machine.toLowerCase().includes('conveyor') || machine.toLowerCase().includes('belt')) {
-                requirements.push("Follow lockout/tagout procedures before maintenance");
-                requirements.push("Keep hands clear of moving parts at all times");
-            }
-            
-            requirements.push("If issue persists or worsens, stop operation immediately");
-            
-            return requirements;
-        }
-
-        function generateTroubleshootingSteps(machine, description) {
-            const steps = [];
-            
-            if (machine.toLowerCase().includes('heat') || machine.toLowerCase().includes('sealer')) {
-                if (description.toLowerCase().includes('temperature')) {
-                    steps.push(
-                        "Verify temperature controller display readings",
-                        "Check setpoint matches required temperature",
-                        "Inspect heating elements for damage or buildup",
-                        "Check temperature sensor connections",
-                        "Test controller output with multimeter"
-                    );
-                }
-            } else if (machine.toLowerCase().includes('conveyor') || machine.toLowerCase().includes('belt')) {
-                if (description.toLowerCase().includes('tracking')) {
-                    steps.push(
-                        "Check belt tension using tension gauge",
-                        "Inspect rollers for debris or damage",
-                        "Adjust tracking bolts 1/4 turn at a time",
-                        "Run belt slowly and observe tracking",
-                        "Fine-tune adjustment as needed"
-                    );
-                }
-            }
-            
-            if (steps.length === 0) {
-                steps.push(
-                    "Check all connections and fittings",
-                    "Verify power supply and electrical connections",
-                    "Test individual components as applicable",
-                    "Consult equipment manual for specific procedures"
-                );
-            }
-            
-            steps.push("Document all findings and actions taken");
-            return steps;
-        }
-
-        function calculateEstimatedTime(stepCount, priority) {
-            const baseTime = stepCount * 5;
-            const priorityMultiplier = {
-                'low': 0.8,
-                'medium': 1.0,
-                'high': 1.3,
-                'critical': 1.5
-            };
-            
-            const totalMinutes = Math.round(baseTime * priorityMultiplier[priority]);
-            return `${totalMinutes}-${totalMinutes + 10} minutes`;
-        }
-
-        function generateAdditionalNotes(line, machine, description) {
-            const notes = [
-                "If issue persists after following these steps, escalate to maintenance team",
-                "Document any deviations from normal operation",
-                "Take photos of any unusual wear or damage for reference"
-            ];
-
-            if (line === 'RX500' || line === 'RX300') {
-                notes.push("Check production log for any recent changeovers or adjustments");
-            }
-            
-            return notes;
-        }
-
-        function displayWorkInstruction(instruction) {
+            // Display under development message
             const html = `
                 <div class="work-instruction">
                     <div class="wi-header">
-                        🛠️ AI-GENERATED WORK INSTRUCTION
+                        🚧 AI WORK INSTRUCTION GENERATOR
                     </div>
                     
-                    <div class="wi-section">
-                        <h4>📋 ISSUE DETAILS</h4>
-                        <p><strong>Production Line:</strong> ${instruction.line}</p>
-                        <p><strong>Equipment:</strong> ${instruction.equipment}</p>
-                        <p><strong>Issue:</strong> ${instruction.issue}</p>
-                        <p><strong>Priority:</strong> ${instruction.priority}</p>
-                        <p><strong>Estimated Time:</strong> ${instruction.estimatedTime}</p>
-                    </div>
-
-                    <div class="wi-section">
-                        <h4>⚠️ SAFETY REQUIREMENTS</h4>
-                        <ul>
-                            ${instruction.safety.map(req => `<li>${req}</li>`).join('')}
-                        </ul>
-                    </div>
-
-                    <div class="wi-section">
-                        <h4>🔧 TROUBLESHOOTING STEPS</h4>
-                        <ol class="wi-steps">
-                            ${instruction.steps.map(step => `<li>${step}</li>`).join('')}
-                        </ol>
-                    </div>
-
-                    <div class="wi-section">
-                        <h4>📝 ADDITIONAL NOTES</h4>
-                        <ul>
-                            ${instruction.notes.map(note => `<li>${note}</li>`).join('')}
-                        </ul>
+                    <div class="wi-section" style="text-align: center; padding: 40px 20px;">
+                        <h3 style="color: #666; font-size: 24px; margin-bottom: 20px;">Currently Under Development</h3>
+                        <p style="color: #888; font-size: 16px; line-height: 1.6;">
+                            The AI Work Instruction Generator is currently being developed.<br>
+                            This feature will provide intelligent, step-by-step troubleshooting<br>
+                            instructions based on your equipment and issue description.
+                        </p>
+                        <p style="color: #888; font-size: 14px; margin-top: 30px;">
+                            Check back soon for updates!
+                        </p>
                     </div>
                 </div>
             `;
