@@ -328,6 +328,16 @@
                     <textarea id="solutions" class="form-control" rows="3" placeholder="What have you tried so far?"></textarea>
                 </div>
 
+                <div class="form-group" id="effectiveness-group" style="display: none;">
+                    <label for="effectiveness">Did the solution correct the problem? *</label>
+                    <select id="effectiveness" class="form-control">
+                        <option value="">Select...</option>
+                        <option value="corrected">Yes - Problem Corrected</option>
+                        <option value="not-corrected">No - Problem Not Corrected</option>
+                        <option value="unsure">Unsure</option>
+                    </select>
+                </div>
+
                 <button type="submit" class="btn btn-primary">Submit Issue</button>
                 <button type="button" class="btn btn-success" onclick="loadFromCloud()">🔄 Refresh from Cloud</button>
             </form>
@@ -445,6 +455,20 @@
             loadFromCloud();
             updateHistoryMachineOptions();
             displayHistory(issues);
+            
+            // Show effectiveness field when solutions are entered
+            document.getElementById('solutions').addEventListener('input', function() {
+                const effectivenessGroup = document.getElementById('effectiveness-group');
+                const effectivenessSelect = document.getElementById('effectiveness');
+                if (this.value.trim().length > 0) {
+                    effectivenessGroup.style.display = 'block';
+                    effectivenessSelect.required = true;
+                } else {
+                    effectivenessGroup.style.display = 'none';
+                    effectivenessSelect.required = false;
+                    effectivenessSelect.value = '';
+                }
+            });
         });
 
         // ====== CLOUD SYNC FUNCTIONS ======
@@ -628,6 +652,15 @@
         async function submitIssue(event) {
             event.preventDefault();
             
+            const solutionsText = document.getElementById('solutions').value.trim();
+            const effectiveness = document.getElementById('effectiveness').value;
+            
+            // Validate effectiveness if solutions provided
+            if (solutionsText && !effectiveness) {
+                alert('Please indicate if the solution corrected the problem');
+                return;
+            }
+            
             const issue = {
                 id: Date.now().toString(),
                 timestamp: new Date().toISOString(),
@@ -635,7 +668,8 @@
                 line: document.getElementById('line').value,
                 machine: document.getElementById('machine').value,
                 description: document.getElementById('description').value,
-                solutions: document.getElementById('solutions').value
+                solutions: solutionsText,
+                effectiveness: effectiveness || null
             };
             
             issues.push(issue);
@@ -645,6 +679,7 @@
             
             alert('Issue logged successfully!');
             document.getElementById('issue-form').reset();
+            document.getElementById('effectiveness-group').style.display = 'none';
         }
 
         // ====== SEARCH FUNCTIONS ======
@@ -666,6 +701,53 @@
             displaySearchResults(results);
         }
 
+        function analyzeSolutions(results) {
+            // Group solutions by text and track effectiveness
+            const solutionStats = {};
+            
+            results.forEach(issue => {
+                if (issue.solutions && issue.solutions.trim()) {
+                    const solution = issue.solutions.trim().toLowerCase();
+                    
+                    if (!solutionStats[solution]) {
+                        solutionStats[solution] = {
+                            text: issue.solutions.trim(),
+                            total: 0,
+                            corrected: 0,
+                            notCorrected: 0,
+                            unsure: 0
+                        };
+                    }
+                    
+                    solutionStats[solution].total++;
+                    
+                    if (issue.effectiveness === 'corrected') {
+                        solutionStats[solution].corrected++;
+                    } else if (issue.effectiveness === 'not-corrected') {
+                        solutionStats[solution].notCorrected++;
+                    } else if (issue.effectiveness === 'unsure') {
+                        solutionStats[solution].unsure++;
+                    }
+                }
+            });
+            
+            // Convert to array and calculate success rate
+            const solutionArray = Object.values(solutionStats).map(stat => {
+                stat.successRate = stat.total > 0 ? (stat.corrected / stat.total) * 100 : 0;
+                return stat;
+            });
+            
+            // Sort by success rate (highest first), then by frequency
+            solutionArray.sort((a, b) => {
+                if (b.successRate !== a.successRate) {
+                    return b.successRate - a.successRate;
+                }
+                return b.total - a.total;
+            });
+            
+            return solutionArray;
+        }
+
         function displaySearchResults(results) {
             const container = document.getElementById('search-results');
             
@@ -673,24 +755,76 @@
                 container.innerHTML = `
                     <div class="issue-card">
                         <h4>No matching issues found</h4>
-                        <p>This might be a new type of issue. Consider generating an AI work instruction.</p>
+                        <p>This might be a new type of issue.</p>
                     </div>
                 `;
                 return;
             }
 
-            const html = `
-                <h3>Search Results (${results.length})</h3>
-                ${results.map(issue => `
+            // Analyze solutions and rank them
+            const solutionRankings = analyzeSolutions(results);
+            
+            let html = `<h3>Search Results (${results.length} issue${results.length !== 1 ? 's' : ''} found)</h3>`;
+            
+            // Display solution rankings if any exist
+            if (solutionRankings.length > 0) {
+                html += `
+                    <div class="issue-card" style="background: #e8f5e9; border: 2px solid #4caf50;">
+                        <h4>🎯 Recommended Solutions (Ranked by Success Rate)</h4>
+                        <div style="margin-top: 15px;">
+                `;
+                
+                solutionRankings.forEach((solution, index) => {
+                    const successRateColor = solution.successRate >= 75 ? '#4caf50' : 
+                                            solution.successRate >= 50 ? '#ff9800' : '#f44336';
+                    
+                    html += `
+                        <div style="background: white; padding: 15px; margin-bottom: 10px; border-radius: 5px; border-left: 4px solid ${successRateColor};">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                <strong style="color: #333;">#${index + 1} Solution:</strong>
+                                <span style="background: ${successRateColor}; color: white; padding: 4px 12px; border-radius: 15px; font-size: 14px; font-weight: bold;">
+                                    ${solution.successRate.toFixed(0)}% Success Rate
+                                </span>
+                            </div>
+                            <p style="margin: 8px 0; color: #555;">${solution.text}</p>
+                            <div style="font-size: 13px; color: #666; margin-top: 8px;">
+                                <span style="color: #4caf50;">✓ Corrected: ${solution.corrected}</span> | 
+                                <span style="color: #f44336;">✗ Not Corrected: ${solution.notCorrected}</span> | 
+                                <span style="color: #ff9800;">? Unsure: ${solution.unsure}</span>
+                                <span style="color: #999; margin-left: 10px;">(${solution.total} total attempt${solution.total !== 1 ? 's' : ''})</span>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                html += `</div></div>`;
+            }
+            
+            // Display individual issues
+            html += `<h4 style="margin-top: 25px; color: #666;">All Related Issues:</h4>`;
+            
+            html += results.map(issue => {
+                let effectivenessHTML = '';
+                if (issue.effectiveness) {
+                    const effectivenessMap = {
+                        'corrected': '<span style="color: #4caf50; font-weight: bold;">✓ Problem Corrected</span>',
+                        'not-corrected': '<span style="color: #f44336; font-weight: bold;">✗ Problem Not Corrected</span>',
+                        'unsure': '<span style="color: #ff9800; font-weight: bold;">? Unsure</span>'
+                    };
+                    effectivenessHTML = `<p><strong>Effectiveness:</strong> ${effectivenessMap[issue.effectiveness]}</p>`;
+                }
+                
+                return `
                     <div class="issue-card">
                         <h4>${issue.line} - ${issue.machine}</h4>
                         <p><strong>Issue:</strong> ${issue.description}</p>
                         <p><strong>Solutions Tried:</strong> ${issue.solutions || 'None documented'}</p>
+                        ${effectivenessHTML}
                         <p><strong>Date:</strong> ${new Date(issue.timestamp).toLocaleDateString()}</p>
                         <p><strong>Operator:</strong> ${issue.operator}</p>
                     </div>
-                `).join('')}
-            `;
+                `;
+            }).join('');
             
             container.innerHTML = html;
         }
@@ -722,17 +856,29 @@
                 new Date(b.timestamp) - new Date(a.timestamp)
             );
 
-            const html = sorted.map(issue => `
-                <div class="issue-card">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                        <h4>${issue.line} - ${issue.machine}</h4>
-                        <small style="color: #666;">${new Date(issue.timestamp).toLocaleDateString()}</small>
+            const html = sorted.map(issue => {
+                let effectivenessHTML = '';
+                if (issue.effectiveness) {
+                    const effectivenessMap = {
+                        'corrected': '<span style="color: #4caf50; font-weight: bold;">✓ Corrected</span>',
+                        'not-corrected': '<span style="color: #f44336; font-weight: bold;">✗ Not Corrected</span>',
+                        'unsure': '<span style="color: #ff9800; font-weight: bold;">? Unsure</span>'
+                    };
+                    effectivenessHTML = ` | <strong>Effectiveness:</strong> ${effectivenessMap[issue.effectiveness]}`;
+                }
+                
+                return `
+                    <div class="issue-card">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                            <h4>${issue.line} - ${issue.machine}</h4>
+                            <small style="color: #666;">${new Date(issue.timestamp).toLocaleDateString()}</small>
+                        </div>
+                        <p><strong>Issue:</strong> ${issue.description}</p>
+                        <p><strong>Solutions Tried:</strong> ${issue.solutions || 'None documented'}</p>
+                        <p><strong>Operator:</strong> ${issue.operator}${effectivenessHTML}</p>
                     </div>
-                    <p><strong>Issue:</strong> ${issue.description}</p>
-                    <p><strong>Solutions Tried:</strong> ${issue.solutions || 'None documented'}</p>
-                    <p><strong>Operator:</strong> ${issue.operator}</p>
-                </div>
-            `).join('');
+                `;
+            }).join('');
             
             container.innerHTML = html;
         }
