@@ -466,7 +466,7 @@
         <div class="header">
             <h1>🏭 Manufacturing Issue Tracker</h1>
             <p>Equipment Failure & Maintenance System</p>
-            <div class="version">v10.2 - Multi-AI</div>
+            <div class="version">v10.3 - Multi-AI</div>
         </div>
 
         <div id="sync-status" class="sync-status"></div>
@@ -1937,7 +1937,6 @@ Keep instructions clear, specific, and actionable. Use proper formatting with cl
             const apiKey = geminiConfig.apiKey;
             const model = geminiConfig.model || 'gemini-1.5-flash-latest';
             
-            // FINAL FIX: The 1.5 models REQUIRE the v1beta endpoint. Reverting this change.
             const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
             
             const response = await fetch(url, {
@@ -1998,10 +1997,13 @@ Keep instructions clear, specific, and actionable. Use proper formatting with cl
             }
             
             const modelToTest = geminiConfig.model || 'gemini-1.5-flash-latest';
+            const keyToTest = geminiConfig.apiKey;
+
+            // DIAGNOSTIC ALERT: This will show us the exact values being used.
+            alert(`--- DIAGNOSTIC INFO ---\n\nModel: ${modelToTest}\nAPI Key: ...${keyToTest.slice(-4)}`);
 
             try {
-                // FINAL FIX: The 1.5 models REQUIRE the v1beta endpoint. Reverting this change.
-                const testUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelToTest}:generateContent?key=${geminiConfig.apiKey}`;
+                const testUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelToTest}:generateContent?key=${keyToTest}`;
                 
                 const response = await fetch(testUrl, {
                     method: 'POST',
