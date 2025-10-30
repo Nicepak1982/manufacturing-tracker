@@ -466,7 +466,7 @@
         <div class="header">
             <h1>🏭 Manufacturing Issue Tracker</h1>
             <p>Equipment Failure & Maintenance System</p>
-            <div class="version">v9.1 - Multi-AI</div>
+            <div class="version">v9.8 - Multi-AI</div>
         </div>
 
         <div id="sync-status" class="sync-status"></div>
@@ -675,8 +675,9 @@
                 <div class="form-group">
                     <label for="gemini-model">Model</label>
                     <select id="gemini-model" class="form-control">
-                        <option value="gemini-1.5-flash">Gemini 1.5 Flash (Recommended - Fast & Free)</option>
-                        <option value="gemini-1.5-pro">Gemini 1.5 Pro (Most Capable)</option>
+                        <option value="gemini-1.5-flash-latest">Gemini 1.5 Flash (Recommended - Fast & Free)</option>
+                        <option value="gemini-1.5-pro-latest">Gemini 1.5 Pro (Most Capable)</option>
+                        <option value="gemini-pro">Gemini Pro (Legacy)</option>
                     </select>
                 </div>
 
@@ -1944,9 +1945,9 @@ Keep instructions clear, specific, and actionable. Use proper formatting with cl
         // ====== GOOGLE GEMINI API ======
         async function callGeminiAPI(prompt) {
             const apiKey = geminiConfig.apiKey;
-            const model = geminiConfig.model || 'gemini-1.5-flash';
+            const model = geminiConfig.model || 'gemini-1.5-flash-latest';
             
-            const url = `https://generativelanguage.googleapis.com/v1/models/${model}:generateContent?key=${apiKey}`;
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
             
             const response = await fetch(url, {
                 method: 'POST',
@@ -1991,7 +1992,7 @@ Keep instructions clear, specific, and actionable. Use proper formatting with cl
             const modelSelect = document.getElementById('gemini-model');
             geminiConfig = {
                 apiKey: keyInput ? keyInput.value : '',
-                model: modelSelect ? modelSelect.value : 'gemini-1.5-flash'
+                model: modelSelect ? modelSelect.value : 'gemini-1.5-flash-latest'
             };
             
             localStorage.setItem('geminiConfig', JSON.stringify(geminiConfig));
