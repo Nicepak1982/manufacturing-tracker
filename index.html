@@ -466,7 +466,7 @@
         <div class="header">
             <h1>🏭 Manufacturing Issue Tracker</h1>
             <p>Equipment Failure & Maintenance System</p>
-            <div class="version">v9.1 - Multi-AI</div>
+            <div class="version">v9.4 - Multi-AI</div>
         </div>
 
         <div id="sync-status" class="sync-status"></div>
@@ -888,6 +888,31 @@
                 if (data.success && data.issues) {
                     issues = data.issues;
                     saveLocalData();
+                    
+                    // Load AI configs if available
+                    if (data.aiConfigs) {
+                        if (data.aiConfigs.azureConfig) {
+                            azureConfig = data.aiConfigs.azureConfig;
+                            localStorage.setItem('azureConfig', JSON.stringify(azureConfig));
+                            loadAzureConfig();
+                        }
+                        if (data.aiConfigs.geminiConfig) {
+                            geminiConfig = data.aiConfigs.geminiConfig;
+                            localStorage.setItem('geminiConfig', JSON.stringify(geminiConfig));
+                            loadGeminiConfig();
+                        }
+                        if (data.aiConfigs.manualMappings) {
+                            manualMappings = data.aiConfigs.manualMappings;
+                            localStorage.setItem('manualMappings', JSON.stringify(manualMappings));
+                            renderManualMappings();
+                        }
+                        if (data.aiConfigs.selectedProvider) {
+                            selectedProvider = data.aiConfigs.selectedProvider;
+                            localStorage.setItem('selectedProvider', selectedProvider);
+                            selectProvider(selectedProvider);
+                        }
+                    }
+                    
                     showSyncStatus('success', '✓ Loaded from Google Sheets successfully');
                     
                     // Refresh current view
@@ -908,6 +933,66 @@
                     showSyncStatus('', '');
                 }, 5000);
             }
+        }
+
+        async function syncAIConfigsToCloud() {
+            return new Promise((resolve) => {
+                showSyncStatus('syncing', '☁️ Syncing AI configs to Google Sheets...');
+                
+                try {
+                    let iframe = document.getElementById('sync-iframe');
+                    if (!iframe) {
+                        iframe = document.createElement('iframe');
+                        iframe.id = 'sync-iframe';
+                        iframe.name = 'sync-iframe';
+                        iframe.style.display = 'none';
+                        document.body.appendChild(iframe);
+                    }
+                    
+                    let form = document.getElementById('config-sync-form');
+                    if (form) form.remove();
+                    
+                    form = document.createElement('form');
+                    form.id = 'config-sync-form';
+                    form.method = 'POST';
+                    form.action = GOOGLE_SCRIPT_URL;
+                    form.target = 'sync-iframe';
+                    form.style.display = 'none';
+                    
+                    const actionInput = document.createElement('input');
+                    actionInput.type = 'hidden';
+                    actionInput.name = 'action';
+                    actionInput.value = 'saveAIConfigs';
+                    form.appendChild(actionInput);
+                    
+                    const configsInput = document.createElement('input');
+                    configsInput.type = 'hidden';
+                    configsInput.name = 'aiConfigs';
+                    configsInput.value = JSON.stringify({
+                        azureConfig: azureConfig,
+                        geminiConfig: geminiConfig,
+                        manualMappings: manualMappings,
+                        selectedProvider: selectedProvider
+                    });
+                    form.appendChild(configsInput);
+                    
+                    document.body.appendChild(form);
+                    form.submit();
+                    
+                    setTimeout(() => {
+                        showSyncStatus('success', '✓ AI configs synced to Google Sheets');
+                        resolve(true);
+                    }, 1000);
+                    
+                } catch (error) {
+                    console.error('Config sync error:', error);
+                    showSyncStatus('error', '✗ Config sync failed - saved locally');
+                    setTimeout(() => {
+                        showSyncStatus('', '');
+                    }, 5000);
+                    resolve(false);
+                }
+            });
         }
 
         // ====== LOCAL STORAGE ======
@@ -1852,6 +1937,9 @@ Keep instructions clear, specific, and actionable. Use proper formatting with cl
             const azureConfig = document.getElementById('azure-config');
             if (geminiConfig) geminiConfig.style.display = provider === 'gemini' ? 'block' : 'none';
             if (azureConfig) azureConfig.style.display = provider === 'azure' ? 'block' : 'none';
+            
+            // Sync to cloud
+            syncAIConfigsToCloud();
         }
 
         // ====== GOOGLE GEMINI API ======
@@ -1908,7 +1996,8 @@ Keep instructions clear, specific, and actionable. Use proper formatting with cl
             };
             
             localStorage.setItem('geminiConfig', JSON.stringify(geminiConfig));
-            alert('✓ Google Gemini configuration saved!');
+            syncAIConfigsToCloud();
+            alert('✓ Google Gemini configuration saved and synced to cloud!');
         }
 
         async function testGeminiConnection() {
@@ -1992,7 +2081,8 @@ Keep instructions clear, specific, and actionable. Use proper formatting with cl
             };
             
             localStorage.setItem('azureConfig', JSON.stringify(azureConfig));
-            alert('✓ Azure OpenAI configuration saved!');
+            syncAIConfigsToCloud();
+            alert('✓ Azure OpenAI configuration saved and synced to cloud!');
         }
 
         async function testAzureConnection() {
@@ -2057,7 +2147,8 @@ Keep instructions clear, specific, and actionable. Use proper formatting with cl
 
             localStorage.setItem('manualMappings', JSON.stringify(manualMappings));
             renderManualMappings();
-            alert('✓ Manual mapping added successfully!');
+            syncAIConfigsToCloud();
+            alert('✓ Manual mapping added and synced to cloud!');
         }
 
         function removeManualMapping(machine) {
@@ -2065,7 +2156,8 @@ Keep instructions clear, specific, and actionable. Use proper formatting with cl
                 delete manualMappings[machine];
                 localStorage.setItem('manualMappings', JSON.stringify(manualMappings));
                 renderManualMappings();
-                alert('✓ Manual mapping removed!');
+                syncAIConfigsToCloud();
+                alert('✓ Manual mapping removed and synced to cloud!');
             }
         }
     </script>
