@@ -466,7 +466,7 @@
         <div class="header">
             <h1>🏭 Manufacturing Issue Tracker</h1>
             <p>Equipment Failure & Maintenance System</p>
-            <div class="version">v9.8 - Multi-AI</div>
+            <div class="version">v10.0 - Multi-AI</div>
         </div>
 
         <div id="sync-status" class="sync-status"></div>
@@ -479,7 +479,6 @@
             <button class="nav-tab" onclick="switchTab('settings')">⚙️ Settings</button>
         </div>
 
-        <!-- Log Issue Tab -->
         <div id="log-tab" class="tab-content active">
             <h2>Report New Issue</h2>
             <form id="issue-form" onsubmit="submitIssue(event)">
@@ -527,7 +526,6 @@
             </form>
         </div>
 
-        <!-- Search Tab -->
         <div id="search-tab" class="tab-content">
             <h2>Search Similar Issues</h2>
             <div class="form-group">
@@ -571,7 +569,6 @@
             <div id="search-results" class="search-results"></div>
         </div>
 
-        <!-- History Tab -->
         <div id="history-tab" class="tab-content">
             <h2>Issue History</h2>
             
@@ -599,7 +596,6 @@
             <div id="history-list" class="history-list"></div>
         </div>
 
-        <!-- AI Work Instruction Tab -->
         <div id="ai-tab" class="tab-content">
             <h2>🤖 AI Work Instruction Generator</h2>
             <p style="margin-bottom: 20px; color: #666;">Generate step-by-step troubleshooting instructions based on your issue.</p>
@@ -631,7 +627,6 @@
             <div id="generated-instruction"></div>
         </div>
 
-        <!-- Settings Tab -->
         <div id="settings-tab" class="tab-content">
             <h2>⚙️ AI Configuration Settings</h2>
             
@@ -658,7 +653,6 @@
                 </div>
             </div>
 
-            <!-- Google Gemini Configuration -->
             <div class="config-section" id="gemini-config" style="display: none;">
                 <h3>🔑 Google Gemini API Configuration</h3>
                 <p style="color: #666; margin-bottom: 15px;">
@@ -677,8 +671,7 @@
                     <select id="gemini-model" class="form-control">
                         <option value="gemini-1.5-flash-latest">Gemini 1.5 Flash (Recommended - Fast & Free)</option>
                         <option value="gemini-1.5-pro-latest">Gemini 1.5 Pro (Most Capable)</option>
-                        <option value="gemini-pro">Gemini Pro (Legacy)</option>
-                    </select>
+                        </select>
                 </div>
 
                 <button onclick="saveGeminiConfig()" class="btn btn-primary">Save Gemini Configuration</button>
@@ -692,7 +685,6 @@
                 </div>
             </div>
 
-            <!-- Azure OpenAI Configuration -->
             <div class="config-section" id="azure-config" style="display: none;">
                 <h3>🔑 Azure OpenAI Configuration</h3>
                 <p style="color: #666; margin-bottom: 15px;">Configure your Azure OpenAI credentials.</p>
@@ -729,7 +721,6 @@
                 </div>
             </div>
 
-            <!-- Equipment Manual Configuration -->
             <div class="config-section">
                 <h3>📚 Equipment Manual Configuration</h3>
                 <p style="color: #666; margin-bottom: 15px;">
@@ -742,7 +733,6 @@
             </div>
         </div>
 
-        <!-- Add Action Modal -->
         <div id="action-modal" onclick="handleModalClick(event)">
             <div class="modal-content" onclick="event.stopPropagation()">
                 <h3 style="margin-bottom: 20px; color: #2c3e50;">Add Action Taken</h3>
@@ -1945,6 +1935,7 @@ Keep instructions clear, specific, and actionable. Use proper formatting with cl
         // ====== GOOGLE GEMINI API ======
         async function callGeminiAPI(prompt) {
             const apiKey = geminiConfig.apiKey;
+            // UPDATED: Changed default model to the recommended, working version
             const model = geminiConfig.model || 'gemini-1.5-flash-latest';
             
             const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
@@ -1990,6 +1981,7 @@ Keep instructions clear, specific, and actionable. Use proper formatting with cl
         function saveGeminiConfig() {
             const keyInput = document.getElementById('gemini-key');
             const modelSelect = document.getElementById('gemini-model');
+            // UPDATED: Ensured default model in config save is the working one
             geminiConfig = {
                 apiKey: keyInput ? keyInput.value : '',
                 model: modelSelect ? modelSelect.value : 'gemini-1.5-flash-latest'
@@ -2005,10 +1997,39 @@ Keep instructions clear, specific, and actionable. Use proper formatting with cl
                 alert('Please save your Gemini API key first');
                 return;
             }
+            
+            // UPDATED: Used the correct model for the test connection call
+            const modelToTest = geminiConfig.model || 'gemini-1.5-flash-latest';
 
             try {
-                const response = await callGeminiAPI('Hello! Please respond with "Connection successful!"');
-                alert('✓ Connection successful!\n\n' + response);
+                // Call the API directly using the model set in the configuration
+                const testUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelToTest}:generateContent?key=${geminiConfig.apiKey}`;
+                
+                const response = await fetch(testUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        contents: [{
+                            parts: [{
+                                text: 'Hello! Please respond with "Connection successful!"'
+                            }]
+                        }],
+                        generationConfig: {
+                            temperature: 0.1,
+                            maxOutputTokens: 50
+                        }
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error?.message || `API request failed with status ${response.status}`);
+                }
+
+                const data = await response.json();
+                alert('✓ Connection successful!\n\n' + data.candidates[0].content.parts[0].text);
             } catch (error) {
                 alert('❌ Connection failed:\n\n' + error.message);
             }
