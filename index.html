@@ -466,7 +466,7 @@
         <div class="header">
             <h1>🏭 Manufacturing Issue Tracker</h1>
             <p>Equipment Failure & Maintenance System</p>
-            <div class="version">v10.1</div>
+            <div class="version">v10.2 - Multi-AI</div>
         </div>
 
         <div id="sync-status" class="sync-status"></div>
@@ -1650,13 +1650,12 @@
                 
                 return `
                     <div class="issue-card">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                            <h4>${issue.line} - ${issue.machine}</h4>
-                            <small style="color: #666;">${new Date(issue.timestamp).toLocaleDateString()}</small>
-                        </div>
+                        <h4>${issue.line} - ${issue.machine}</h4>
                         <p><strong>Issue:</strong> ${issue.description}</p>
                         <p><strong>Solutions Tried:</strong> ${issue.solutions || 'None documented'}</p>
-                        <p><strong>Operator:</strong> ${issue.operator}${effectivenessHTML}</p>
+                        ${effectivenessHTML}
+                        <p><strong>Date:</strong> ${new Date(issue.timestamp).toLocaleDateString()}</p>
+                        <p><strong>Operator:</strong> ${issue.operator}</p>
                     </div>
                 `;
             }).join('');
@@ -1938,8 +1937,8 @@ Keep instructions clear, specific, and actionable. Use proper formatting with cl
             const apiKey = geminiConfig.apiKey;
             const model = geminiConfig.model || 'gemini-1.5-flash-latest';
             
-            // FIX: Changed v1beta endpoint to v1 for modern model names (gemini-1.5-flash-latest)
-            const url = `https://generativelanguage.googleapis.com/v1/models/${model}:generateContent?key=${apiKey}`;
+            // FINAL FIX: The 1.5 models REQUIRE the v1beta endpoint. Reverting this change.
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
             
             const response = await fetch(url, {
                 method: 'POST',
@@ -1982,7 +1981,6 @@ Keep instructions clear, specific, and actionable. Use proper formatting with cl
         function saveGeminiConfig() {
             const keyInput = document.getElementById('gemini-key');
             const modelSelect = document.getElementById('gemini-model');
-            // Ensured default model in config save is the working one
             geminiConfig = {
                 apiKey: keyInput ? keyInput.value : '',
                 model: modelSelect ? modelSelect.value : 'gemini-1.5-flash-latest'
@@ -1999,12 +1997,11 @@ Keep instructions clear, specific, and actionable. Use proper formatting with cl
                 return;
             }
             
-            // Used the correct model for the test connection call
             const modelToTest = geminiConfig.model || 'gemini-1.5-flash-latest';
 
             try {
-                // FIX: Changed v1beta endpoint to v1 for modern model names
-                const testUrl = `https://generativelanguage.googleapis.com/v1/models/${modelToTest}:generateContent?key=${geminiConfig.apiKey}`;
+                // FINAL FIX: The 1.5 models REQUIRE the v1beta endpoint. Reverting this change.
+                const testUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelToTest}:generateContent?key=${geminiConfig.apiKey}`;
                 
                 const response = await fetch(testUrl, {
                     method: 'POST',
