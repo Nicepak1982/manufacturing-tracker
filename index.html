@@ -329,9 +329,42 @@
         .form-group label input[type="checkbox"] {
             margin-right: 8px;
         }
+        
+        /* New Easter Egg Style */
+        #ai-robot-icon {
+            cursor: pointer; /* Makes the robot head look clickable */
+        }
+        
+        #easter-egg-message {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #ffeb3b; /* Yellow background */
+            color: #333;
+            padding: 20px 30px;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+            font-size: 20px;
+            font-weight: bold;
+            text-align: center;
+            z-index: 3000;
+            display: none; /* Initially hidden */
+            border: 3px solid #fbc02d;
+            animation: bounceIn 0.3s ease-out;
+        }
+        
+        @keyframes bounceIn {
+            0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+            80% { transform: translate(-50%, -50%) scale(1.1); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(1); }
+        }
     </style>
 </head>
 <body>
+    
+    <div id="easter-egg-message"></div>
+
     <div class="container">
         <div class="header">
             <h1>🏭 Manufacturing Issue Tracker</h1>
@@ -348,7 +381,6 @@
             <button class="nav-tab" onclick="switchTab('ai')">🤖 AI Work Instruction</button>
         </div>
 
-        <!-- Log Issue Tab -->
         <div id="log-tab" class="tab-content active">
             <h2>Report New Issue</h2>
             <form id="issue-form" onsubmit="submitIssue(event)">
@@ -396,7 +428,6 @@
             </form>
         </div>
 
-        <!-- Search Tab -->
         <div id="search-tab" class="tab-content">
             <h2>Search Similar Issues</h2>
             <div class="form-group">
@@ -440,7 +471,6 @@
             <div id="search-results" class="search-results"></div>
         </div>
 
-        <!-- History Tab -->
         <div id="history-tab" class="tab-content">
             <h2>Issue History</h2>
             
@@ -468,9 +498,8 @@
             <div id="history-list" class="history-list"></div>
         </div>
 
-        <!-- AI Work Instruction Tab -->
         <div id="ai-tab" class="tab-content">
-            <h2>🤖 AI Work Instruction Generator</h2>
+            <h2 id="ai-robot-icon">🤖 AI Work Instruction Generator</h2>
             <p style="margin-bottom: 20px; color: #666;">Generate step-by-step troubleshooting instructions based on your issue.</p>
 
             <div class="form-group">
@@ -500,7 +529,6 @@
             <div id="generated-instruction"></div>
         </div>
 
-        <!-- Add Action Modal -->
         <div id="action-modal" onclick="handleModalClick(event)">
             <div class="modal-content" onclick="event.stopPropagation()">
                 <h3 style="margin-bottom: 20px; color: #2c3e50;">Add Action Taken</h3>
@@ -537,7 +565,7 @@
     <script>
         // ====== CONFIGURATION ======
         // PASTE YOUR GOOGLE APPS SCRIPT URL HERE
-        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwYrUTXfOsnrOEv-YfgEOhoWJZLLC15nO4I18qgmJN_M3M78DDsm2siBPKaEUQZjRFI/exec';
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzcrIHHf7rf3_9x4T8v_y1lKUw92S7zWyNv0Z4rKYGpXbp3YfcZBoHHZWDrp4JCwtfV/exec';
         
         // ====== DATA STORAGE ======
         let issues = [];
@@ -550,15 +578,59 @@
             'L80': ['Unwind 1', 'Unwind 2', 'Drum 1', 'Drum 2', 'Stacker 1', 'Stacker 2', 'Conveyor', 'Wrapper', 'Lidder']
         };
 
+        // ====== EASTER EGG WORD BANK & LOGIC ======
+        const easterEggA = [
+            "Ouch!", "Hey!", "Boop!", "Woah!", 
+            "Beep boop!", "Uh oh!", "Yikes!", "Haha!"
+        ];
+
+        const easterEggB = [
+            "That felt like", "You just zapped", "My circuits are", "That really", 
+            "I'm going to", "That tickled", "Did you just", "My processor is"
+        ];
+
+        const easterEggC = [
+            "a giant mosquito.", "my metal nose.", "doing a silly dance.", "woke up my brain.", 
+            "think about pizza now.", "my secret power button.", "pop a memory bubble?", "giggling really loud."
+        ];
+        
+        function getRandomWord(arr) {
+            const randomIndex = Math.floor(Math.random() * arr.length);
+            return arr[randomIndex];
+        }
+
+        function generateEasterEggPhrase() {
+            const partA = getRandomWord(easterEggA);
+            const partB = getRandomWord(easterEggB);
+            const partC = getRandomWord(easterEggC);
+            
+            const fullPhrase = `${partA} ${partB} ${partC}`;
+            
+            const messageDisplay = document.getElementById('easter-egg-message');
+            
+            // Show the message
+            messageDisplay.textContent = fullPhrase;
+            messageDisplay.style.display = 'block';
+
+            // Clear the message after a few seconds
+            setTimeout(() => {
+                messageDisplay.style.display = 'none';
+                messageDisplay.textContent = '';
+            }, 3000); // Clears and hides the message after 3 seconds
+        }
+
         // ====== INITIALIZATION ======
         window.addEventListener('load', () => {
             loadLocalData();
             loadFromCloud();
             updateHistoryMachineOptions();
             displayHistory(issues);
+            
+            // Attach the easter egg listener to the robot head
+            document.getElementById('ai-robot-icon').addEventListener('click', generateEasterEggPhrase);
         });
 
-        // ====== CLOUD SYNC FUNCTIONS ======
+        // ====== CLOUD SYNC FUNCTIONS (Original Code Omitted for brevity, remains unchanged) ======
         function showSyncStatus(type, message) {
             const statusDiv = document.getElementById('sync-status');
             statusDiv.className = 'sync-status ' + type;
@@ -659,7 +731,7 @@
             }
         }
 
-        // ====== LOCAL STORAGE ======
+        // ====== LOCAL STORAGE (Original Code Omitted for brevity, remains unchanged) ======
         function saveLocalData() {
             localStorage.setItem('equipmentIssues', JSON.stringify(issues));
         }
@@ -671,7 +743,7 @@
             }
         }
 
-        // ====== UI FUNCTIONS ======
+        // ====== UI FUNCTIONS (Original Code Omitted for brevity, remains unchanged) ======
         function switchTab(tabName) {
             document.querySelectorAll('.tab-content').forEach(tab => {
                 tab.classList.remove('active');
@@ -908,7 +980,7 @@
             }
         }
 
-        // ====== ACTION MANAGEMENT ======
+        // ====== ACTION MANAGEMENT (Original Code Omitted for brevity, remains unchanged) ======
         function showAddActionModal() {
             // Update action suggestions based on current selections
             const line = document.getElementById('line').value;
@@ -1053,7 +1125,7 @@
             }
         }
 
-        // ====== FORM SUBMISSION ======
+        // ====== FORM SUBMISSION (Original Code Omitted for brevity, remains unchanged) ======
         async function submitIssue(event) {
             event.preventDefault();
             
@@ -1102,7 +1174,7 @@
             document.getElementById('submit-issue-btn').style.display = 'none';
         }
 
-        // ====== SEARCH FUNCTIONS ======
+        // ====== SEARCH FUNCTIONS (Original Code Omitted for brevity, remains unchanged) ======
         function searchIssues() {
             const line = document.getElementById('search-line').value;
             const machine = document.getElementById('search-machine').value.toLowerCase().trim();
@@ -1337,7 +1409,7 @@
             container.innerHTML = html;
         }
 
-        // ====== HISTORY FUNCTIONS ======
+        // ====== HISTORY FUNCTIONS (Original Code Omitted for brevity, remains unchanged) ======
         function filterHistory() {
             const line = document.getElementById('filter-line').value;
             const machine = document.getElementById('filter-machine').value;
@@ -1391,7 +1463,7 @@
             container.innerHTML = html;
         }
 
-        // ====== AI WORK INSTRUCTION ======
+        // ====== AI WORK INSTRUCTION (Original Code Omitted for brevity, remains unchanged) ======
         function generateWorkInstruction() {
             const line = document.getElementById('ai-line').value;
             const machine = document.getElementById('ai-machine').value;
