@@ -466,7 +466,7 @@
         <div class="header">
             <h1>🏭 Manufacturing Issue Tracker</h1>
             <p>Equipment Failure & Maintenance System</p>
-            <div class="version">v10.5 - Multi-AI</div>
+            <div class="version">v10.6 - Multi-AI</div>
         </div>
 
         <div id="sync-status" class="sync-status"></div>
@@ -669,9 +669,8 @@
                 <div class="form-group">
                     <label for="gemini-model">Model</label>
                     <select id="gemini-model" class="form-control">
-                        <option value="gemini-1.5-pro-latest">Gemini 1.5 Pro (Recommended)</option>
-                        <option value="gemini-1.5-flash-latest">Gemini 1.5 Flash (Fast)</option>
-                        <option value="gemini-pro">Gemini Pro (Stable)</option>
+                        <option value="gemini-2.5-pro">Gemini 2.5 Pro (Recommended)</option>
+                        <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
                     </select>
                 </div>
 
@@ -1803,9 +1802,7 @@ Keep instructions clear, specific, and actionable. Use proper formatting with cl
                 // Call the appropriate AI service
                 let response;
                 if (selectedProvider === 'gemini') {
-                    // UPDATED: Get the selected model from config
-                    const model = geminiConfig.model || 'gemini-1.5-pro-latest';
-                    response = await callGeminiAPI(prompt, model);
+                    response = await callGeminiAPI(prompt);
                 } else {
                     response = await callAzureOpenAI(prompt);
                 }
@@ -1936,63 +1933,40 @@ Keep instructions clear, specific, and actionable. Use proper formatting with cl
         }
 
         // ====== GOOGLE GEMINI API ======
-        
-        /**
-         * NEW: This function now implements a fallback strategy.
-         * It tries the v1beta endpoint first, and if that fails,
-         * it automatically tries the v1 endpoint.
-         */
-        async function callGeminiAPI(prompt, model) {
+        // SIMPLIFIED: Reverted to a single, direct API call
+        async function callGeminiAPI(prompt) {
             const apiKey = geminiConfig.apiKey;
+            // UPDATED: Use the correct, available model name
+            const model = geminiConfig.model || 'gemini-2.5-pro';
             
-            // Define the endpoints to try in order
-            const endpointsToTry = [
-                `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
-                `https://generativelanguage.googleapis.com/v1/models/${model}:generateContent?key=${apiKey}`
-            ];
-
-            let lastError = null;
-
-            for (const url of endpointsToTry) {
-                const endpointVersion = url.includes('v1beta') ? 'v1beta' : 'v1';
-                console.log(`Attempting connection with ${model} on ${endpointVersion}...`);
-                
-                try {
-                    const response = await fetch(url, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            contents: [{ parts: [{ text: prompt }] }],
-                            // Use generationConfig for v1beta, but it's also compatible with v1
-                            generationConfig: {
-                                temperature: 0.7,
-                                maxOutputTokens: 2048
-                            }
-                        })
-                    });
-
-                    if (response.ok) {
-                        console.log(`Success with ${endpointVersion}!`);
-                        const data = await response.json();
-                        return data.candidates[0].content.parts[0].text;
+            // UPDATED: Use the v1beta endpoint which works with your key
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+            
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    contents: [{
+                        parts: [{
+                            text: prompt
+                        }]
+                    }],
+                    generationConfig: {
+                        temperature: 0.7,
+                        maxOutputTokens: 2048
                     }
+                })
+            });
 
-                    // If not ok, store the error and try the next endpoint
-                    const errorData = await response.json();
-                    lastError = errorData.error?.message || `API request failed with status ${response.status}`;
-                    console.warn(`Attempt failed for ${endpointVersion}: ${lastError}`);
-
-                } catch (error) {
-                    // Network error or other fetch-level failure
-                    lastError = error.message;
-                    console.warn(`Attempt failed for ${endpointVersion}: ${lastError}`);
-                }
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error?.message || `API request failed with status ${response.status}`);
             }
 
-            // If the loop finishes without returning, all attempts have failed
-            throw new Error(`All API attempts failed. Last error: ${lastError}`);
+            const data = await response.json();
+            return data.candidates[0].content.parts[0].text;
         }
 
         function loadGeminiConfig() {
@@ -2011,8 +1985,8 @@ Keep instructions clear, specific, and actionable. Use proper formatting with cl
             const modelSelect = document.getElementById('gemini-model');
             geminiConfig = {
                 apiKey: keyInput ? keyInput.value : '',
-                // UPDATED: Set default to 1.5-pro
-                model: modelSelect ? modelSelect.value : 'gemini-1.5-pro-latest'
+                // UPDATED: Use the correct, available model name
+                model: modelSelect ? modelSelect.value : 'gemini-2.5-pro'
             };
             
             localStorage.setItem('geminiConfig', JSON.stringify(geminiConfig));
@@ -2020,28 +1994,19 @@ Keep instructions clear, specific, and actionable. Use proper formatting with cl
             alert('✓ Google Gemini configuration saved and synced to cloud!');
         }
 
+        // SIMPLIFIED: Reverted test connection to a single attempt
         async function testGeminiConnection() {
             if (!geminiConfig.apiKey) {
                 alert('Please save your Gemini API key first');
                 return;
             }
-            
-            // Get the model selected in the dropdown
-            const modelToTest = geminiConfig.model || 'gemini-1.5-pro-latest';
-            const keyToTest = geminiConfig.apiKey;
-
-            // Diagnostic alert
-            alert(`--- TESTING CONNECTION ---\n\nModel: ${modelToTest}\nAPI Key: ...${keyToTest.slice(-4)}\n\nWill attempt v1beta first, then v1 as a fallback.`);
 
             try {
-                // Call the new resilient function
-                const response = await callGeminiAPI('Hello! Please respond with "Connection successful!"', modelToTest);
-                
-                // If it gets here, it worked!
+                // Call the API directly using the simplified function logic
+                const response = await callGeminiAPI('Hello! Please respond with "Connection successful!"');
                 alert('✓ Connection successful!\n\n' + response);
 
             } catch (error) {
-                // If it gets here, all attempts failed
                 alert('❌ Connection failed:\n\n' + error.message);
             }
         }
