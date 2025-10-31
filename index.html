@@ -193,62 +193,129 @@
         }
 
         .work-instruction {
-            background: linear-gradient(135deg, #e8f5e8, #f0f8f0);
-            border: 2px solid #28a745;
-            border-radius: 10px;
-            padding: 25px;
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 12px;
+            padding: 0;
             margin-top: 20px;
-            font-family: 'Courier New', monospace;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         }
 
         .wi-header {
-            background: #28a745;
+            background: linear-gradient(135deg, #28a745, #20c997);
             color: white;
-            padding: 15px;
-            margin: -25px -25px 20px -25px;
-            border-radius: 8px 8px 0 0;
+            padding: 20px 25px;
+            border-radius: 12px 12px 0 0;
             text-align: center;
-            font-size: 18px;
+            font-size: 20px;
             font-weight: bold;
+            letter-spacing: 0.5px;
+        }
+
+        .wi-caution {
+            background: linear-gradient(135deg, #ff9800, #ff5722);
+            color: white;
+            padding: 15px 25px;
+            border-left: 5px solid #d84315;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 600;
+        }
+
+        .wi-caution-icon {
+            font-size: 28px;
+            flex-shrink: 0;
+        }
+
+        .wi-metadata {
+            background: #f8f9fa;
+            padding: 20px 25px;
+            border-bottom: 2px solid #dee2e6;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .wi-metadata-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .wi-metadata-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #6c757d;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .wi-metadata-value {
+            color: #2c3e50;
+            font-weight: 500;
+            font-size: 14px;
         }
 
         .wi-section {
-            margin-bottom: 20px;
+            padding: 25px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .wi-section:last-of-type {
+            border-bottom: none;
         }
 
         .wi-section h4 {
-            color: #155724;
-            margin-bottom: 10px;
-            font-size: 16px;
-        }
-
-        .wi-steps {
-            list-style: none;
-            counter-reset: step-counter;
-        }
-
-        .wi-steps li {
-            counter-increment: step-counter;
-            margin-bottom: 8px;
-            padding-left: 30px;
-            position: relative;
-        }
-
-        .wi-steps li:before {
-            content: counter(step-counter);
-            position: absolute;
-            left: 0;
-            top: 0;
-            background: #28a745;
-            color: white;
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 18px;
+            font-weight: 700;
             display: flex;
             align-items: center;
-            justify-content: center;
+            gap: 10px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #28a745;
+        }
+
+        .wi-section h4::before {
+            content: '▶';
+            color: #28a745;
+            font-size: 14px;
+        }
+
+        .wi-content {
+            color: #495057;
+            line-height: 1.8;
+            font-size: 15px;
+        }
+
+        .wi-step {
+            margin: 12px 0;
+            padding-left: 15px;
+            position: relative;
+            color: #495057;
+        }
+
+        .wi-step::before {
+            content: '●';
+            position: absolute;
+            left: 0;
+            color: #28a745;
             font-weight: bold;
-            font-size: 12px;
+        }
+
+        .wi-actions {
+            padding: 25px;
+            background: #f8f9fa;
+            text-align: center;
+            border-radius: 0 0 12px 12px;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
         }
 
         .loading-spinner {
@@ -428,7 +495,7 @@
         <div class="header">
             <h1>🏭 Manufacturing Issue Tracker</h1>
             <p>Track equipment issues and generate AI-powered work instructions</p>
-            <div class="version">v11.1</div>
+            <div class="version">v11.2</div>
         </div>
 
         <div id="sync-status" class="sync-status"></div>
@@ -1938,11 +2005,11 @@
             document.getElementById('generated-instruction').innerHTML = `
                 <div class="work-instruction">
                     <div class="wi-header">🤖 GENERATING AI WORK INSTRUCTION</div>
-                    <div class="wi-section" style="text-align: center; padding: 40px 20px;">
+                    <div style="padding: 60px 20px; text-align: center; background: white;">
                         <div class="loading-spinner"></div>
-                        <p style="margin-top: 20px; color: #666;">
-                            Analyzing issue and retrieving equipment manual...<br>
-                            Consulting ${selectedProvider === 'gemini' ? 'Google Gemini' : 'Microsoft Copilot'} AI...
+                        <p style="margin-top: 25px; color: #666; font-size: 15px;">
+                            <strong>Analyzing issue and retrieving equipment manual...</strong><br>
+                            <span style="font-size: 14px;">Consulting ${selectedProvider === 'gemini' ? 'Google Gemini' : 'Azure OpenAI'} AI...</span>
                         </p>
                     </div>
                 </div>
@@ -2008,13 +2075,17 @@ Keep instructions clear, specific, and actionable. Use proper formatting with cl
                 console.error('Error generating work instruction:', error);
                 document.getElementById('generated-instruction').innerHTML = `
                     <div class="work-instruction">
-                        <div class="wi-header" style="background: #dc3545;">❌ ERROR</div>
-                        <div class="wi-section">
-                            <p style="color: #721c24;"><strong>Failed to generate work instruction:</strong></p>
-                            <p style="color: #666;">${error.message}</p>
-                            <p style="margin-top: 15px; color: #666;">
-                                Please check your ${selectedProvider === 'gemini' ? 'Google Gemini' : 'Azure OpenAI'} configuration in the Settings tab.
+                        <div class="wi-header" style="background: linear-gradient(135deg, #dc3545, #c82333);">❌ ERROR</div>
+                        <div style="padding: 40px 25px; text-align: center; background: white;">
+                            <div style="font-size: 48px; margin-bottom: 20px;">⚠️</div>
+                            <h3 style="color: #dc3545; margin-bottom: 15px;">Failed to Generate Work Instruction</h3>
+                            <p style="color: #666; margin-bottom: 20px; font-size: 15px;">${error.message}</p>
+                            <p style="color: #666; font-size: 14px;">
+                                Please check your ${selectedProvider === 'gemini' ? 'Google Gemini' : 'Azure OpenAI'} configuration in the Setup tab.
                             </p>
+                            <button onclick="switchTab('settings')" class="btn btn-primary" style="margin-top: 20px;">
+                                Go to Setup
+                            </button>
                         </div>
                     </div>
                 `;
@@ -2024,14 +2095,15 @@ Keep instructions clear, specific, and actionable. Use proper formatting with cl
         function showConfigurationRequired(providerName, message) {
             const html = `
                 <div class="work-instruction">
-                    <div class="wi-header">⚙️ CONFIGURATION REQUIRED</div>
-                    <div class="wi-section" style="text-align: center; padding: 40px 20px;">
-                        <h3 style="color: #856404;">${providerName} Not Configured</h3>
-                        <p style="color: #666; margin: 20px 0;">
+                    <div class="wi-header" style="background: linear-gradient(135deg, #ffc107, #ff9800);">⚙️ CONFIGURATION REQUIRED</div>
+                    <div style="padding: 60px 25px; text-align: center; background: white;">
+                        <div style="font-size: 64px; margin-bottom: 20px;">🔧</div>
+                        <h3 style="color: #ff9800; margin-bottom: 15px;">${providerName} Not Configured</h3>
+                        <p style="color: #666; margin: 20px auto; max-width: 500px; font-size: 15px;">
                             ${message}
                         </p>
-                        <button onclick="switchTab('settings')" class="btn btn-primary">
-                            Go to Settings
+                        <button onclick="switchTab('settings')" class="btn btn-primary" style="margin-top: 20px; padding: 15px 30px; font-size: 16px;">
+                            Go to Setup Tab
                         </button>
                     </div>
                 </div>
@@ -2049,12 +2121,35 @@ Keep instructions clear, specific, and actionable. Use proper formatting with cl
                         🤖 AI-GENERATED WORK INSTRUCTION
                     </div>
                     
-                    <div class="wi-section">
-                        <p><strong>Production Line:</strong> ${line}</p>
-                        <p><strong>Equipment:</strong> ${machine}</p>
-                        <p><strong>Issue:</strong> ${issue}</p>
-                        <p><strong>Generated:</strong> ${new Date().toLocaleString()}</p>
-                        <p><strong>AI Provider:</strong> ${selectedProvider === 'gemini' ? 'Google Gemini (FREE)' : 'Azure OpenAI (Microsoft)'}</p>
+                    <div class="wi-caution">
+                        <div class="wi-caution-icon">⚠️</div>
+                        <div>
+                            <strong>CAUTION: AI-Generated Work Instruction</strong><br>
+                            <span style="font-size: 13px; opacity: 0.95;">Contact supervisor to review prior to implementing this procedure. Always follow company safety protocols.</span>
+                        </div>
+                    </div>
+                    
+                    <div class="wi-metadata">
+                        <div class="wi-metadata-item">
+                            <span class="wi-metadata-label">Production Line</span>
+                            <span class="wi-metadata-value">${line}</span>
+                        </div>
+                        <div class="wi-metadata-item">
+                            <span class="wi-metadata-label">Equipment</span>
+                            <span class="wi-metadata-value">${machine}</span>
+                        </div>
+                        <div class="wi-metadata-item">
+                            <span class="wi-metadata-label">Issue</span>
+                            <span class="wi-metadata-value">${issue}</span>
+                        </div>
+                        <div class="wi-metadata-item">
+                            <span class="wi-metadata-label">Generated</span>
+                            <span class="wi-metadata-value">${new Date().toLocaleString()}</span>
+                        </div>
+                        <div class="wi-metadata-item">
+                            <span class="wi-metadata-label">AI Provider</span>
+                            <span class="wi-metadata-value">${selectedProvider === 'gemini' ? 'Google Gemini' : 'Azure OpenAI'}</span>
+                        </div>
                     </div>
             `;
 
@@ -2068,23 +2163,27 @@ Keep instructions clear, specific, and actionable. Use proper formatting with cl
 
                     html += `
                         <div class="wi-section">
-                            <h4 style="color: #155724;">${title}</h4>
+                            <h4>${title}</h4>
+                            <div class="wi-content">
                     `;
 
                     items.forEach(item => {
                         if (item.trim()) {
-                            html += `<p style="margin: 8px 0; padding-left: 15px;">• ${item.trim()}</p>`;
+                            html += `<div class="wi-step">${item.trim()}</div>`;
                         }
                     });
 
-                    html += `</div>`;
+                    html += `
+                            </div>
+                        </div>
+                    `;
                 }
             });
 
             html += `
-                    <div class="wi-section" style="text-align: center; margin-top: 20px;">
-                        <button onclick="window.print()" class="btn btn-primary">🖨️ Print</button>
-                        <button onclick="downloadWorkInstruction()" class="btn btn-info">💾 Download</button>
+                    <div class="wi-actions">
+                        <button onclick="window.print()" class="btn btn-primary">🖨️ Print Instruction</button>
+                        <button onclick="downloadWorkInstruction()" class="btn btn-info">💾 Download as Text</button>
                     </div>
                 </div>
             `;
