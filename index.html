@@ -428,7 +428,7 @@
         <div class="header">
             <h1>🏭 Manufacturing Issue Tracker</h1>
             <p>Track equipment issues and generate AI-powered work instructions</p>
-            <div class="version">v11.0</div>
+            <div class="version">v11.1</div>
         </div>
 
         <div id="sync-status" class="sync-status"></div>
@@ -528,7 +528,7 @@
         </div>
 
         <div id="ai-tab" class="tab-content">
-            <h2>🤖 AI-Generated Work Instructions</h2>
+            <h2><span onclick="robotEasterEgg()" style="cursor: pointer; display: inline-block; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.2) rotate(10deg)'" onmouseout="this.style.transform='scale(1) rotate(0deg)'">🤖</span> AI-Generated Work Instructions</h2>
             <p style="color: #666; margin-bottom: 20px;">
                 Generate detailed troubleshooting instructions using AI. Manuals will be referenced automatically if configured.
             </p>
@@ -2101,6 +2101,53 @@ Keep instructions clear, specific, and actionable. Use proper formatting with cl
             a.download = 'work-instruction.txt';
             a.click();
             window.URL.revokeObjectURL(url);
+        }
+
+        // ====== EASTER EGG ======
+        function robotEasterEgg() {
+            const columnA = [
+                "Ouch!",
+                "Hey!",
+                "Boop!",
+                "Woah!",
+                "Beep boop!",
+                "Uh oh!",
+                "Yikes!",
+                "Haha!"
+            ];
+
+            const columnB = [
+                "That felt like",
+                "You just zapped",
+                "My circuits are",
+                "That really",
+                "I'm going to",
+                "That tickled",
+                "Did you just",
+                "My processor is"
+            ];
+
+            const columnC = [
+                "a giant mosquito.",
+                "my metal nose.",
+                "doing a silly dance.",
+                "woke up my brain.",
+                "think about pizza now.",
+                "my secret power button.",
+                "pop a memory bubble?",
+                "giggling really loud."
+            ];
+
+            // Pick random items from each column
+            const randomA = columnA[Math.floor(Math.random() * columnA.length)];
+            const randomB = columnB[Math.floor(Math.random() * columnB.length)];
+            const randomC = columnC[Math.floor(Math.random() * columnC.length)];
+
+            // Combine them into a funny phrase
+            const funnyPhrase = `${randomA} ${randomB} ${randomC}`;
+
+            // Display in a fun alert
+            alert('🤖 ' + funnyPhrase);
         }
     </script>
 </body>
