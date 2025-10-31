@@ -241,63 +241,60 @@
             top: 0;
             background: #28a745;
             color: white;
-            width: 20px;
-            height: 20px;
+            width: 24px;
+            height: 24px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 12px;
             font-weight: bold;
+            font-size: 12px;
         }
 
-        .suggestions-dropdown {
-            background: white;
-            border: 1px solid #dee2e6;
-            border-radius: 8px;
-            max-height: 200px;
-            overflow-y: auto;
-            position: absolute;
-            z-index: 1000;
-            width: calc(100% - 24px);
-            display: none;
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #28a745;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
         }
 
-        .suggestion-item {
-            padding: 10px 15px;
-            cursor: pointer;
-            border-bottom: 1px solid #f1f1f1;
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
-        .suggestion-item:hover {
-            background: #f8f9fa;
-        }
-
-        /* Action Modal Styling */
-        #action-modal {
+        .modal {
             display: none;
             position: fixed;
-            top: 0;
+            z-index: 1000;
             left: 0;
+            top: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.5);
-            z-index: 2000;
-            align-items: center;
-            justify-content: center;
+            background-color: rgba(0,0,0,0.5);
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
 
         .modal-content {
-            background: white;
-            border-radius: 15px;
+            background-color: white;
+            margin: 5% auto;
             padding: 30px;
-            max-width: 600px;
+            border-radius: 15px;
             width: 90%;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-            animation: modalSlideIn 0.3s ease;
+            max-width: 600px;
+            box-shadow: 0 10px 50px rgba(0,0,0,0.3);
+            animation: slideDown 0.3s ease;
         }
 
-        @keyframes modalSlideIn {
+        @keyframes slideDown {
             from {
                 transform: translateY(-50px);
                 opacity: 0;
@@ -311,134 +308,82 @@
         .action-buttons {
             display: flex;
             gap: 10px;
+            flex-wrap: wrap;
             margin-top: 10px;
         }
 
         .action-buttons button {
             flex: 1;
-        }
-
-        /* Checkbox styling */
-        input[type="checkbox"] {
-            width: 18px;
-            height: 18px;
-            cursor: pointer;
-            vertical-align: middle;
-        }
-
-        .form-group label input[type="checkbox"] {
-            margin-right: 8px;
-        }
-
-        /* Provider Toggle Styles */
-        .provider-toggle {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 25px;
-            padding: 20px;
-            background: #f8f9fa;
-            border-radius: 10px;
-        }
-
-        .provider-option {
-            flex: 1;
-            padding: 20px;
-            border: 3px solid #dee2e6;
-            border-radius: 10px;
-            cursor: pointer;
-            text-align: center;
-            transition: all 0.3s ease;
-            background: white;
-        }
-
-        .provider-option:hover {
-            border-color: #007bff;
-            transform: translateY(-3px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-        }
-
-        .provider-option.active {
-            border-color: #007bff;
-            background: #e7f3ff;
-            box-shadow: 0 5px 15px rgba(0,123,255,0.2);
-        }
-
-        .provider-option h4 {
-            margin-bottom: 8px;
-            color: #333;
-            font-size: 18px;
-        }
-
-        .provider-option p {
-            font-size: 13px;
-            color: #666;
-            margin: 5px 0;
-        }
-
-        .provider-badge {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 12px;
-            font-size: 11px;
-            font-weight: bold;
-            margin-left: 8px;
-        }
-
-        .provider-badge.free {
-            background: #28a745;
-            color: white;
-        }
-
-        .provider-badge.paid {
-            background: #ffc107;
-            color: #212529;
+            min-width: 150px;
         }
 
         .config-section {
-            background: #f0f8ff;
-            border: 2px solid #007bff;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
             border-radius: 10px;
-            padding: 25px;
-            margin-bottom: 30px;
+            padding: 20px;
+            margin-bottom: 20px;
         }
 
         .config-section h3 {
-            color: #007bff;
             margin-bottom: 15px;
-            font-size: 20px;
+            color: #2c3e50;
+        }
+
+        .provider-selector {
+            display: flex;
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .provider-card {
+            flex: 1;
+            padding: 20px;
+            border: 2px solid #dee2e6;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .provider-card:hover {
+            border-color: #007bff;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .provider-card.selected {
+            border-color: #28a745;
+            background: #e8f5e8;
+        }
+
+        .provider-card h4 {
+            margin-bottom: 10px;
+            color: #2c3e50;
         }
 
         .alert-box {
-            padding: 15px 20px;
+            padding: 15px;
             border-radius: 8px;
-            margin-top: 15px;
+            margin: 15px 0;
         }
 
         .alert-success-box {
             background: #d4edda;
-            border: 1px solid #28a745;
+            border: 1px solid #c3e6cb;
             color: #155724;
+        }
+
+        .alert-info-box {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
         }
 
         .alert-warning-box {
             background: #fff3cd;
-            border: 1px solid #ffc107;
+            border: 1px solid #ffeaa7;
             color: #856404;
-        }
-
-        .loading-spinner {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #007bff;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 20px auto;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
         }
 
         .manual-list-item {
@@ -450,14 +395,31 @@
         }
 
         .manual-list-item h4 {
-            color: #333;
-            margin-bottom: 8px;
+            color: #2c3e50;
+            margin-bottom: 5px;
         }
 
         .manual-list-item p {
-            margin: 5px 0;
             color: #666;
+            margin: 5px 0;
             font-size: 14px;
+        }
+
+        .line-group {
+            margin-bottom: 25px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+        }
+
+        .line-group-header {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-weight: bold;
+            font-size: 16px;
         }
     </style>
 </head>
@@ -465,21 +427,21 @@
     <div class="container">
         <div class="header">
             <h1>🏭 Manufacturing Issue Tracker</h1>
-            <p>Equipment Failure & Maintenance System</p>
-            <div class="version">v10.6 - Multi-AI</div>
+            <p>Track equipment issues and generate AI-powered work instructions</p>
+            <div class="version">v11.0</div>
         </div>
 
         <div id="sync-status" class="sync-status"></div>
 
         <div class="nav-tabs">
-            <button class="nav-tab active" onclick="switchTab('log')">📝 Log Issue</button>
-            <button class="nav-tab" onclick="switchTab('search')">🔍 Search Similar</button>
+            <button class="nav-tab active" onclick="switchTab('report')">📝 Report Issue</button>
+            <button class="nav-tab" onclick="switchTab('search')">🔍 Search Issues</button>
+            <button class="nav-tab" onclick="switchTab('ai')">🤖 AI Work Instructions</button>
             <button class="nav-tab" onclick="switchTab('history')">📊 History</button>
-            <button class="nav-tab" onclick="switchTab('ai')">🤖 AI Work Instruction</button>
-            <button class="nav-tab" onclick="switchTab('settings')">⚙️ Settings</button>
+            <button class="nav-tab" onclick="switchTab('settings')">⚙️ Setup</button>
         </div>
 
-        <div id="log-tab" class="tab-content active">
+        <div id="report-tab" class="tab-content active">
             <h2>Report New Issue</h2>
             <form id="issue-form" onsubmit="submitIssue(event)">
                 <div class="form-group">
@@ -489,116 +451,87 @@
 
                 <div class="form-group">
                     <label for="line">Production Line *</label>
-                    <select id="line" class="form-control" required onchange="updateMachineOptions()">
+                    <select id="line" class="form-control" required onchange="updateMachineOptions(); updateSuggestions();">
                         <option value="">Select Line</option>
                         <option value="RX500">RX500</option>
                         <option value="RX300">RX300</option>
+                        <option value="HH">HH</option>
                         <option value="JBFlex">JBFlex</option>
                         <option value="L80">L80</option>
-                        <option value="HH">HH</option>
                     </select>
                 </div>
 
                 <div class="form-group">
                     <label for="machine">Machine/Equipment *</label>
-                    <input type="text" id="machine" class="form-control" required list="machine-list" onchange="updateSuggestions()">
+                    <input type="text" id="machine" class="form-control" required list="machine-list" autocomplete="off" onchange="updateSuggestions()">
                     <datalist id="machine-list"></datalist>
                 </div>
 
                 <div class="form-group">
                     <label for="description">Issue Description *</label>
-                    <input type="text" id="description" class="form-control" required placeholder="Describe the issue in detail..." list="description-suggestions" autocomplete="off">
+                    <input type="text" id="description" class="form-control" required list="description-suggestions" autocomplete="off">
                     <datalist id="description-suggestions"></datalist>
-                    <small id="description-help" style="color: #666; font-size: 12px;">Start typing or select from previous issues for this machine</small>
+                    <small id="description-help" style="color: #666; font-size: 12px;">Select line and machine to see previous issues</small>
                 </div>
 
                 <div class="form-group">
                     <label>Actions Taken *</label>
-                    <div id="actions-display" style="background: #f8f9fa; border: 2px solid #dee2e6; border-radius: 8px; padding: 15px; min-height: 80px;">
+                    <div id="actions-display" style="background: #f8f9fa; border: 2px dashed #dee2e6; border-radius: 8px; padding: 15px; min-height: 100px; margin-bottom: 10px;">
                         <p style="color: #999; text-align: center; margin: 20px 0;">No actions added yet. Click "Add Action" below to begin.</p>
                     </div>
-                    <small style="color: #666; font-size: 12px;">You must add at least one action taken to resolve the issue</small>
+                    <button type="button" class="btn btn-success" onclick="showAddActionModal()">+ Add Action</button>
                 </div>
 
-                <button type="button" class="btn btn-primary" onclick="showAddActionModal()">➕ Add Action Taken</button>
-                <button type="submit" class="btn btn-success" id="submit-issue-btn" style="display: none;">Submit Issue</button>
-                <button type="button" class="btn btn-success" onclick="loadFromCloud()">🔄 Refresh from Cloud</button>
+                <button type="submit" id="submit-issue-btn" class="btn btn-primary" style="display: none;">Submit Issue Report</button>
             </form>
         </div>
 
         <div id="search-tab" class="tab-content">
-            <h2>Search Similar Issues</h2>
+            <h2>Search Historical Issues</h2>
+            
             <div class="form-group">
                 <label for="search-line">Production Line</label>
                 <select id="search-line" class="form-control" onchange="updateSearchMachines()">
                     <option value="">All Lines</option>
                     <option value="RX500">RX500</option>
                     <option value="RX300">RX300</option>
+                    <option value="HH">HH</option>
                     <option value="JBFlex">JBFlex</option>
                     <option value="L80">L80</option>
-                    <option value="HH">HH</option>
                 </select>
-            </div>
-
-            <div class="form-group">
-                <label for="search-machine">Machine</label>
-                <input type="text" id="search-machine" class="form-control" placeholder="Enter machine name..." list="search-machine-list" onchange="updateSearchKeywords()">
-                <datalist id="search-machine-list"></datalist>
-                <small id="search-machine-help" style="color: #666; font-size: 12px;">Select production line to see machine suggestions</small>
             </div>
 
             <div class="form-group">
                 <label>
-                    <input type="checkbox" id="search-all-lines" onchange="updateSearchMachines(); updateSearchKeywords();" style="margin-right: 8px;">
+                    <input type="checkbox" id="search-all-lines" onchange="updateSearchMachines()" style="margin-right: 8px;">
                     <strong>Search all production lines for this machine</strong>
                 </label>
-                <small style="display: block; color: #666; font-size: 12px; margin-top: 5px;">
-                    Check this to find issues from machines with the same name on any production line
-                </small>
+                <small id="search-machine-help" style="color: #666; font-size: 12px; display: block; margin-top: 5px;">Select a production line above, or check this box to search across all lines</small>
             </div>
 
             <div class="form-group">
-                <label for="search-keyword">Issue Description / Keyword Search</label>
-                <input type="text" id="search-keyword" class="form-control" placeholder="Search in descriptions..." list="search-keyword-list" autocomplete="off">
+                <label for="search-machine">Machine/Equipment</label>
+                <input type="text" id="search-machine" class="form-control" list="search-machine-list" autocomplete="off" onchange="updateSearchKeywords()">
+                <datalist id="search-machine-list"></datalist>
+            </div>
+
+            <div class="form-group">
+                <label for="search-keyword">Issue Keywords (Optional)</label>
+                <input type="text" id="search-keyword" class="form-control" list="search-keyword-list" placeholder="e.g., jam, leak, error">
                 <datalist id="search-keyword-list"></datalist>
                 <small id="search-keyword-help" style="color: #666; font-size: 12px;">Select a machine to see previous issues</small>
             </div>
 
-            <button class="btn btn-info" onclick="searchIssues()">🔍 Search</button>
+            <button onclick="searchIssues()" class="btn btn-primary">🔍 Search Issues</button>
 
             <div id="search-results" class="search-results"></div>
         </div>
 
-        <div id="history-tab" class="tab-content">
-            <h2>Issue History</h2>
-            
-            <div class="form-group">
-                <label>Filter by Line</label>
-                <select id="filter-line" class="form-control" onchange="updateHistoryMachineOptions(); filterHistory()">
-                    <option value="">All Lines</option>
-                    <option value="RX500">RX500</option>
-                    <option value="RX300">RX300</option>
-                    <option value="JBFlex">JBFlex</option>
-                    <option value="L80">L80</option>
-                    <option value="HH">HH</option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label>Filter by Machine</label>
-                <select id="filter-machine" class="form-control" onchange="filterHistory()">
-                    <option value="">All Machines</option>
-                </select>
-            </div>
-
-            <button class="btn btn-success" onclick="loadFromCloud()">🔄 Refresh from Cloud</button>
-
-            <div id="history-list" class="history-list"></div>
-        </div>
-
         <div id="ai-tab" class="tab-content">
-            <h2>🤖 AI Work Instruction Generator</h2>
-            <p style="margin-bottom: 20px; color: #666;">Generate step-by-step troubleshooting instructions based on your issue.</p>
+            <h2>🤖 AI-Generated Work Instructions</h2>
+            <p style="color: #666; margin-bottom: 20px;">
+                Generate detailed troubleshooting instructions using AI. Manuals will be referenced automatically if configured.
+            </p>
 
             <div class="form-group">
                 <label for="ai-line">Production Line *</label>
@@ -606,94 +539,111 @@
                     <option value="">Select Line</option>
                     <option value="RX500">RX500</option>
                     <option value="RX300">RX300</option>
+                    <option value="HH">HH</option>
                     <option value="JBFlex">JBFlex</option>
                     <option value="L80">L80</option>
-                    <option value="HH">HH</option>
                 </select>
             </div>
 
             <div class="form-group">
-                <label for="ai-machine">Equipment *</label>
+                <label for="ai-machine">Machine/Equipment *</label>
                 <input type="text" id="ai-machine" class="form-control" required placeholder="e.g., Heat Sealer 2">
             </div>
 
             <div class="form-group">
                 <label for="ai-issue">Issue Description *</label>
-                <textarea id="ai-issue" class="form-control" rows="4" required placeholder="Describe the issue..."></textarea>
+                <textarea id="ai-issue" class="form-control" rows="4" required placeholder="Describe the problem in detail..."></textarea>
             </div>
 
-            <button class="btn btn-success" onclick="generateWorkInstruction()">Generate Instructions</button>
+            <button onclick="generateWorkInstruction()" class="btn btn-primary">🤖 Generate Work Instruction</button>
 
             <div id="generated-instruction"></div>
         </div>
 
+        <div id="history-tab" class="tab-content">
+            <h2>Issue History</h2>
+            
+            <div style="margin-bottom: 20px;">
+                <label for="filter-line">Filter by Line:</label>
+                <select id="filter-line" class="form-control" onchange="filterHistory(); updateHistoryMachineOptions();" style="display: inline-block; width: 200px; margin: 0 10px;">
+                    <option value="">All Lines</option>
+                    <option value="RX500">RX500</option>
+                    <option value="RX300">RX300</option>
+                    <option value="HH">HH</option>
+                    <option value="JBFlex">JBFlex</option>
+                    <option value="L80">L80</option>
+                </select>
+
+                <label for="filter-machine">Machine:</label>
+                <select id="filter-machine" class="form-control" onchange="filterHistory()" style="display: inline-block; width: 200px; margin: 0 10px;">
+                    <option value="">All Machines</option>
+                </select>
+            </div>
+
+            <div id="history-list" class="history-list"></div>
+        </div>
+
         <div id="settings-tab" class="tab-content">
-            <h2>⚙️ AI Configuration Settings</h2>
+            <h2>⚙️ Setup & Configuration</h2>
             
             <div class="config-section">
-                <h3>🎯 Select AI Provider</h3>
-                <p style="color: #666; margin-bottom: 15px;">Choose which AI service to use for generating work instructions.</p>
+                <h3>🤖 AI Provider Selection</h3>
+                <p style="color: #666; margin-bottom: 15px;">Choose which AI service to use for generating work instructions</p>
                 
-                <div class="provider-toggle">
-                    <div class="provider-option" onclick="selectProvider('gemini')" id="provider-gemini">
-                        <h4>Google Gemini <span class="provider-badge free">FREE</span></h4>
-                        <p style="font-weight: bold; color: #28a745;">Perfect for Pilot Programs</p>
-                        <p><strong>15 req/min • 1,500 req/day</strong></p>
-                        <p style="margin-top: 8px; font-size: 12px;">✓ No credit card needed</p>
-                        <p style="font-size: 12px;">✓ Instant setup</p>
+                <div class="provider-selector">
+                    <div class="provider-card" id="gemini-card" onclick="selectProvider('gemini')">
+                        <h4>🆓 Google Gemini</h4>
+                        <p style="color: #666; font-size: 14px; margin: 10px 0;">FREE - No credit card needed</p>
+                        <p style="color: #28a745; font-weight: bold;">✓ Recommended for most users</p>
                     </div>
                     
-                    <div class="provider-option" onclick="selectProvider('azure')" id="provider-azure">
-                        <h4>Azure OpenAI <span class="provider-badge paid">PAID</span></h4>
-                        <p style="font-weight: bold; color: #0066cc;">Enterprise-Grade Solution</p>
-                        <p><strong>Pay-per-use • Best Quality</strong></p>
-                        <p style="margin-top: 8px; font-size: 12px;">✓ GPT-4 available</p>
-                        <p style="font-size: 12px;">✓ Unlimited scale</p>
+                    <div class="provider-card" id="azure-card" onclick="selectProvider('azure')">
+                        <h4>💼 Azure OpenAI</h4>
+                        <p style="color: #666; font-size: 14px; margin: 10px 0;">Requires Azure account</p>
+                        <p style="color: #007bff; font-weight: bold;">Best for enterprises</p>
                     </div>
                 </div>
             </div>
 
-            <div class="config-section" id="gemini-config" style="display: none;">
-                <h3>🔑 Google Gemini API Configuration</h3>
-                <p style="color: #666; margin-bottom: 15px;">
-                    Get your free API key at <a href="https://ai.google.dev" target="_blank" style="color: #007bff;">ai.google.dev</a>
-                </p>
-                
+            <div class="config-section" id="gemini-config">
+                <h3>🔑 Google Gemini Configuration</h3>
+                <div class="alert-box alert-success-box">
+                    <strong>✓ FREE - No Credit Card Required</strong><br>
+                    Get your free API key at: <a href="https://ai.google.dev" target="_blank">ai.google.dev</a>
+                </div>
+
                 <div class="form-group">
-                    <label for="gemini-key">Gemini API Key *</label>
+                    <label for="gemini-key">API Key *</label>
                     <input type="password" id="gemini-key" class="form-control" 
-                           placeholder="Your Google Gemini API key">
-                    <small style="color: #666;">Click "Get API key" at ai.google.dev - it's instant and free!</small>
+                           placeholder="Your Gemini API key (starts with AIza...)">
+                    <small style="color: #666;">Get it from Google AI Studio (ai.google.dev) - completely free!</small>
                 </div>
 
                 <div class="form-group">
                     <label for="gemini-model">Model</label>
                     <select id="gemini-model" class="form-control">
-                        <option value="gemini-2.5-pro">Gemini 2.5 Pro (Recommended)</option>
-                        <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+                        <option value="gemini-2.0-flash-exp">Gemini 2.0 Flash (Recommended - Fast & Free)</option>
+                        <option value="gemini-1.5-pro">Gemini 1.5 Pro (More detailed)</option>
+                        <option value="gemini-1.5-flash">Gemini 1.5 Flash (Faster)</option>
                     </select>
                 </div>
 
                 <button onclick="saveGeminiConfig()" class="btn btn-primary">Save Gemini Configuration</button>
                 <button onclick="testGeminiConnection()" class="btn btn-info">Test Connection</button>
-                
-                <div class="alert-box alert-success-box">
-                    <strong>✓ Free Tier Limits:</strong><br>
-                    • 15 requests per minute<br>
-                    • 1,500 requests per day<br>
-                    • Perfect for pilot programs!
-                </div>
             </div>
 
             <div class="config-section" id="azure-config" style="display: none;">
                 <h3>🔑 Azure OpenAI Configuration</h3>
-                <p style="color: #666; margin-bottom: 15px;">Configure your Azure OpenAI credentials.</p>
-                
+                <div class="alert-box alert-info-box">
+                    <strong>ℹ️ Azure Subscription Required</strong><br>
+                    You'll need an Azure account with OpenAI access. New accounts get $200 free credit.
+                </div>
+
                 <div class="form-group">
-                    <label for="azure-endpoint">Azure OpenAI Endpoint *</label>
+                    <label for="azure-endpoint">Azure Endpoint URL *</label>
                     <input type="text" id="azure-endpoint" class="form-control" 
                            placeholder="https://your-resource.openai.azure.com/">
-                    <small style="color: #666;">Example: https://my-openai.openai.azure.com/</small>
+                    <small style="color: #666;">Found in Azure Portal → Your OpenAI Resource → Endpoint</small>
                 </div>
 
                 <div class="form-group">
@@ -725,6 +675,7 @@
                 <h3>📚 Equipment Manual Configuration</h3>
                 <p style="color: #666; margin-bottom: 15px;">
                     Link each piece of equipment to its manual stored in OneDrive, SharePoint, or GitHub.
+                    <strong>Manuals are organized by Production Line and Machine.</strong>
                 </p>
 
                 <div id="manual-config-list" style="margin: 15px 0;"></div>
@@ -733,7 +684,7 @@
             </div>
         </div>
 
-        <div id="action-modal" onclick="handleModalClick(event)">
+        <div id="action-modal" class="modal" onclick="handleModalClick(event)">
             <div class="modal-content" onclick="event.stopPropagation()">
                 <h3 style="margin-bottom: 20px; color: #2c3e50;">Add Action Taken</h3>
                 
@@ -1249,7 +1200,8 @@
             // Load previous actions for suggestions
             const relevantIssues = issues.filter(issue => 
                 issue.line === line && 
-                issue.machine.toLowerCase() === machine.toLowerCase()
+                issue.machine.toLowerCase() === machine.toLowerCase() &&
+                issue.description.toLowerCase().includes(description.toLowerCase())
             );
             
             const actions = new Set();
@@ -1259,44 +1211,41 @@
                 }
             });
             
-            const actionSuggestions = document.getElementById('action-suggestions');
-            actionSuggestions.innerHTML = '';
+            // Update action suggestions datalist
+            const actionList = document.getElementById('action-suggestions');
+            actionList.innerHTML = '';
             actions.forEach(action => {
                 const option = document.createElement('option');
                 option.value = action;
-                actionSuggestions.appendChild(option);
+                actionList.appendChild(option);
             });
             
-            // Clear input and show modal
-            document.getElementById('action-input').value = '';
-            document.getElementById('action-modal').style.display = 'flex';
-            document.getElementById('action-input').focus();
+            // Update helper text
+            const actionHelp = document.getElementById('action-help');
+            if (actions.size > 0) {
+                actionHelp.innerHTML = `<strong style="color: #28a745;">✓ ${actions.size} previous action${actions.size !== 1 ? 's' : ''} available</strong> - Start typing or click ▼ to select`;
+            } else {
+                actionHelp.textContent = 'No previous actions found - enter a new action';
+            }
             
-            // Add keyboard support
-            document.addEventListener('keydown', handleModalKeydown);
+            // Show modal
+            document.getElementById('action-modal').style.display = 'block';
+            document.getElementById('action-input').focus();
         }
-        
-        function handleModalKeydown(e) {
-            if (e.key === 'Escape') {
-                closeActionModal();
-            }
-        }
-        
-        function handleModalClick(e) {
-            if (e.target.id === 'action-modal') {
-                closeActionModal();
-            }
-        }
-        
+
         function closeActionModal() {
             document.getElementById('action-modal').style.display = 'none';
             document.getElementById('action-input').value = '';
-            document.removeEventListener('keydown', handleModalKeydown);
         }
-        
+
+        function handleModalClick(event) {
+            if (event.target.id === 'action-modal') {
+                closeActionModal();
+            }
+        }
+
         function addActionWithStatus(status) {
-            const actionInput = document.getElementById('action-input');
-            const action = actionInput.value.trim();
+            const action = document.getElementById('action-input').value.trim();
             
             if (!action) {
                 alert('Please describe the action taken.');
@@ -1498,32 +1447,31 @@
                 const knownOutcomes = stat.corrected + stat.notCorrected;
                 
                 if (knownOutcomes > 0) {
-                    // Calculate success rate based only on known outcomes
                     stat.successRate = (stat.corrected / knownOutcomes) * 100;
                 } else {
-                    // No known outcomes (only "unsure" entries) - can't calculate success rate
-                    stat.successRate = null;  // Will be handled in display
+                    // If only "unsure" results, set to -1 to indicate unknown
+                    stat.successRate = -1;
                 }
                 
-                stat.knownOutcomes = knownOutcomes;  // Store for display
                 return stat;
             });
             
-            // Sort by success rate (highest first), then by known outcomes count
+            // Sort by success rate (descending) then by total attempts (descending)
             solutionArray.sort((a, b) => {
-                // Handle null success rates (only unsure data)
-                if (a.successRate === null && b.successRate === null) {
-                    return b.total - a.total;  // Both null, sort by total attempts
+                // First, put unknown rates at the end
+                if (a.successRate === -1 && b.successRate !== -1) return 1;
+                if (a.successRate !== -1 && b.successRate === -1) return -1;
+                if (a.successRate === -1 && b.successRate === -1) {
+                    return b.total - a.total; // Sort by attempts if both unknown
                 }
-                if (a.successRate === null) return 1;  // a has no known data, put it last
-                if (b.successRate === null) return -1; // b has no known data, put it last
                 
-                // Normal sorting by success rate
-                if (b.successRate !== a.successRate) {
+                // Then sort by success rate
+                if (Math.abs(a.successRate - b.successRate) > 0.1) {
                     return b.successRate - a.successRate;
                 }
-                // If same success rate, prefer one with more known outcomes
-                return b.knownOutcomes - a.knownOutcomes;
+                
+                // If success rates are similar, sort by total attempts
+                return b.total - a.total;
             });
             
             return solutionArray;
@@ -1533,396 +1481,156 @@
             const container = document.getElementById('search-results');
             
             if (results.length === 0) {
-                container.innerHTML = `
-                    <div class="issue-card">
-                        <h4>No matching issues found</h4>
-                        <p>This might be a new type of issue.</p>
-                    </div>
-                `;
+                container.innerHTML = '<p style="color: #666; text-align: center; padding: 40px;">No matching issues found.</p>';
                 return;
             }
-
-            // Analyze solutions and rank them
-            const solutionRankings = analyzeSolutions(results);
             
-            let html = `<h3>Search Results (${results.length} issue${results.length !== 1 ? 's' : ''} found)</h3>`;
+            // Calculate and display solution effectiveness analysis
+            const solutionAnalysis = analyzeSolutions(results);
             
-            // Show cross-line search indicator if applicable
-            if (searchAllLines) {
-                const linesFound = [...new Set(results.map(issue => issue.line))];
-                html += `
-                    <div style="background: #e7f3ff; border: 2px solid #007bff; border-radius: 10px; padding: 15px; margin-bottom: 20px;">
-                        <strong style="color: #007bff;">🔍 Cross-Line Search Active</strong>
-                        <p style="margin: 5px 0 0 0; color: #666;">
-                            Results include issues from ${linesFound.length} production line${linesFound.length !== 1 ? 's' : ''}: 
-                            <strong>${linesFound.join(', ')}</strong>
-                        </p>
-                    </div>
-                `;
-            }
+            let html = `
+                <div style="background: linear-gradient(135deg, #e8f4f8, #f0f8ff); border: 2px solid #007bff; border-radius: 10px; padding: 20px; margin: 20px 0;">
+                    <h3 style="color: #007bff; margin-bottom: 15px;">📊 Solution Effectiveness Analysis</h3>
+                    <p style="color: #666; margin-bottom: 15px;">Found <strong>${results.length}</strong> matching issue${results.length !== 1 ? 's' : ''}. Here are the most effective solutions:</p>
+            `;
             
-            // Display solution rankings if any exist
-            if (solutionRankings.length > 0) {
-                html += `
-                    <div class="issue-card" style="background: #e8f5e9; border: 2px solid #4caf50;">
-                        <h4>🎯 Recommended Solutions (Ranked by Success Rate)</h4>
-                        <div style="margin-top: 15px;">
-                `;
-                
-                solutionRankings.forEach((solution, index) => {
-                    let successRateDisplay;
-                    let successRateColor;
+            if (solutionAnalysis.length > 0) {
+                html += '<div style="margin-top: 15px;">';
+                solutionAnalysis.slice(0, 5).forEach((stat, index) => {
+                    const successColor = stat.successRate >= 70 ? '#28a745' : 
+                                       stat.successRate >= 40 ? '#ffc107' : 
+                                       stat.successRate >= 0 ? '#dc3545' : '#6c757d';
                     
-                    if (solution.successRate === null) {
-                        // No known outcomes - only "unsure" data
-                        successRateDisplay = 'Insufficient Data';
-                        successRateColor = '#9e9e9e';
-                    } else {
-                        successRateColor = solution.successRate >= 75 ? '#4caf50' : 
-                                          solution.successRate >= 50 ? '#ff9800' : '#f44336';
-                        successRateDisplay = solution.successRate.toFixed(0) + '% Success Rate';
-                    }
+                    const successText = stat.successRate >= 0 
+                        ? `${stat.successRate.toFixed(0)}% success rate` 
+                        : 'Success rate unknown';
+                    
+                    const rankEmoji = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}.`;
                     
                     html += `
-                        <div style="background: white; padding: 15px; margin-bottom: 10px; border-radius: 5px; border-left: 4px solid ${successRateColor};">
+                        <div style="background: white; border-left: 4px solid ${successColor}; padding: 12px; margin-bottom: 10px; border-radius: 5px;">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                                <strong style="color: #333;">#${index + 1} Solution:</strong>
-                                <span style="background: ${successRateColor}; color: white; padding: 4px 12px; border-radius: 15px; font-size: 14px; font-weight: bold;">
-                                    ${successRateDisplay}
+                                <strong style="color: #2c3e50;">${rankEmoji} ${stat.text}</strong>
+                                <span style="background: ${successColor}; color: white; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: bold;">
+                                    ${successText}
                                 </span>
                             </div>
-                            <p style="margin: 8px 0; color: #555;">${solution.text}</p>
-                            <div style="font-size: 13px; color: #666; margin-top: 8px;">
-                    `;
-                    
-                    if (solution.successRate !== null) {
-                        // Show success rate based on known outcomes
-                        html += `
-                            <div style="margin-bottom: 5px;">
-                                <span style="color: #4caf50;">✓ Corrected: ${solution.corrected}</span> | 
-                                <span style="color: #f44336;">✗ Not Corrected: ${solution.notCorrected}</span>
-                                <span style="color: #666; margin-left: 5px;">(${solution.knownOutcomes} known outcome${solution.knownOutcomes !== 1 ? 's' : ''})</span>
-                            </div>
-                        `;
-                        
-                        // Show unsure separately if any exist
-                        if (solution.unsure > 0) {
-                            html += `
-                                <div style="color: #ff9800; font-size: 12px; font-style: italic;">
-                                    ℹ️ ${solution.unsure} additional attempt${solution.unsure !== 1 ? 's' : ''} with unknown outcome
-                                </div>
-                            `;
-                        }
-                    } else {
-                        // Only "unsure" data available
-                        html += `
-                            <div style="color: #ff9800;">
-                                ❓ ${solution.unsure} attempt${solution.unsure !== 1 ? 's' : ''} recorded, but outcomes unknown
-                            </div>
-                            <div style="font-size: 12px; color: #999; margin-top: 3px;">
-                                Success rate cannot be calculated without known outcomes
-                            </div>
-                        `;
-                    }
-                    
-                    html += `
+                            <div style="font-size: 13px; color: #666;">
+                                Tried <strong>${stat.total}</strong> time${stat.total !== 1 ? 's' : ''}: 
+                                <span style="color: #28a745;">✅ ${stat.corrected}</span> | 
+                                <span style="color: #dc3545;">❌ ${stat.notCorrected}</span>
+                                ${stat.unsure > 0 ? ` | <span style="color: #ffc107;">❓ ${stat.unsure}</span>` : ''}
                             </div>
                         </div>
                     `;
                 });
-                
-                html += `</div></div>`;
+                html += '</div>';
+            } else {
+                html += '<p style="color: #666;">No solution effectiveness data available yet.</p>';
             }
             
-            // Display individual issues
-            html += `<h4 style="margin-top: 25px; color: #666;">All Related Issues:</h4>`;
+            html += '</div>';
             
-            html += results.map(issue => {
-                let effectivenessHTML = '';
-                if (issue.effectiveness) {
-                    const effectivenessMap = {
-                        'corrected': '<span style="color: #4caf50; font-weight: bold;">✓ Problem Corrected</span>',
-                        'not-corrected': '<span style="color: #f44336; font-weight: bold;">✗ Problem Not Corrected</span>',
-                        'unsure': '<span style="color: #ff9800; font-weight: bold;">? Unsure</span>'
-                    };
-                    effectivenessHTML = `<p><strong>Effectiveness:</strong> ${effectivenessMap[issue.effectiveness]}</p>`;
-                }
+            // Display individual issue cards
+            html += '<h3 style="margin-top: 30px; color: #2c3e50;">Individual Issue Reports:</h3>';
+            
+            // Group issues by line if searching all lines
+            if (searchAllLines) {
+                const issuesByLine = {};
+                results.forEach(issue => {
+                    if (!issuesByLine[issue.line]) {
+                        issuesByLine[issue.line] = [];
+                    }
+                    issuesByLine[issue.line].push(issue);
+                });
                 
-                return `
-                    <div class="issue-card">
+                Object.keys(issuesByLine).sort().forEach(line => {
+                    html += `
+                        <h4 style="margin-top: 20px; color: #667eea; background: #f8f9fa; padding: 10px; border-radius: 5px;">
+                            ${line} (${issuesByLine[line].length} issue${issuesByLine[line].length !== 1 ? 's' : ''})
+                        </h4>
+                    `;
+                    
+                    issuesByLine[line].forEach(issue => {
+                        html += formatIssueCard(issue);
+                    });
+                });
+            } else {
+                results.forEach(issue => {
+                    html += formatIssueCard(issue);
+                });
+            }
+            
+            container.innerHTML = html;
+        }
+
+        function formatIssueCard(issue) {
+            let effectivenessHTML = '';
+            if (issue.effectiveness) {
+                const effectivenessMap = {
+                    'corrected': '<span style="color: #28a745; font-weight: bold;">✅ Corrected</span>',
+                    'not-corrected': '<span style="color: #dc3545; font-weight: bold;">❌ Not Corrected</span>',
+                    'unsure': '<span style="color: #ffc107; font-weight: bold;">❓ Unsure</span>'
+                };
+                effectivenessHTML = ` | <strong>Effectiveness:</strong> ${effectivenessMap[issue.effectiveness]}`;
+            }
+            
+            return `
+                <div class="issue-card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                         <h4>${issue.line} - ${issue.machine}</h4>
-                        <p><strong>Issue:</strong> ${issue.description}</p>
-                        <p><strong>Solutions Tried:</strong> ${issue.solutions || 'None documented'}</p>
-                        ${effectivenessHTML}
-                        <p><strong>Date:</strong> ${new Date(issue.timestamp).toLocaleDateString()}</p>
-                        <p><strong>Operator:</strong> ${issue.operator}</p>
+                        <small style="color: #666;">${new Date(issue.timestamp).toLocaleDateString()}</small>
                     </div>
-                `;
+                    <p><strong>Issue:</strong> ${issue.description}</p>
+                    <p><strong>Solutions Tried:</strong> ${issue.solutions || 'None documented'}</p>
+                    <p><strong>Operator:</strong> ${issue.operator}${effectivenessHTML}</p>
+                </div>
+            `;
+        }
+
+        function displayHistory(issuesToDisplay) {
+            const container = document.getElementById('history-list');
+            
+            if (issuesToDisplay.length === 0) {
+                container.innerHTML = '<p style="color: #666; text-align: center; padding: 40px;">No issues logged yet.</p>';
+                return;
+            }
+            
+            const html = issuesToDisplay.slice().reverse().map(issue => {
+                return formatIssueCard(issue);
             }).join('');
             
             container.innerHTML = html;
         }
 
-        // ====== HISTORY FUNCTIONS ======
         function filterHistory() {
             const line = document.getElementById('filter-line').value;
             const machine = document.getElementById('filter-machine').value;
             
-            const filtered = issues.filter(issue => {
-                const matchLine = !line || issue.line === line;
-                const matchMachine = !machine || issue.machine === machine;
-                
-                return matchLine && matchMachine;
-            });
+            let filtered = issues;
+            
+            if (line) {
+                filtered = filtered.filter(issue => issue.line === line);
+            }
+            
+            if (machine) {
+                filtered = filtered.filter(issue => issue.machine === machine);
+            }
             
             displayHistory(filtered);
         }
 
-        function displayHistory(filteredIssues) {
-            const container = document.getElementById('history-list');
-            
-            if (filteredIssues.length === 0) {
-                container.innerHTML = '<p>No issues found matching the current filters.</p>';
-                return;
-            }
-
-            const sorted = [...filteredIssues].sort((a, b) => 
-                new Date(b.timestamp) - new Date(a.timestamp)
-            );
-
-            const html = sorted.map(issue => {
-                let effectivenessHTML = '';
-                if (issue.effectiveness) {
-                    const effectivenessMap = {
-                        'corrected': '<span style="color: #4caf50; font-weight: bold;">✓ Corrected</span>',
-                        'not-corrected': '<span style="color: #f44336; font-weight: bold;">✗ Not Corrected</span>',
-                        'unsure': '<span style="color: #ff9800; font-weight: bold;">? Unsure</span>'
-                    };
-                    effectivenessHTML = ` | <strong>Effectiveness:</strong> ${effectivenessMap[issue.effectiveness]}`;
-                }
-                
-                return `
-                    <div class="issue-card">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                            <h4>${issue.line} - ${issue.machine}</h4>
-                            <small style="color: #666;">${new Date(issue.timestamp).toLocaleDateString()}</small>
-                        </div>
-                        <p><strong>Issue:</strong> ${issue.description}</p>
-                        <p><strong>Solutions Tried:</strong> ${issue.solutions || 'None documented'}</p>
-                        <p><strong>Operator:</strong> ${issue.operator}${effectivenessHTML}</p>
-                    </div>
-                `;
-            }).join('');
-            
-            container.innerHTML = html;
-        }
-
-        // ====== AI WORK INSTRUCTION ======
-        async function generateWorkInstruction() {
-            const line = document.getElementById('ai-line').value;
-            const machine = document.getElementById('ai-machine').value;
-            const issue = document.getElementById('ai-issue').value;
-            
-            if (!line || !machine || !issue) {
-                alert('Please fill in all required fields');
-                return;
-            }
-
-            // Check configuration based on selected provider
-            if (selectedProvider === 'gemini') {
-                if (!geminiConfig.apiKey) {
-                    showConfigurationRequired('Google Gemini', 'Get your free API key at ai.google.dev');
-                    return;
-                }
-            } else if (selectedProvider === 'azure') {
-                if (!azureConfig.endpoint || !azureConfig.apiKey) {
-                    showConfigurationRequired('Azure OpenAI', 'Configure your Azure OpenAI credentials');
-                    return;
-                }
-            }
-
-            // Show loading state
-            document.getElementById('generated-instruction').innerHTML = `
-                <div class="work-instruction">
-                    <div class="wi-header">🤖 GENERATING AI WORK INSTRUCTION</div>
-                    <div class="wi-section" style="text-align: center; padding: 40px 20px;">
-                        <div class="loading-spinner"></div>
-                        <p style="margin-top: 20px; color: #666;">
-                            Analyzing issue and retrieving equipment manual...<br>
-                            Consulting ${selectedProvider === 'gemini' ? 'Google Gemini' : 'Microsoft Copilot'} AI...
-                        </p>
-                    </div>
-                </div>
-            `;
-
-            try {
-                // Get manual URL if available
-                const manualInfo = manualMappings[machine];
-                let manualContext = '';
-                
-                if (manualInfo && manualInfo.url) {
-                    manualContext = `\n\nEquipment Manual Reference: ${manualInfo.name}\nManual URL: ${manualInfo.url}\n(Note: You may need to reference specific sections of this manual for detailed procedures)`;
-                }
-
-                // Create the prompt
-                const prompt = `You are an expert manufacturing technician helping troubleshoot equipment issues. 
-
-EQUIPMENT INFORMATION:
-- Production Line: ${line}
-- Machine/Equipment: ${machine}
-- Issue Description: ${issue}
-${manualContext}
-
-TASK: Provide step-by-step work instructions to diagnose and resolve this issue.
-
-FORMAT YOUR RESPONSE AS FOLLOWS:
-
-WORK INSTRUCTION - ${machine} TROUBLESHOOTING
-
-SAFETY PRECAUTIONS:
-[List 3-5 key safety considerations]
-
-REQUIRED TOOLS & MATERIALS:
-[List necessary tools and materials]
-
-DIAGNOSTIC STEPS:
-[Numbered steps to identify the root cause]
-
-CORRECTIVE ACTION:
-[Detailed steps to fix the issue]
-
-VERIFICATION:
-[How to confirm the issue is resolved]
-
-DOCUMENTATION:
-[What should be recorded]
-
-Keep instructions clear, specific, and actionable. Use proper formatting with clear section headers.`;
-
-                // Call the appropriate AI service
-                let response;
-                if (selectedProvider === 'gemini') {
-                    response = await callGeminiAPI(prompt);
-                } else {
-                    response = await callAzureOpenAI(prompt);
-                }
-                
-                // Display the result
-                displayWorkInstruction(response, line, machine, issue);
-
-            } catch (error) {
-                console.error('Error generating work instruction:', error);
-                document.getElementById('generated-instruction').innerHTML = `
-                    <div class="work-instruction">
-                        <div class="wi-header" style="background: #dc3545;">❌ ERROR</div>
-                        <div class="wi-section">
-                            <p style="color: #721c24;"><strong>Failed to generate work instruction:</strong></p>
-                            <p style="color: #666;">${error.message}</p>
-                            <p style="margin-top: 15px; color: #666;">
-                                Please check your ${selectedProvider === 'gemini' ? 'Google Gemini' : 'Azure OpenAI'} configuration in the Settings tab.
-                            </p>
-                        </div>
-                    </div>
-                `;
-            }
-        }
-
-        function showConfigurationRequired(providerName, message) {
-            const html = `
-                <div class="work-instruction">
-                    <div class="wi-header">⚙️ CONFIGURATION REQUIRED</div>
-                    <div class="wi-section" style="text-align: center; padding: 40px 20px;">
-                        <h3 style="color: #856404;">${providerName} Not Configured</h3>
-                        <p style="color: #666; margin: 20px 0;">
-                            ${message}
-                        </p>
-                        <button onclick="switchTab('settings')" class="btn btn-primary">
-                            Go to Settings
-                        </button>
-                    </div>
-                </div>
-            `;
-            document.getElementById('generated-instruction').innerHTML = html;
-        }
-
-        function displayWorkInstruction(content, line, machine, issue) {
-            // Parse the content and format it nicely
-            const sections = content.split(/\n(?=[A-Z][A-Z\s]+:)/);
-            
-            let html = `
-                <div class="work-instruction">
-                    <div class="wi-header">
-                        🤖 AI-GENERATED WORK INSTRUCTION
-                    </div>
-                    
-                    <div class="wi-section">
-                        <p><strong>Equipment:</strong> ${machine} (${line})</p>
-                        <p><strong>Issue:</strong> ${issue}</p>
-                        <p><strong>Generated:</strong> ${new Date().toLocaleString()}</p>
-                        <p><strong>AI Provider:</strong> ${selectedProvider === 'gemini' ? 'Google Gemini (FREE)' : 'Azure OpenAI (Microsoft)'}</p>
-                    </div>
-            `;
-
-            sections.forEach(section => {
-                if (section.trim()) {
-                    const lines = section.split('\n').filter(line => line.trim());
-                    if (lines.length === 0) return;
-                    
-                    const title = lines[0].replace(':', '').trim();
-                    const items = lines.slice(1);
-
-                    html += `
-                        <div class="wi-section">
-                            <h4 style="color: #155724;">${title}</h4>
-                    `;
-
-                    items.forEach(item => {
-                        if (item.trim()) {
-                            html += `<p style="margin: 8px 0; padding-left: 15px;">• ${item.trim()}</p>`;
-                        }
-                    });
-
-                    html += `</div>`;
-                }
-            });
-
-            html += `
-                    <div class="wi-section" style="text-align: center; margin-top: 20px;">
-                        <button onclick="window.print()" class="btn btn-primary">🖨️ Print</button>
-                        <button onclick="downloadWorkInstruction()" class="btn btn-info">💾 Download</button>
-                    </div>
-                </div>
-            `;
-
-            document.getElementById('generated-instruction').innerHTML = html;
-        }
-
-        function downloadWorkInstruction() {
-            const content = document.getElementById('generated-instruction').innerText;
-            const blob = new Blob([content], { type: 'text/plain' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `work-instruction-${Date.now()}.txt`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        }
-
-        // ====== PROVIDER SELECTION ======
+        // ====== AI PROVIDER SELECTION ======
         function selectProvider(provider) {
             selectedProvider = provider;
             localStorage.setItem('selectedProvider', provider);
             
             // Update UI
-            document.querySelectorAll('.provider-option').forEach(opt => opt.classList.remove('active'));
-            const selectedElement = document.getElementById('provider-' + provider);
-            if (selectedElement) {
-                selectedElement.classList.add('active');
-            }
+            document.getElementById('gemini-card').classList.remove('selected');
+            document.getElementById('azure-card').classList.remove('selected');
+            document.getElementById(provider + '-card').classList.add('selected');
             
-            // Show/hide configuration sections
+            // Show/hide config sections
             const geminiConfig = document.getElementById('gemini-config');
             const azureConfig = document.getElementById('azure-config');
             if (geminiConfig) geminiConfig.style.display = provider === 'gemini' ? 'block' : 'none';
@@ -1937,7 +1645,7 @@ Keep instructions clear, specific, and actionable. Use proper formatting with cl
         async function callGeminiAPI(prompt) {
             const apiKey = geminiConfig.apiKey;
             // UPDATED: Use the correct, available model name
-            const model = geminiConfig.model || 'gemini-2.5-pro';
+            const model = geminiConfig.model || 'gemini-2.0-flash-exp';
             
             // UPDATED: Use the v1beta endpoint which works with your key
             const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
@@ -1986,7 +1694,7 @@ Keep instructions clear, specific, and actionable. Use proper formatting with cl
             geminiConfig = {
                 apiKey: keyInput ? keyInput.value : '',
                 // UPDATED: Use the correct, available model name
-                model: modelSelect ? modelSelect.value : 'gemini-2.5-pro'
+                model: modelSelect ? modelSelect.value : 'gemini-2.0-flash-exp'
             };
             
             localStorage.setItem('geminiConfig', JSON.stringify(geminiConfig));
@@ -2106,56 +1814,293 @@ Keep instructions clear, specific, and actionable. Use proper formatting with cl
                 return;
             }
 
+            // Group by production line
+            const manualsByLine = {};
+            for (const [key, info] of Object.entries(manualMappings)) {
+                // key format is "LINE-MACHINE"
+                const [line, machine] = key.split('-', 2);
+                if (!manualsByLine[line]) {
+                    manualsByLine[line] = [];
+                }
+                manualsByLine[line].push({ key, line, machine, info });
+            }
+
             let html = '';
-            for (const [machine, info] of Object.entries(manualMappings)) {
+            
+            // Render each line group
+            for (const [line, manuals] of Object.entries(manualsByLine).sort()) {
                 html += `
-                    <div class="manual-list-item">
-                        <div style="display: flex; justify-content: space-between; align-items: start;">
-                            <div style="flex: 1;">
-                                <h4>${machine}</h4>
-                                <p><strong>Manual:</strong> ${info.name}</p>
-                                <p><strong>URL:</strong> <a href="${info.url}" target="_blank" style="color: #007bff;">${info.url}</a></p>
-                            </div>
-                            <button onclick="removeManualMapping('${machine}')" class="btn" style="background: #dc3545; color: white; margin-left: 10px;">
-                                Delete
-                            </button>
+                    <div class="line-group">
+                        <div class="line-group-header">
+                            ${line} (${manuals.length} manual${manuals.length !== 1 ? 's' : ''})
                         </div>
-                    </div>
                 `;
+                
+                manuals.forEach(({ key, machine, info }) => {
+                    html += `
+                        <div class="manual-list-item">
+                            <div style="display: flex; justify-content: space-between; align-items: start;">
+                                <div style="flex: 1;">
+                                    <h4>${machine}</h4>
+                                    <p><strong>Manual:</strong> ${info.name}</p>
+                                    <p><strong>URL:</strong> <a href="${info.url}" target="_blank" style="color: #007bff; word-break: break-all;">${info.url}</a></p>
+                                </div>
+                                <button onclick="removeManualMapping('${key}')" class="btn" style="background: #dc3545; color: white; margin-left: 10px;">
+                                    Delete
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                html += '</div>';
             }
             
             container.innerHTML = html;
         }
 
         function addManualMapping() {
-            const machine = prompt('Enter equipment name (e.g., Heat Sealer 2):');
-            if (!machine) return;
+            // Step 1: Select Production Line
+            const line = prompt('Step 1/4: Select Production Line\n\nEnter line name (e.g., RX500, RX300, HH, JBFlex, L80):');
+            if (!line || !line.trim()) return;
 
-            const manualName = prompt('Enter manual name (e.g., Heat Sealer Operation Manual v2.1):');
-            if (!manualName) return;
+            // Step 2: Enter Equipment Name
+            const machine = prompt(`Step 2/4: Enter Equipment Name for ${line.trim()}\n\n(e.g., Unwind, Heat Sealer, Conveyor):`);
+            if (!machine || !machine.trim()) return;
 
-            const url = prompt('Enter manual URL (OneDrive, SharePoint, GitHub, etc.):');
-            if (!url) return;
+            // Step 3: Enter Manual Name
+            const manualName = prompt(`Step 3/4: Enter Manual Name\n\nFor: ${line.trim()} - ${machine.trim()}\n(e.g., Unwind Operation Manual v3.2):`);
+            if (!manualName || !manualName.trim()) return;
 
-            manualMappings[machine] = {
-                name: manualName,
-                url: url
+            // Step 4: Enter URL
+            const url = prompt(`Step 4/4: Enter Manual URL\n\nFor: ${line.trim()} - ${machine.trim()}\n(OneDrive, SharePoint, GitHub, etc.):`);
+            if (!url || !url.trim()) return;
+
+            // Create key in format "LINE-MACHINE"
+            const key = `${line.trim()}-${machine.trim()}`;
+
+            // Check if already exists
+            if (manualMappings[key]) {
+                if (!confirm(`A manual already exists for ${line.trim()} - ${machine.trim()}.\n\nDo you want to replace it?`)) {
+                    return;
+                }
+            }
+
+            manualMappings[key] = {
+                name: manualName.trim(),
+                url: url.trim()
             };
 
             localStorage.setItem('manualMappings', JSON.stringify(manualMappings));
             renderManualMappings();
             syncAIConfigsToCloud();
-            alert('✓ Manual mapping added and synced to cloud!');
+            alert(`✓ Manual mapping added for ${line.trim()} - ${machine.trim()} and synced to cloud!`);
         }
 
-        function removeManualMapping(machine) {
-            if (confirm(`Remove manual mapping for ${machine}?`)) {
-                delete manualMappings[machine];
+        function removeManualMapping(key) {
+            // Extract line and machine from key for display
+            const [line, machine] = key.split('-', 2);
+            
+            if (confirm(`Remove manual mapping for ${line} - ${machine}?`)) {
+                delete manualMappings[key];
                 localStorage.setItem('manualMappings', JSON.stringify(manualMappings));
                 renderManualMappings();
                 syncAIConfigsToCloud();
                 alert('✓ Manual mapping removed and synced to cloud!');
             }
+        }
+
+        // ====== AI WORK INSTRUCTION ======
+        async function generateWorkInstruction() {
+            const line = document.getElementById('ai-line').value;
+            const machine = document.getElementById('ai-machine').value;
+            const issue = document.getElementById('ai-issue').value;
+            
+            if (!line || !machine || !issue) {
+                alert('Please fill in all required fields');
+                return;
+            }
+
+            // Check configuration based on selected provider
+            if (selectedProvider === 'gemini') {
+                if (!geminiConfig.apiKey) {
+                    showConfigurationRequired('Google Gemini', 'Get your free API key at ai.google.dev');
+                    return;
+                }
+            } else if (selectedProvider === 'azure') {
+                if (!azureConfig.endpoint || !azureConfig.apiKey) {
+                    showConfigurationRequired('Azure OpenAI', 'Configure your Azure OpenAI credentials');
+                    return;
+                }
+            }
+
+            // Show loading state
+            document.getElementById('generated-instruction').innerHTML = `
+                <div class="work-instruction">
+                    <div class="wi-header">🤖 GENERATING AI WORK INSTRUCTION</div>
+                    <div class="wi-section" style="text-align: center; padding: 40px 20px;">
+                        <div class="loading-spinner"></div>
+                        <p style="margin-top: 20px; color: #666;">
+                            Analyzing issue and retrieving equipment manual...<br>
+                            Consulting ${selectedProvider === 'gemini' ? 'Google Gemini' : 'Microsoft Copilot'} AI...
+                        </p>
+                    </div>
+                </div>
+            `;
+
+            try {
+                // Get manual URL if available using LINE-MACHINE key
+                const manualKey = `${line}-${machine}`;
+                const manualInfo = manualMappings[manualKey];
+                let manualContext = '';
+                
+                if (manualInfo && manualInfo.url) {
+                    manualContext = `\n\nEquipment Manual Reference: ${manualInfo.name}\nManual URL: ${manualInfo.url}\n(Note: You may need to reference specific sections of this manual for detailed procedures)`;
+                }
+
+                // Create the prompt
+                const prompt = `You are an expert manufacturing technician helping troubleshoot equipment issues. 
+
+EQUIPMENT INFORMATION:
+- Production Line: ${line}
+- Machine/Equipment: ${machine}
+- Issue Description: ${issue}
+${manualContext}
+
+TASK: Provide step-by-step work instructions to diagnose and resolve this issue.
+
+FORMAT YOUR RESPONSE AS FOLLOWS:
+
+WORK INSTRUCTION - ${machine} TROUBLESHOOTING
+
+SAFETY PRECAUTIONS:
+[List 3-5 key safety considerations]
+
+REQUIRED TOOLS & MATERIALS:
+[List necessary tools and materials]
+
+DIAGNOSTIC STEPS:
+[Numbered steps to identify the root cause]
+
+CORRECTIVE ACTION:
+[Detailed steps to fix the issue]
+
+VERIFICATION:
+[How to confirm the issue is resolved]
+
+DOCUMENTATION:
+[What should be recorded]
+
+Keep instructions clear, specific, and actionable. Use proper formatting with clear section headers.`;
+
+                // Call the appropriate AI service
+                let response;
+                if (selectedProvider === 'gemini') {
+                    response = await callGeminiAPI(prompt);
+                } else {
+                    response = await callAzureOpenAI(prompt);
+                }
+                
+                // Display the result
+                displayWorkInstruction(response, line, machine, issue);
+
+            } catch (error) {
+                console.error('Error generating work instruction:', error);
+                document.getElementById('generated-instruction').innerHTML = `
+                    <div class="work-instruction">
+                        <div class="wi-header" style="background: #dc3545;">❌ ERROR</div>
+                        <div class="wi-section">
+                            <p style="color: #721c24;"><strong>Failed to generate work instruction:</strong></p>
+                            <p style="color: #666;">${error.message}</p>
+                            <p style="margin-top: 15px; color: #666;">
+                                Please check your ${selectedProvider === 'gemini' ? 'Google Gemini' : 'Azure OpenAI'} configuration in the Settings tab.
+                            </p>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        function showConfigurationRequired(providerName, message) {
+            const html = `
+                <div class="work-instruction">
+                    <div class="wi-header">⚙️ CONFIGURATION REQUIRED</div>
+                    <div class="wi-section" style="text-align: center; padding: 40px 20px;">
+                        <h3 style="color: #856404;">${providerName} Not Configured</h3>
+                        <p style="color: #666; margin: 20px 0;">
+                            ${message}
+                        </p>
+                        <button onclick="switchTab('settings')" class="btn btn-primary">
+                            Go to Settings
+                        </button>
+                    </div>
+                </div>
+            `;
+            document.getElementById('generated-instruction').innerHTML = html;
+        }
+
+        function displayWorkInstruction(content, line, machine, issue) {
+            // Parse the content and format it nicely
+            const sections = content.split(/\n(?=[A-Z][A-Z\s]+:)/);
+            
+            let html = `
+                <div class="work-instruction">
+                    <div class="wi-header">
+                        🤖 AI-GENERATED WORK INSTRUCTION
+                    </div>
+                    
+                    <div class="wi-section">
+                        <p><strong>Production Line:</strong> ${line}</p>
+                        <p><strong>Equipment:</strong> ${machine}</p>
+                        <p><strong>Issue:</strong> ${issue}</p>
+                        <p><strong>Generated:</strong> ${new Date().toLocaleString()}</p>
+                        <p><strong>AI Provider:</strong> ${selectedProvider === 'gemini' ? 'Google Gemini (FREE)' : 'Azure OpenAI (Microsoft)'}</p>
+                    </div>
+            `;
+
+            sections.forEach(section => {
+                if (section.trim()) {
+                    const lines = section.split('\n').filter(line => line.trim());
+                    if (lines.length === 0) return;
+                    
+                    const title = lines[0].replace(':', '').trim();
+                    const items = lines.slice(1);
+
+                    html += `
+                        <div class="wi-section">
+                            <h4 style="color: #155724;">${title}</h4>
+                    `;
+
+                    items.forEach(item => {
+                        if (item.trim()) {
+                            html += `<p style="margin: 8px 0; padding-left: 15px;">• ${item.trim()}</p>`;
+                        }
+                    });
+
+                    html += `</div>`;
+                }
+            });
+
+            html += `
+                    <div class="wi-section" style="text-align: center; margin-top: 20px;">
+                        <button onclick="window.print()" class="btn btn-primary">🖨️ Print</button>
+                        <button onclick="downloadWorkInstruction()" class="btn btn-info">💾 Download</button>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('generated-instruction').innerHTML = html;
+        }
+
+        function downloadWorkInstruction() {
+            const content = document.getElementById('generated-instruction').innerText;
+            const blob = new Blob([content], { type: 'text/plain' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'work-instruction.txt';
+            a.click();
+            window.URL.revokeObjectURL(url);
         }
     </script>
 </body>
