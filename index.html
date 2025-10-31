@@ -495,7 +495,7 @@
         <div class="header">
             <h1>🏭 Manufacturing Issue Tracker</h1>
             <p>Track equipment issues and generate AI-powered work instructions</p>
-            <div class="version">v11.2</div>
+            <div class="version">v11.5</div>
         </div>
 
         <div id="sync-status" class="sync-status"></div>
@@ -749,6 +749,18 @@
 
                 <button onclick="addManualMapping()" class="btn btn-success">+ Add Manual Mapping</button>
             </div>
+
+            <div class="config-section">
+                <h3>🔍 Cloud Sync Verification</h3>
+                <p style="color: #666; margin-bottom: 15px;">
+                    Use these tools to verify your manual mappings are properly syncing to Google Sheets.
+                </p>
+                
+                <button onclick="verifyCloudSync()" class="btn btn-info">🔍 Check What's in Google Sheets</button>
+                <button onclick="forceResyncAll()" class="btn btn-warning">🔄 Force Re-sync All Configs</button>
+                
+                <div id="sync-verification-result" style="margin-top: 15px;"></div>
+            </div>
         </div>
 
         <div id="action-modal" class="modal" onclick="handleModalClick(event)">
@@ -779,6 +791,40 @@
 
                 <div style="margin-top: 20px; text-align: right;">
                     <button type="button" class="btn" onclick="closeActionModal()" style="background: #6c757d; color: white;">Cancel</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="manual-modal" class="modal" onclick="handleManualModalClick(event)">
+            <div class="modal-content" onclick="event.stopPropagation()">
+                <h3 style="margin-bottom: 20px; color: #2c3e50;">Add Equipment Manual Mapping</h3>
+                
+                <div class="form-group">
+                    <label for="manual-line">Production Line *</label>
+                    <select id="manual-line" class="form-control" onchange="updateManualMachineOptions()">
+                        <option value="">Select Production Line</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="manual-machine">Machine/Equipment *</label>
+                    <input type="text" id="manual-machine" class="form-control" list="manual-machine-list" placeholder="Select or type equipment name">
+                    <datalist id="manual-machine-list"></datalist>
+                </div>
+
+                <div class="form-group">
+                    <label for="manual-name">Manual Name *</label>
+                    <input type="text" id="manual-name" class="form-control" placeholder="e.g., Unwind Operation Manual v3.2">
+                </div>
+
+                <div class="form-group">
+                    <label for="manual-url">Manual URL *</label>
+                    <input type="text" id="manual-url" class="form-control" placeholder="https://... (OneDrive, SharePoint, GitHub, etc.)">
+                </div>
+
+                <div style="margin-top: 20px; text-align: right;">
+                    <button type="button" class="btn" onclick="closeManualModal()" style="background: #6c757d; color: white;">Cancel</button>
+                    <button type="button" class="btn btn-success" onclick="saveManualMapping()">Save Manual Mapping</button>
                 </div>
             </div>
         </div>
@@ -1927,41 +1973,130 @@
         }
 
         function addManualMapping() {
-            // Step 1: Select Production Line
-            const line = prompt('Step 1/4: Select Production Line\n\nEnter line name (e.g., RX500, RX300, HH, JBFlex, L80):');
-            if (!line || !line.trim()) return;
+            // Populate line dropdown
+            const lineSelect = document.getElementById('manual-line');
+            lineSelect.innerHTML = '<option value="">Select Production Line</option>';
+            
+            // Get unique lines from machinesByLine and historical data
+            const allLines = new Set(Object.keys(machinesByLine));
+            issues.forEach(issue => allLines.add(issue.line));
+            
+            Array.from(allLines).sort().forEach(line => {
+                const option = document.createElement('option');
+                option.value = line;
+                option.textContent = line;
+                lineSelect.appendChild(option);
+            });
+            
+            // Clear form
+            document.getElementById('manual-machine').value = '';
+            document.getElementById('manual-name').value = '';
+            document.getElementById('manual-url').value = '';
+            
+            // Show modal
+            document.getElementById('manual-modal').style.display = 'block';
+        }
 
-            // Step 2: Enter Equipment Name
-            const machine = prompt(`Step 2/4: Enter Equipment Name for ${line.trim()}\n\n(e.g., Unwind, Heat Sealer, Conveyor):`);
-            if (!machine || !machine.trim()) return;
+        function updateManualMachineOptions() {
+            const line = document.getElementById('manual-line').value;
+            const machineList = document.getElementById('manual-machine-list');
+            
+            machineList.innerHTML = '';
+            
+            if (!line) return;
+            
+            // Get machines from predefined list
+            const machines = new Set();
+            if (machinesByLine[line]) {
+                machinesByLine[line].forEach(m => machines.add(m));
+            }
+            
+            // Add machines from historical data
+            issues
+                .filter(issue => issue.line === line)
+                .forEach(issue => machines.add(issue.machine));
+            
+            // Populate datalist
+            Array.from(machines).sort().forEach(machine => {
+                const option = document.createElement('option');
+                option.value = machine;
+                machineList.appendChild(option);
+            });
+        }
 
-            // Step 3: Enter Manual Name
-            const manualName = prompt(`Step 3/4: Enter Manual Name\n\nFor: ${line.trim()} - ${machine.trim()}\n(e.g., Unwind Operation Manual v3.2):`);
-            if (!manualName || !manualName.trim()) return;
+        function closeManualModal() {
+            document.getElementById('manual-modal').style.display = 'none';
+        }
 
-            // Step 4: Enter URL
-            const url = prompt(`Step 4/4: Enter Manual URL\n\nFor: ${line.trim()} - ${machine.trim()}\n(OneDrive, SharePoint, GitHub, etc.):`);
-            if (!url || !url.trim()) return;
+        function handleManualModalClick(event) {
+            if (event.target.id === 'manual-modal') {
+                closeManualModal();
+            }
+        }
 
+        async function saveManualMapping() {
+            const line = document.getElementById('manual-line').value.trim();
+            const machine = document.getElementById('manual-machine').value.trim();
+            const manualName = document.getElementById('manual-name').value.trim();
+            const url = document.getElementById('manual-url').value.trim();
+            
+            // Validate inputs
+            if (!line) {
+                alert('Please select a production line');
+                return;
+            }
+            if (!machine) {
+                alert('Please enter equipment name');
+                return;
+            }
+            if (!manualName) {
+                alert('Please enter manual name');
+                return;
+            }
+            if (!url) {
+                alert('Please enter manual URL');
+                return;
+            }
+            
             // Create key in format "LINE-MACHINE"
-            const key = `${line.trim()}-${machine.trim()}`;
-
+            const key = `${line}-${machine}`;
+            
             // Check if already exists
             if (manualMappings[key]) {
-                if (!confirm(`A manual already exists for ${line.trim()} - ${machine.trim()}.\n\nDo you want to replace it?`)) {
+                if (!confirm(`A manual already exists for ${line} - ${machine}.\n\nDo you want to replace it?`)) {
                     return;
                 }
             }
-
+            
+            // Save mapping
             manualMappings[key] = {
-                name: manualName.trim(),
-                url: url.trim()
+                name: manualName,
+                url: url
             };
-
+            
+            // Save to localStorage
             localStorage.setItem('manualMappings', JSON.stringify(manualMappings));
+            
+            // Close modal
+            closeManualModal();
+            
+            // Update display
             renderManualMappings();
-            syncAIConfigsToCloud();
-            alert(`✓ Manual mapping added for ${line.trim()} - ${machine.trim()} and synced to cloud!`);
+            
+            // Sync to cloud with better feedback
+            showSyncStatus('syncing', '☁️ Syncing manual mapping to Google Sheets...');
+            
+            try {
+                const success = await syncAIConfigsToCloud();
+                if (success) {
+                    showSyncStatus('success', `✓ Manual mapping for ${line} - ${machine} saved and synced to cloud!`);
+                } else {
+                    showSyncStatus('error', '✗ Cloud sync may have failed - manual saved locally. Check Google Sheet to verify.');
+                }
+            } catch (error) {
+                console.error('Sync error:', error);
+                showSyncStatus('error', '✗ Cloud sync failed - manual saved locally only');
+            }
         }
 
         function removeManualMapping(key) {
@@ -2247,6 +2382,94 @@ Keep instructions clear, specific, and actionable. Use proper formatting with cl
 
             // Display in a fun alert
             alert('🤖 ' + funnyPhrase);
+        }
+
+        // ====== CLOUD SYNC VERIFICATION ======
+        async function verifyCloudSync() {
+            const resultDiv = document.getElementById('sync-verification-result');
+            resultDiv.innerHTML = '<p style="color: #666;">🔍 Checking Google Sheets...</p>';
+            
+            try {
+                const response = await fetch(GOOGLE_SCRIPT_URL + '?action=load');
+                const data = await response.json();
+                
+                if (data.success) {
+                    let html = '<div style="background: #e8f5e9; border: 1px solid #4caf50; border-radius: 8px; padding: 15px; margin-top: 10px;">';
+                    html += '<h4 style="color: #2e7d32; margin-bottom: 10px;">✓ Cloud Connection Successful</h4>';
+                    
+                    // Show what's stored
+                    if (data.aiConfigs && data.aiConfigs.manualMappings) {
+                        const cloudMappings = data.aiConfigs.manualMappings;
+                        const mappingCount = Object.keys(cloudMappings).length;
+                        
+                        html += `<p><strong>Manual Mappings in Google Sheets:</strong> ${mappingCount} mapping${mappingCount !== 1 ? 's' : ''}</p>`;
+                        
+                        if (mappingCount > 0) {
+                            html += '<ul style="margin: 10px 0; padding-left: 20px;">';
+                            for (const [key, info] of Object.entries(cloudMappings)) {
+                                const [line, machine] = key.split('-', 2);
+                                html += `<li>${line} - ${machine}: ${info.name}</li>`;
+                            }
+                            html += '</ul>';
+                        }
+                        
+                        // Compare with local
+                        const localCount = Object.keys(manualMappings).length;
+                        if (localCount !== mappingCount) {
+                            html += `<p style="color: #ff9800; margin-top: 10px;"><strong>⚠️ Warning:</strong> Local storage has ${localCount} mapping${localCount !== 1 ? 's' : ''}, but cloud has ${mappingCount}. They may be out of sync!</p>`;
+                        } else {
+                            html += '<p style="color: #4caf50; margin-top: 10px;">✓ Local and cloud are in sync!</p>';
+                        }
+                    } else {
+                        html += '<p style="color: #ff9800;">⚠️ No manual mappings found in Google Sheets</p>';
+                    }
+                    
+                    html += '</div>';
+                    resultDiv.innerHTML = html;
+                } else {
+                    throw new Error(data.message || 'Unknown error');
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div style="background: #ffebee; border: 1px solid #f44336; border-radius: 8px; padding: 15px; margin-top: 10px;">
+                        <h4 style="color: #c62828;">❌ Cloud Connection Failed</h4>
+                        <p style="color: #666; margin-top: 10px;">Error: ${error.message}</p>
+                        <p style="color: #666; margin-top: 10px;"><strong>Possible causes:</strong></p>
+                        <ul style="margin: 10px 0; padding-left: 20px; color: #666;">
+                            <li>Google Apps Script URL not set correctly</li>
+                            <li>Script not deployed as web app</li>
+                            <li>Script permissions not set to "Anyone"</li>
+                            <li>Network connection issue</li>
+                        </ul>
+                        <p style="color: #666; margin-top: 10px;">Your manual mappings are saved locally but won't sync to other devices until this is fixed.</p>
+                    </div>
+                `;
+            }
+        }
+
+        async function forceResyncAll() {
+            if (!confirm('This will push all your current local manual mappings to Google Sheets.\n\nContinue?')) {
+                return;
+            }
+            
+            const resultDiv = document.getElementById('sync-verification-result');
+            resultDiv.innerHTML = '<p style="color: #666;">🔄 Forcing re-sync...</p>';
+            
+            try {
+                await syncAIConfigsToCloud();
+                
+                // Verify it worked
+                setTimeout(async () => {
+                    await verifyCloudSync();
+                }, 2000);
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div style="background: #ffebee; border: 1px solid #f44336; border-radius: 8px; padding: 15px; margin-top: 10px;">
+                        <h4 style="color: #c62828;">❌ Re-sync Failed</h4>
+                        <p style="color: #666; margin-top: 10px;">Error: ${error.message}</p>
+                    </div>
+                `;
+            }
         }
     </script>
 </body>
