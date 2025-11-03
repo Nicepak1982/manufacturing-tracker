@@ -575,7 +575,7 @@
         <div class="header">
             <h1>🏭 Manufacturing Issue Tracker</h1>
             <p>Track equipment issues and generate AI-powered work instructions</p>
-            <div class="version">v12.4</div>
+            <div class="version">v12.5</div>
         </div>
 
         <div id="sync-status" class="sync-status"></div>
@@ -993,8 +993,7 @@
                     <label for="manual-url">Manual URL *</label>
                     <input type="text" id="manual-url" class="form-control" placeholder="https://drive.google.com/file/d/... 
  (Google Drive link)">
-                    <small style="color: #666;
- font-size: 12px;">📁 Paste your Google Drive link - PDF will be automatically fetched when needed</small>
+                    <small style="color: #666;">📁 Paste your Google Drive link - PDF will be automatically fetched when needed</small>
                 </div>
 
                 <div style="margin-top: 20px;
@@ -1150,6 +1149,8 @@
                     
                     document.body.appendChild(form);
                     form.submit();
+                    if (form) form.remove(); // Cleanup form element immediately
+                    
  setTimeout(() => {
                         showSyncStatus('success', '✓ Synced to Google Sheets successfully');
                         resolve(true);
@@ -1275,6 +1276,7 @@
                     
                     document.body.appendChild(form);
                     form.submit();
+                    if (form) form.remove(); // Cleanup form element immediately
                     
                     setTimeout(() => {
                         showSyncStatus('success', '✓ AI configs synced to Google Sheets');
@@ -1869,8 +1871,7 @@
             let html = `
                 <div style="background: linear-gradient(135deg, #e8f4f8, #f0f8ff); border: 2px solid #007bff; border-radius: 10px; padding: 20px; margin: 20px 0;">
                     <h3 style="color: #007bff; margin-bottom: 15px;">📊 Solution Effectiveness Analysis</h3>
-                    <p style="color: #666; margin-bottom: 15px;">Found <strong>${results.length}</strong> matching issue${results.length !== 1 ?
- 's' : ''}. Here are the most effective solutions:</p>
+                    <p style="color: #666; margin-bottom: 15px;">Found <strong>${results.length}</strong> matching issue${results.length !== 1 ? 's' : ''}. Here are the most effective solutions:</p>
             `;
             if (solutionAnalysis.length > 0) {
                 html += '<div style="margin-top: 15px;">';
@@ -2391,7 +2392,7 @@
             }
             
             if (fileId) {
-                // *** FIX APPLIED HERE: Use export=view for more reliable direct access to public files. ***
+                // *** FIX APPLIED HERE: Use export=view format for more reliable direct access to public files. ***
                 return `https://drive.google.com/uc?id=${fileId}&export=view`; 
             }
             
@@ -2947,6 +2948,8 @@
                     
                     document.body.appendChild(form);
                     form.submit();
+                    if (form) form.remove(); // Cleanup form element immediately
+                    
                     setTimeout(() => {
                         resolve(true);
                     }, 1000);
@@ -3588,8 +3591,7 @@ Keep your response concise, focused, and actionable - aimed at helping the techn
                         // Compare with local
                         const localCount = Object.keys(manualMappings).length;
                         if (localCount !== mappingCount) {
-                            html += `<p style="color: #ff9800; margin-top: 10px;"><strong>⚠️ Warning:</strong> Local storage has ${localCount} mapping${localCount !== 1 ?
- 's' : ''}, but cloud has ${mappingCount}. They may be out of sync!</p>`;
+                            html += `<p style="color: #ff9800; margin-top: 10px;"><strong>⚠️ Warning:</strong> Local storage has ${localCount} mapping${localCount !== 1 ? 's' : ''}, but cloud has ${mappingCount}. They may be out of sync!</p>`;
  } else {
                             html += '<p style="color: #4caf50; margin-top: 10px;">✓ Local and cloud are in sync!</p>';
  }
