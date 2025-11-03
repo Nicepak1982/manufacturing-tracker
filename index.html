@@ -571,7 +571,7 @@
         <div class="header">
             <h1>🏭 Manufacturing Issue Tracker</h1>
             <p>Track equipment issues and generate AI-powered work instructions</p>
-            <div class="version">v12.1</div>
+            <div class="version">v12.2</div>
         </div>
 
         <div id="sync-status" class="sync-status"></div>
@@ -675,7 +675,7 @@
         <div id="ai-tab" class="tab-content">
             <h2><span onclick="robotEasterEgg()" style="cursor: pointer; display: inline-block; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.2) rotate(10deg)'" onmouseout="this.style.transform='scale(1) rotate(0deg)'">🤖</span> AI-Generated Work Instructions</h2>
             <p style="color: #666; margin-bottom: 20px;">
-                Generate detailed troubleshooting instructions using AI. Manuals will be referenced automatically if configured.
+                Generate detailed work instructions based on your equipment manuals and definitions. The AI will only use information from your configured manuals and will indicate when no information is available.
             </p>
 
             <div class="form-group">
@@ -696,8 +696,8 @@
             </div>
 
             <div class="form-group">
-                <label for="ai-issue">Issue Description *</label>
-                <textarea id="ai-issue" class="form-control" rows="4" required placeholder="Describe the problem in detail..."></textarea>
+                <label for="ai-issue">How do I... *</label>
+                <textarea id="ai-issue" class="form-control" rows="4" required placeholder="Describe what you need help with... (e.g., 'replace the heating element on Heat Sealer 2' or 'calibrate the tension sensor')"></textarea>
             </div>
 
             <button onclick="generateWorkInstruction()" class="btn btn-primary">🤖 Generate Work Instruction</button>
@@ -2618,7 +2618,7 @@
                     <div style="padding: 60px 20px; text-align: center; background: white;">
                         <div class="loading-spinner"></div>
                         <p style="margin-top: 25px; color: #666; font-size: 15px;">
-                            <strong>Analyzing issue and retrieving equipment manual...</strong><br>
+                            <strong>Retrieving information from equipment manuals and definitions...</strong><br>
                             <span style="font-size: 14px;">Consulting ${selectedProvider === 'gemini' ? 'Google Gemini' : 'Azure OpenAI'} AI...</span>
                         </p>
                     </div>
@@ -2639,39 +2639,45 @@
                 const definitionsContext = getDefinitionsContext();
 
                 // Create the prompt
-                const prompt = `You are an expert manufacturing technician helping troubleshoot equipment issues at a baby wipes production facility.
+                const prompt = `You are a technical documentation assistant at a baby wipes production facility. Your role is to create work instructions ONLY using information from the provided manuals and definitions.
+
 ${definitionsContext}
 EQUIPMENT INFORMATION:
 - Production Line: ${line}
 - Machine/Equipment: ${machine}
-- Issue Description: ${issue}
+- Task/Procedure: ${issue}
 ${manualContext}
 
-TASK: Provide step-by-step work instructions to diagnose and resolve this issue.
+CRITICAL RULES:
+1. ONLY use information explicitly provided in the manuals, definitions, and references above
+2. NEVER make assumptions, guess, or add information not in the provided sources
+3. For EVERY piece of information, cite the source with: [Source: Document Name, Page X, Section Y]
+4. If information is not available in the provided sources, you MUST state: "No information on this is available in the provided documentation."
+5. Do not fill gaps with general knowledge - only use what is provided
+
+TASK: Create a detailed work instruction for the requested task/procedure.
 
 FORMAT YOUR RESPONSE AS FOLLOWS:
 
-WORK INSTRUCTION - ${machine} TROUBLESHOOTING
+WORK INSTRUCTION - ${machine.toUpperCase()}
 
 SAFETY PRECAUTIONS:
-[List 3-5 key safety considerations]
+All company policies and LOTO (Lockout/Tagout) procedures must be followed at all times.
+[Then list any specific safety information found in the manuals with citations - if none found, state "No specific safety information available in provided documentation."]
 
 REQUIRED TOOLS & MATERIALS:
-[List necessary tools and materials]
+[List tools/materials from manual with citations - if none found, state "No specific tool list available in provided documentation."]
 
-DIAGNOSTIC STEPS:
-[Numbered steps to identify the root cause]
-
-CORRECTIVE ACTION:
-[Detailed steps to fix the issue]
+PROCEDURE STEPS:
+[Numbered steps with detailed citations for each step - if procedure not documented, state "No documented procedure available for this task."]
 
 VERIFICATION:
-[How to confirm the issue is resolved]
+[How to verify completion with citations - if none found, state "No verification procedure available in provided documentation."]
 
-DOCUMENTATION:
-[What should be recorded]
+NOTES & REFERENCES:
+[Any additional relevant information with citations]
 
-Keep instructions clear, specific, and actionable. Use proper formatting with clear section headers.`;
+Remember: Every fact, number, specification, or procedure MUST be cited. If you cannot find information, explicitly say so rather than making it up.`;
 
                 // Call the appropriate AI service
                 let response;
@@ -2737,8 +2743,8 @@ Keep instructions clear, specific, and actionable. Use proper formatting with cl
                     <div class="wi-caution">
                         <div class="wi-caution-icon">⚠️</div>
                         <div>
-                            <strong>CAUTION: AI-Generated Work Instruction</strong><br>
-                            <span style="font-size: 13px; opacity: 0.95;">Contact supervisor to review prior to implementing this procedure. Always follow company safety protocols.</span>
+                            <strong>CAUTION: AI-Generated Information</strong><br>
+                            <span style="font-size: 13px; opacity: 0.95;">This information is AI-generated. User is responsible for referencing work instructions and manuals for accuracy. Contact supervisor to review prior to implementing any procedure.</span>
                         </div>
                     </div>
                     
@@ -2752,7 +2758,7 @@ Keep instructions clear, specific, and actionable. Use proper formatting with cl
                             <span class="wi-metadata-value">${machine}</span>
                         </div>
                         <div class="wi-metadata-item">
-                            <span class="wi-metadata-label">Issue</span>
+                            <span class="wi-metadata-label">Task/Procedure</span>
                             <span class="wi-metadata-value">${issue}</span>
                         </div>
                         <div class="wi-metadata-item">
