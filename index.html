@@ -571,7 +571,7 @@
         <div class="header">
             <h1>🏭 Manufacturing Issue Tracker</h1>
             <p>Track equipment issues and generate AI-powered work instructions</p>
-            <div class="version">v11.0</div>
+            <div class="version">v12.1</div>
         </div>
 
         <div id="sync-status" class="sync-status"></div>
@@ -627,6 +627,7 @@
                 </div>
 
                 <button type="submit" id="submit-issue-btn" class="btn btn-primary" style="display: none;">Submit Issue Report</button>
+                <button type="button" id="ask-ai-btn" class="btn btn-info" style="display: none;" onclick="askAIForAssistance()">🤖 Ask AI For Assistance</button>
             </form>
         </div>
 
@@ -1536,8 +1537,9 @@
                 if (addAnother) {
                     showAddActionModal();
                 } else {
-                    // Show submit button now that we have at least one action
+                    // Show submit button and AI assistance button now that we have at least one action
                     document.getElementById('submit-issue-btn').style.display = 'inline-block';
+                    document.getElementById('ask-ai-btn').style.display = 'inline-block';
                 }
             }, 100);
         }
@@ -1579,9 +1581,10 @@
                 currentActions.splice(index, 1);
                 updateActionsDisplay();
                 
-                // Hide submit button if no actions remain
+                // Hide submit button and AI button if no actions remain
                 if (currentActions.length === 0) {
                     document.getElementById('submit-issue-btn').style.display = 'none';
+                    document.getElementById('ask-ai-btn').style.display = 'none';
                 }
             }
         }
@@ -1633,6 +1636,13 @@
             currentActions = [];
             updateActionsDisplay();
             document.getElementById('submit-issue-btn').style.display = 'none';
+            document.getElementById('ask-ai-btn').style.display = 'none';
+            
+            // Clear AI assistance display if it exists
+            const aiAssistanceDiv = document.getElementById('ai-assistance-display');
+            if (aiAssistanceDiv) {
+                aiAssistanceDiv.innerHTML = '';
+            }
         }
 
         // ====== SEARCH FUNCTIONS ======
@@ -2804,6 +2814,197 @@ Keep instructions clear, specific, and actionable. Use proper formatting with cl
             a.click();
             window.URL.revokeObjectURL(url);
         }
+
+        // ====== AI ASSISTANCE FOR REPORT ISSUE ======
+        async function askAIForAssistance() {
+            // Gather all the current issue information
+            const line = document.getElementById('line').value;
+            const machine = document.getElementById('machine').value;
+            const description = document.getElementById('description').value;
+            
+            if (!line || !machine || !description || currentActions.length === 0) {
+                alert('Please fill in all issue details and add at least one action before requesting AI assistance.');
+                return;
+            }
+
+            // Check configuration based on selected provider
+            if (selectedProvider === 'gemini') {
+                if (!geminiConfig.apiKey) {
+                    showConfigurationRequired('Google Gemini', 'Get your free API key at ai.google.dev');
+                    return;
+                }
+            } else if (selectedProvider === 'azure') {
+                if (!azureConfig.endpoint || !azureConfig.apiKey) {
+                    showConfigurationRequired('Azure OpenAI', 'Configure your Azure OpenAI credentials');
+                    return;
+                }
+            }
+
+            // Create a modal/div to show the AI response (we'll reuse the AI tab's display area)
+            // First, create a dedicated display area if it doesn't exist
+            let aiAssistanceDiv = document.getElementById('ai-assistance-display');
+            if (!aiAssistanceDiv) {
+                aiAssistanceDiv = document.createElement('div');
+                aiAssistanceDiv.id = 'ai-assistance-display';
+                aiAssistanceDiv.style.marginTop = '30px';
+                document.getElementById('report-tab').appendChild(aiAssistanceDiv);
+            }
+
+            // Show loading state
+            aiAssistanceDiv.innerHTML = `
+                <div class="work-instruction">
+                    <div class="wi-header">🤖 AI ANALYZING YOUR ISSUE</div>
+                    <div style="padding: 60px 20px; text-align: center; background: white;">
+                        <div class="loading-spinner"></div>
+                        <p style="margin-top: 25px; color: #666; font-size: 15px;">
+                            <strong>Analyzing your issue and actions taken...</strong><br>
+                            <span style="font-size: 14px;">Consulting ${selectedProvider === 'gemini' ? 'Google Gemini' : 'Azure OpenAI'} AI for best course of action...</span>
+                        </p>
+                    </div>
+                </div>
+            `;
+
+            // Scroll to the AI assistance display
+            aiAssistanceDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+            try {
+                // Get manual URL if available using LINE-MACHINE key
+                const manualKey = `${line}-${machine}`;
+                const manualInfo = manualMappings[manualKey];
+                let manualContext = '';
+                
+                if (manualInfo && manualInfo.url) {
+                    manualContext = `\n\nEquipment Manual Reference: ${manualInfo.name}\nManual URL: ${manualInfo.url}\n(Note: Reference specific sections of this manual for detailed procedures)`;
+                }
+
+                // Get definitions context
+                const definitionsContext = getDefinitionsContext();
+
+                // Format the actions taken
+                let actionsText = '\n\nACTIONS ALREADY TAKEN:\n';
+                currentActions.forEach((act, index) => {
+                    actionsText += `${index + 1}. ${act.action}\n   Result: ${act.status}\n`;
+                });
+
+                // Create the prompt - focused on next best action, not full work instruction
+                const prompt = `You are an expert manufacturing technician helping troubleshoot equipment issues at a baby wipes production facility.
+${definitionsContext}
+CURRENT SITUATION:
+- Production Line: ${line}
+- Machine/Equipment: ${machine}
+- Issue Description: ${description}
+${actionsText}${manualContext}
+
+TASK: Based on the actions already taken and their results, recommend the BEST NEXT COURSE OF ACTION to resolve this issue. 
+
+DO NOT provide a full work instruction. Instead, provide:
+1. A brief analysis of what the actions taken tell us about the problem
+2. The most likely root cause based on the information
+3. Specific next steps that should be taken (2-4 recommended actions)
+4. Any safety considerations for these next steps
+5. References to relevant manual sections or documentation if applicable
+
+Keep your response concise, focused, and actionable - aimed at helping the technician decide what to try next.`;
+
+                // Call the appropriate AI service
+                let response;
+                if (selectedProvider === 'gemini') {
+                    response = await callGeminiAPI(prompt);
+                } else {
+                    response = await callAzureOpenAI(prompt);
+                }
+                
+                // Display the result
+                displayAIAssistance(response, line, machine, description);
+
+            } catch (error) {
+                console.error('Error getting AI assistance:', error);
+                aiAssistanceDiv.innerHTML = `
+                    <div class="work-instruction">
+                        <div class="wi-header" style="background: linear-gradient(135deg, #dc3545, #c82333);">❌ ERROR</div>
+                        <div style="padding: 40px 25px; text-align: center; background: white;">
+                            <div style="font-size: 48px; margin-bottom: 20px;">⚠️</div>
+                            <h3 style="color: #dc3545; margin-bottom: 15px;">Failed to Get AI Assistance</h3>
+                            <p style="color: #666; margin-bottom: 20px; font-size: 15px;">${error.message}</p>
+                            <p style="color: #666; font-size: 14px;">
+                                Please check your ${selectedProvider === 'gemini' ? 'Google Gemini' : 'Azure OpenAI'} configuration in the Setup tab.
+                            </p>
+                            <button onclick="switchTab('settings')" class="btn btn-primary" style="margin-top: 20px;">
+                                Go to Setup
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        function displayAIAssistance(aiResponse, line, machine, issue) {
+            const aiAssistanceDiv = document.getElementById('ai-assistance-display');
+            
+            // Parse the response into sections (similar to work instruction but simpler)
+            const sections = aiResponse.split('\n\n');
+            
+            let html = `
+                <div class="work-instruction">
+                    <div class="wi-header">🤖 AI RECOMMENDED COURSE OF ACTION</div>
+                    
+                    <div class="wi-caution">
+                        <div class="wi-caution-icon">⚠️</div>
+                        <div>
+                            <strong>CAUTION: AI-Generated Recommendation</strong><br>
+                            <span style="font-size: 13px; opacity: 0.95;">Contact supervisor to review prior to implementing these recommendations. Always follow company safety protocols.</span>
+                        </div>
+                    </div>
+                    
+                    <div class="wi-metadata">
+                        <div class="wi-metadata-item">
+                            <span class="wi-metadata-label">Production Line</span>
+                            <span class="wi-metadata-value">${line}</span>
+                        </div>
+                        <div class="wi-metadata-item">
+                            <span class="wi-metadata-label">Equipment</span>
+                            <span class="wi-metadata-value">${machine}</span>
+                        </div>
+                        <div class="wi-metadata-item">
+                            <span class="wi-metadata-label">Issue</span>
+                            <span class="wi-metadata-value">${issue}</span>
+                        </div>
+                        <div class="wi-metadata-item">
+                            <span class="wi-metadata-label">Generated</span>
+                            <span class="wi-metadata-value">${new Date().toLocaleString()}</span>
+                        </div>
+                        <div class="wi-metadata-item">
+                            <span class="wi-metadata-label">AI Provider</span>
+                            <span class="wi-metadata-value">${selectedProvider === 'gemini' ? 'Google Gemini' : 'Azure OpenAI'}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="wi-section">
+                        <div class="wi-content" style="line-height: 1.8; white-space: pre-wrap;">${aiResponse}</div>
+                    </div>
+                    
+                    <div class="wi-actions">
+                        <button onclick="window.print()" class="btn btn-primary">🖨️ Print Recommendation</button>
+                        <button onclick="downloadAIAssistance()" class="btn btn-info">💾 Download as Text</button>
+                        <button onclick="document.getElementById('ai-assistance-display').innerHTML = ''" class="btn btn-warning">✖️ Close</button>
+                    </div>
+                </div>
+            `;
+
+            aiAssistanceDiv.innerHTML = html;
+        }
+
+        function downloadAIAssistance() {
+            const content = document.getElementById('ai-assistance-display').innerText;
+            const blob = new Blob([content], { type: 'text/plain' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'ai-assistance-recommendation.txt';
+            a.click();
+            window.URL.revokeObjectURL(url);
+        }
+
 
         // ====== EASTER EGG ======
         function robotEasterEgg() {
