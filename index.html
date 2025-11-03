@@ -495,7 +495,7 @@
         <div class="header">
             <h1>🏭 Manufacturing Issue Tracker</h1>
             <p>Track equipment issues and generate AI-powered work instructions</p>
-            <div class="version">v11.7</div>
+            <div class="version">v11.9</div>
         </div>
 
         <div id="sync-status" class="sync-status"></div>
@@ -652,28 +652,6 @@
 
         <div id="settings-tab" class="tab-content">
             <h2>⚙️ Setup & Configuration</h2>
-            
-            <div class="config-section">
-                <h3>☁️ Google Sheets Sync Configuration</h3>
-                <div class="alert-box alert-info-box">
-                    <strong>ℹ️ Required for Cross-Device Sync</strong><br>
-                    Configure your Google Apps Script URL below so your manual mappings and data sync across all devices.
-                </div>
-                
-                <div class="form-group">
-                    <label for="google-script-url-input">Google Apps Script Web App URL *</label>
-                    <input type="text" id="google-script-url-input" class="form-control" 
-                           placeholder="https://script.google.com/macros/s/...">
-                    <small style="color: #666;">
-                        Deploy your Google Apps Script as a web app and paste the URL here.
-                    </small>
-                </div>
-                
-                <button onclick="saveGoogleScriptUrl()" class="btn btn-success">💾 Save Script URL</button>
-                <button onclick="testGoogleSheetsConnection()" class="btn btn-info">🧪 Test Connection</button>
-                
-                <div id="google-sheets-status" style="margin-top: 15px;"></div>
-            </div>
             
             <div class="config-section">
                 <h3>🤖 AI Provider Selection</h3>
@@ -854,8 +832,8 @@
 
     <script>
         // ====== CONFIGURATION ======
-        // Load Google Script URL from localStorage (can be configured in Settings tab)
-        let GOOGLE_SCRIPT_URL = localStorage.getItem('googleScriptUrl') || 'https://script.google.com/macros/s/AKfycbwYrUTXfOsnrOEv-YfgEOhoWJZLLC15nO4I18qgmJN_M3M78DDsm2siBPKaEUQZjRFI/exec';
+        // UPDATE THIS URL WHEN YOU DEPLOY A NEW VERSION OF THE GOOGLE APPS SCRIPT
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwkP07t0Yif8o1dChDFUiuijpcFyhzoEzqI21qLb0xG75Ifte0vR0Fu517zbsOo7D_a/exec';
         
         // ====== DATA STORAGE ======
         let issues = [];
@@ -881,7 +859,6 @@
             displayHistory(issues);
             loadAzureConfig();
             loadGeminiConfig();
-            loadGoogleScriptUrl();
             selectProvider(selectedProvider);
             renderManualMappings();
         });
@@ -988,11 +965,6 @@
                             localStorage.setItem('selectedProvider', selectedProvider);
                             selectProvider(selectedProvider);
                         }
-                        if (data.aiConfigs.googleScriptUrl) {
-                            GOOGLE_SCRIPT_URL = data.aiConfigs.googleScriptUrl;
-                            localStorage.setItem('googleScriptUrl', GOOGLE_SCRIPT_URL);
-                            loadGoogleScriptUrl();
-                        }
                     }
                     
                     showSyncStatus('success', '✓ Loaded from Google Sheets successfully');
@@ -1054,8 +1026,7 @@
                         azureConfig: azureConfig,
                         geminiConfig: geminiConfig,
                         manualMappings: manualMappings,
-                        selectedProvider: selectedProvider,
-                        googleScriptUrl: GOOGLE_SCRIPT_URL
+                        selectedProvider: selectedProvider
                     });
                     form.appendChild(configsInput);
                     
@@ -1943,99 +1914,6 @@
                 alert('✓ Connection successful!\n\n' + response);
             } catch (error) {
                 alert('❌ Connection failed:\n\n' + error.message);
-            }
-        }
-
-        // ====== GOOGLE SCRIPT URL CONFIGURATION ======
-        function saveGoogleScriptUrl() {
-            const urlInput = document.getElementById('google-script-url-input');
-            const url = urlInput.value.trim();
-            
-            if (!url) {
-                alert('Please enter a Google Apps Script URL');
-                return;
-            }
-            
-            if (!url.startsWith('https://script.google.com/macros/s/')) {
-                alert('Invalid URL format. URL should start with:\nhttps://script.google.com/macros/s/');
-                return;
-            }
-            
-            // Save to localStorage
-            localStorage.setItem('googleScriptUrl', url);
-            GOOGLE_SCRIPT_URL = url;
-            
-            // Also sync to Google Sheets so other devices can load it
-            syncAIConfigsToCloud();
-            
-            alert('✓ Google Script URL saved!\n\nClick "Test Connection" to verify it works.');
-        }
-        
-        async function testGoogleSheetsConnection() {
-            const statusDiv = document.getElementById('google-sheets-status');
-            
-            if (!GOOGLE_SCRIPT_URL) {
-                statusDiv.innerHTML = `
-                    <div class="alert-box alert-error-box">
-                        <strong>❌ No URL Configured</strong><br>
-                        Please enter your Google Apps Script URL above and click "Save Script URL".
-                    </div>
-                `;
-                return;
-            }
-            
-            statusDiv.innerHTML = `
-                <div class="alert-box alert-warning-box">
-                    <strong>⏳ Testing Connection...</strong><br>
-                    Attempting to connect to Google Sheets...
-                </div>
-            `;
-            
-            try {
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 10000);
-                
-                const response = await fetch(GOOGLE_SCRIPT_URL + '?action=test', {
-                    signal: controller.signal
-                });
-                clearTimeout(timeoutId);
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    statusDiv.innerHTML = `
-                        <div class="alert-box alert-success-box">
-                            <strong>✅ Connection Successful!</strong><br>
-                            Your manual mappings and data will sync across all devices.
-                        </div>
-                    `;
-                } else {
-                    throw new Error(data.message || 'Connection test failed');
-                }
-            } catch (error) {
-                let errorMessage = error.message;
-                if (error.name === 'AbortError') {
-                    errorMessage = 'Connection timeout - could not reach Google Sheets within 10 seconds';
-                }
-                
-                statusDiv.innerHTML = `
-                    <div class="alert-box alert-error-box">
-                        <strong>❌ Connection Failed</strong><br>
-                        ${errorMessage}<br><br>
-                        <strong>Common Issues:</strong><br>
-                        • Script not deployed as "Web app"<br>
-                        • "Who has access" not set to "Anyone"<br>
-                        • Wrong URL copied<br>
-                        • Network/firewall blocking the request
-                    </div>
-                `;
-            }
-        }
-        
-        function loadGoogleScriptUrl() {
-            const urlInput = document.getElementById('google-script-url-input');
-            if (urlInput && GOOGLE_SCRIPT_URL) {
-                urlInput.value = GOOGLE_SCRIPT_URL;
             }
         }
 
