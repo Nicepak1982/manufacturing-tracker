@@ -571,7 +571,7 @@
         <div class="header">
             <h1>🏭 Manufacturing Issue Tracker</h1>
             <p>Track equipment issues and generate AI-powered work instructions</p>
-            <div class="version">v12.2</div>
+            <div class="version">v12.3</div>
         </div>
 
         <div id="sync-status" class="sync-status"></div>
@@ -916,7 +916,8 @@
 
                 <div class="form-group">
                     <label for="manual-url">Manual URL *</label>
-                    <input type="text" id="manual-url" class="form-control" placeholder="https://... (OneDrive, SharePoint, GitHub, etc.)">
+                    <input type="text" id="manual-url" class="form-control" placeholder="https://drive.google.com/file/d/... (Google Drive link)">
+                    <small style="color: #666; font-size: 12px;">📁 Paste your Google Drive link - PDF will be automatically fetched when needed</small>
                 </div>
 
                 <div style="margin-top: 20px; text-align: right;">
@@ -1910,13 +1911,31 @@
 
         // ====== GOOGLE GEMINI API ======
         // SIMPLIFIED: Reverted to a single, direct API call
-        async function callGeminiAPI(prompt) {
+        async function callGeminiAPI(prompt, fileUri = null) {
             const apiKey = geminiConfig.apiKey;
             // UPDATED: Use the correct, available model name
             const model = geminiConfig.model || 'gemini-2.0-flash-exp';
             
             // UPDATED: Use the v1beta endpoint which works with your key
             const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+            
+            // Build parts array - include file if provided
+            const parts = [];
+            
+            // Add file first if provided (so AI reads it before the prompt)
+            if (fileUri) {
+                parts.push({
+                    fileData: {
+                        mimeType: 'application/pdf',
+                        fileUri: fileUri
+                    }
+                });
+            }
+            
+            // Add text prompt
+            parts.push({
+                text: prompt
+            });
             
             const response = await fetch(url, {
                 method: 'POST',
@@ -1925,9 +1944,7 @@
                 },
                 body: JSON.stringify({
                     contents: [{
-                        parts: [{
-                            text: prompt
-                        }]
+                        parts: parts
                     }],
                     generationConfig: {
                         temperature: 0.7,
@@ -2105,17 +2122,39 @@
                 `;
                 
                 manuals.forEach(({ key, machine, info }) => {
+                    // Determine cache status
+                    const hasPDF = info.geminiFileUri ? true : false;
+                    const needsRefresh = info.lastUpdated ? needsCacheRefresh(info.lastUpdated) : true;
+                    const lastUpdatedText = info.lastUpdated 
+                        ? new Date(info.lastUpdated).toLocaleDateString() 
+                        : 'Never';
+                    
+                    let statusBadge = '';
+                    if (hasPDF && !needsRefresh) {
+                        statusBadge = '<span style="background: #28a745; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px;">✅ PDF Cached</span>';
+                    } else if (hasPDF && needsRefresh) {
+                        statusBadge = '<span style="background: #ffc107; color: #212529; padding: 4px 8px; border-radius: 4px; font-size: 12px;">⚠️ Needs Refresh</span>';
+                    } else {
+                        statusBadge = '<span style="background: #6c757d; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px;">📄 Not Cached</span>';
+                    }
+                    
                     html += `
                         <div class="manual-list-item">
                             <div style="display: flex; justify-content: space-between; align-items: start;">
                                 <div style="flex: 1;">
-                                    <h4>${machine}</h4>
+                                    <h4>${machine} ${statusBadge}</h4>
                                     <p><strong>Manual:</strong> ${info.name}</p>
                                     <p><strong>URL:</strong> <a href="${info.url}" target="_blank" style="color: #007bff; word-break: break-all;">${info.url}</a></p>
+                                    <p style="font-size: 12px; color: #666;"><strong>Last Updated:</strong> ${lastUpdatedText}</p>
                                 </div>
-                                <button onclick="removeManualMapping('${key}')" class="btn" style="background: #dc3545; color: white; margin-left: 10px;">
-                                    Delete
-                                </button>
+                                <div style="display: flex; gap: 5px; margin-left: 10px;">
+                                    <button onclick="refreshSingleManual('${key}')" class="btn btn-info" title="Refresh PDF from Google Drive">
+                                        🔄 Refresh
+                                    </button>
+                                    <button onclick="removeManualMapping('${key}')" class="btn" style="background: #dc3545; color: white;">
+                                        Delete
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     `;
@@ -2187,6 +2226,203 @@
             if (event.target.id === 'manual-modal') {
                 closeManualModal();
             }
+        }
+
+        // ====== GOOGLE DRIVE & GEMINI FILE API HELPERS ======
+        
+        // Convert Google Drive view link to direct download link
+        function convertGoogleDriveUrl(url) {
+            // Extract file ID from various Google Drive URL formats
+            let fileId = null;
+            
+            // Format 1: https://drive.google.com/file/d/FILE_ID/view
+            const viewMatch = url.match(/\/file\/d\/([^\/]+)/);
+            if (viewMatch) {
+                fileId = viewMatch[1];
+            }
+            
+            // Format 2: https://drive.google.com/open?id=FILE_ID
+            const openMatch = url.match(/[?&]id=([^&]+)/);
+            if (openMatch) {
+                fileId = openMatch[1];
+            }
+            
+            if (fileId) {
+                return `https://drive.google.com/uc?export=download&id=${fileId}`;
+            }
+            
+            // If already a direct link or not a Google Drive link, return as-is
+            return url;
+        }
+        
+        // Download PDF from Google Drive
+        async function downloadPDFFromGoogleDrive(url) {
+            const downloadUrl = convertGoogleDriveUrl(url);
+            
+            try {
+                const response = await fetch(downloadUrl);
+                if (!response.ok) {
+                    throw new Error(`Failed to download PDF: ${response.status}`);
+                }
+                
+                const blob = await response.blob();
+                return blob;
+            } catch (error) {
+                console.error('Error downloading PDF:', error);
+                throw new Error('Failed to download PDF from Google Drive. Please check the link is public and accessible.');
+            }
+        }
+        
+        // Upload PDF to Gemini File API
+        async function uploadPDFToGemini(pdfBlob, fileName) {
+            if (!geminiConfig.apiKey) {
+                throw new Error('Gemini API key not configured');
+            }
+            
+            // Step 1: Start resumable upload session
+            const initialMetadata = {
+                file: {
+                    display_name: fileName
+                }
+            };
+            
+            const initResponse = await fetch(
+                `https://generativelanguage.googleapis.com/upload/v1beta/files?key=${geminiConfig.apiKey}`,
+                {
+                    method: 'POST',
+                    headers: {
+                        'X-Goog-Upload-Protocol': 'resumable',
+                        'X-Goog-Upload-Command': 'start',
+                        'X-Goog-Upload-Header-Content-Type': 'application/pdf',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(initialMetadata)
+                }
+            );
+            
+            if (!initResponse.ok) {
+                throw new Error(`Failed to start upload: ${initResponse.status}`);
+            }
+            
+            const uploadUrl = initResponse.headers.get('X-Goog-Upload-URL');
+            if (!uploadUrl) {
+                throw new Error('No upload URL received from Gemini');
+            }
+            
+            // Step 2: Upload the actual file
+            const uploadResponse = await fetch(uploadUrl, {
+                method: 'POST',
+                headers: {
+                    'X-Goog-Upload-Command': 'upload, finalize',
+                    'X-Goog-Upload-Offset': '0',
+                    'Content-Type': 'application/pdf'
+                },
+                body: pdfBlob
+            });
+            
+            if (!uploadResponse.ok) {
+                const errorText = await uploadResponse.text();
+                console.error('Upload error:', errorText);
+                throw new Error(`Failed to upload PDF: ${uploadResponse.status}`);
+            }
+            
+            const fileData = await uploadResponse.json();
+            
+            // Step 3: Wait for file to be processed (Gemini needs time to process PDFs)
+            let file = fileData.file;
+            while (file.state === 'PROCESSING') {
+                await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
+                
+                const statusResponse = await fetch(
+                    `https://generativelanguage.googleapis.com/v1beta/${file.name}?key=${geminiConfig.apiKey}`
+                );
+                
+                if (statusResponse.ok) {
+                    const statusData = await statusResponse.json();
+                    file = statusData;
+                } else {
+                    break;
+                }
+            }
+            
+            if (file.state !== 'ACTIVE') {
+                throw new Error('PDF processing failed or timed out');
+            }
+            
+            return file.uri;
+        }
+        
+        // Check if manual cache needs refresh (7 days)
+        function needsCacheRefresh(lastUpdated) {
+            if (!lastUpdated) return true;
+            
+            const lastUpdate = new Date(lastUpdated);
+            const now = new Date();
+            const daysSinceUpdate = (now - lastUpdate) / (1000 * 60 * 60 * 24);
+            
+            return daysSinceUpdate >= 7;
+        }
+        
+        // Refresh manual from Google Drive and upload to Gemini
+        async function refreshManualCache(key, showProgress = true) {
+            const mapping = manualMappings[key];
+            if (!mapping || !mapping.url) {
+                throw new Error('No manual URL found');
+            }
+            
+            if (showProgress) {
+                showSyncStatus('syncing', '📥 Downloading PDF from Google Drive...');
+            }
+            
+            try {
+                // Download PDF from Google Drive
+                const pdfBlob = await downloadPDFFromGoogleDrive(mapping.url);
+                
+                if (showProgress) {
+                    showSyncStatus('syncing', '☁️ Uploading PDF to Gemini...');
+                }
+                
+                // Upload to Gemini File API
+                const geminiFileUri = await uploadPDFToGemini(pdfBlob, mapping.name);
+                
+                // Update cache
+                mapping.geminiFileUri = geminiFileUri;
+                mapping.lastUpdated = new Date().toISOString();
+                
+                // Save to localStorage
+                localStorage.setItem('manualMappings', JSON.stringify(manualMappings));
+                
+                // Sync to cloud
+                await syncAIConfigsToCloud();
+                
+                if (showProgress) {
+                    showSyncStatus('success', '✓ Manual cached successfully!');
+                }
+                
+                return geminiFileUri;
+            } catch (error) {
+                console.error('Error refreshing manual cache:', error);
+                if (showProgress) {
+                    showSyncStatus('error', '✗ Failed to cache manual: ' + error.message);
+                }
+                throw error;
+            }
+        }
+        
+        // Get manual file URI (with auto-refresh if needed)
+        async function getManualFileUri(key, showProgress = true) {
+            const mapping = manualMappings[key];
+            if (!mapping) {
+                return null; // No manual mapped
+            }
+            
+            // Check if we have a cached file URI and if it needs refresh
+            if (mapping.geminiFileUri && !needsCacheRefresh(mapping.lastUpdated)) {
+                return mapping.geminiFileUri; // Use cached version
+            }
+            
+            // Need to refresh
+            return await refreshManualCache(key, showProgress);
         }
 
         async function saveManualMapping() {
@@ -2264,6 +2500,22 @@
                 renderManualMappings();
                 syncAIConfigsToCloud();
                 alert('✓ Manual mapping removed and synced to cloud!');
+            }
+        }
+
+        async function refreshSingleManual(key) {
+            const [line, machine] = key.split('-', 2);
+            
+            if (!confirm(`Refresh PDF for ${line} - ${machine}?\n\nThis will download the latest version from Google Drive.`)) {
+                return;
+            }
+            
+            try {
+                await refreshManualCache(key, true);
+                renderManualMappings();
+                alert(`✓ PDF for ${line} - ${machine} refreshed successfully!`);
+            } catch (error) {
+                alert(`✗ Failed to refresh PDF: ${error.message}`);
             }
         }
 
@@ -2626,20 +2878,63 @@
             `;
 
             try {
-                // Get manual URL if available using LINE-MACHINE key
+                // Get manual info and file URI using LINE-MACHINE key
                 const manualKey = `${line}-${machine}`;
                 const manualInfo = manualMappings[manualKey];
                 let manualContext = '';
+                let geminiFileUri = null;
                 
                 if (manualInfo && manualInfo.url) {
-                    manualContext = `\n\nEquipment Manual Reference: ${manualInfo.name}\nManual URL: ${manualInfo.url}\n(Note: You may need to reference specific sections of this manual for detailed procedures)`;
+                    manualContext = `\n\nEquipment Manual Reference: ${manualInfo.name}\nManual URL: ${manualInfo.url}`;
+                    
+                    // Try to get Gemini file URI (with auto-refresh if needed)
+                    if (selectedProvider === 'gemini') {
+                        try {
+                            // Update loading message
+                            document.getElementById('generated-instruction').innerHTML = `
+                                <div class="work-instruction">
+                                    <div class="wi-header">🤖 GENERATING AI WORK INSTRUCTION</div>
+                                    <div style="padding: 60px 20px; text-align: center; background: white;">
+                                        <div class="loading-spinner"></div>
+                                        <p style="margin-top: 25px; color: #666; font-size: 15px;">
+                                            <strong>Fetching equipment manual from Google Drive...</strong><br>
+                                            <span style="font-size: 14px;">This may take a moment if manual needs updating...</span>
+                                        </p>
+                                    </div>
+                                </div>
+                            `;
+                            
+                            geminiFileUri = await getManualFileUri(manualKey, false);
+                            
+                            if (geminiFileUri) {
+                                manualContext += `\n(PDF manual content is included and accessible to AI)`;
+                            }
+                        } catch (error) {
+                            console.error('Error fetching manual:', error);
+                            manualContext += `\n(Note: PDF could not be fetched - ${error.message})`;
+                        }
+                    }
                 }
+
+                // Update loading message for AI generation
+                document.getElementById('generated-instruction').innerHTML = `
+                    <div class="work-instruction">
+                        <div class="wi-header">🤖 GENERATING AI WORK INSTRUCTION</div>
+                        <div style="padding: 60px 20px; text-align: center; background: white;">
+                            <div class="loading-spinner"></div>
+                            <p style="margin-top: 25px; color: #666; font-size: 15px;">
+                                <strong>Generating instructions from ${geminiFileUri ? 'equipment manual' : 'available information'}...</strong><br>
+                                <span style="font-size: 14px;">Consulting ${selectedProvider === 'gemini' ? 'Google Gemini' : 'Azure OpenAI'} AI...</span>
+                            </p>
+                        </div>
+                    </div>
+                `;
 
                 // Get definitions context
                 const definitionsContext = getDefinitionsContext();
 
                 // Create the prompt
-                const prompt = `You are a technical documentation assistant at a baby wipes production facility. Your role is to create work instructions ONLY using information from the provided manuals and definitions.
+                const prompt = `You are a technical documentation assistant at a baby wipes production facility. Your role is to create work instructions using information from the provided definitions and manual references.
 
 ${definitionsContext}
 EQUIPMENT INFORMATION:
@@ -2648,41 +2943,48 @@ EQUIPMENT INFORMATION:
 - Task/Procedure: ${issue}
 ${manualContext}
 
-CRITICAL RULES:
-1. ONLY use information explicitly provided in the manuals, definitions, and references above
-2. NEVER make assumptions, guess, or add information not in the provided sources
-3. For EVERY piece of information, cite the source with: [Source: Document Name, Page X, Section Y]
-4. If information is not available in the provided sources, you MUST state: "No information on this is available in the provided documentation."
-5. Do not fill gaps with general knowledge - only use what is provided
+IMPORTANT INSTRUCTIONS:
+${geminiFileUri ? `
+1. PRIMARY SOURCE: The equipment manual PDF is attached and available for you to read. Search it thoroughly for the requested procedure.
+2. DEFINITIONS: Also reference the definitions provided above for facility-specific context.
+3. CITATIONS: When using information from the PDF, cite it as: [Source: ${manualInfo.name}, Page X] or [Source: ${manualInfo.name}, Section Y]
+4. BE THOROUGH: Extract the complete procedure from the manual including all steps, tools, specifications, and safety information.
+5. IF NOT FOUND: If the specific procedure is not in the PDF, state clearly: "This procedure is not documented in the ${manualInfo.name}."
+` : `
+1. PRIMARY SOURCE: Use information from the definitions provided above (if available)
+2. MANUAL REFERENCE: If a manual URL is provided but specific procedure details are not in definitions, provide general guidance and prominently reference the manual for detailed steps
+3. CITATIONS: When using definition content, cite it. When providing general guidance, reference the manual URL
+4. BE HELPFUL: If you have relevant general knowledge about the task and a manual is referenced, provide helpful guidance while directing user to verify in the manual
+5. NO FABRICATION: Do not make up specific measurements, part numbers, or technical specifications
+`}
+6. LOTO: Always emphasize lockout/tagout and company safety policies
 
-TASK: Create a detailed work instruction for the requested task/procedure.
-
-FORMAT YOUR RESPONSE AS FOLLOWS:
+RESPONSE FORMAT:
 
 WORK INSTRUCTION - ${machine.toUpperCase()}
 
 SAFETY PRECAUTIONS:
 All company policies and LOTO (Lockout/Tagout) procedures must be followed at all times.
-[Then list any specific safety information found in the manuals with citations - if none found, state "No specific safety information available in provided documentation."]
+${geminiFileUri ? '[Extract specific safety information from the manual with citations]' : '[Include relevant safety guidance and reference manual for complete safety procedures if available]'}
 
 REQUIRED TOOLS & MATERIALS:
-[List tools/materials from manual with citations - if none found, state "No specific tool list available in provided documentation."]
+${geminiFileUri ? '[Extract tool list from manual with citations]' : '[List typical tools if known, reference manual for complete list]'}
 
 PROCEDURE STEPS:
-[Numbered steps with detailed citations for each step - if procedure not documented, state "No documented procedure available for this task."]
+${geminiFileUri ? '[Extract detailed step-by-step procedure from manual with citations]' : '[Provide helpful step-by-step guidance. Reference manual for verification]'}
 
 VERIFICATION:
-[How to verify completion with citations - if none found, state "No verification procedure available in provided documentation."]
+${geminiFileUri ? '[Extract verification steps from manual with citations]' : '[Suggest verification steps and reference manual for specifications]'}
 
-NOTES & REFERENCES:
-[Any additional relevant information with citations]
-
-Remember: Every fact, number, specification, or procedure MUST be cited. If you cannot find information, explicitly say so rather than making it up.`;
+IMPORTANT NOTES:
+${geminiFileUri ? '- All information extracted from equipment manual\n- Verify page numbers and sections in original manual' : '- This instruction provides general guidance based on common procedures\n- User MUST verify all steps, specifications, and safety procedures in the equipment manual'}
+${manualContext && manualInfo && manualInfo.name ? '\n- Equipment Manual: ' + manualInfo.name : ''}
+${manualContext && manualInfo && manualInfo.url ? '\n- Manual URL: ' + manualInfo.url : ''}`;
 
                 // Call the appropriate AI service
                 let response;
                 if (selectedProvider === 'gemini') {
-                    response = await callGeminiAPI(prompt);
+                    response = await callGeminiAPI(prompt, geminiFileUri);
                 } else {
                     response = await callAzureOpenAI(prompt);
                 }
