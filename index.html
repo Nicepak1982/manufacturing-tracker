@@ -575,7 +575,7 @@
         <div class="header">
             <h1>🏭 Manufacturing Issue Tracker</h1>
             <p>Track equipment issues and generate AI-powered work instructions</p>
-            <div class="version">v12.5</div>
+            <div class="version">v12.6</div>
         </div>
 
         <div id="sync-status" class="sync-status"></div>
@@ -626,7 +626,7 @@
                     <label for="description">Issue Description *</label>
                     <input type="text" id="description" class="form-control" required list="description-suggestions" autocomplete="off">
                     <datalist id="description-suggestions"></datalist>
-                    <small id="description-help" style="color: 
+                    <small style="color: 
  #666; font-size: 12px;">Select line and machine to see previous issues</small>
                 </div>
 
@@ -906,14 +906,15 @@
    
               <button onclick="addManualMapping()" class="btn btn-success">+ Add Manual Mapping</button>
             </div>
-
+            
             <div class="config-section">
-                <h3>🔍 Cloud Sync Verification</h3>
+                <h3>🔍 Cloud Sync Verification & Data Load</h3>
                 <p style="color: #666;
  margin-bottom: 15px;">
-                    Use these tools to verify your manual mappings are properly syncing to Google Sheets.
+                    Use these tools to verify your manual mappings are properly syncing to Google Sheets and to manually pull data.
                 </p>
                 
+                <button onclick="loadFromCloud()" class="btn btn-primary">⬇️ Manually Load/Sync All Data From Cloud</button>
                 <button onclick="verifyCloudSync()" class="btn btn-info">🔍 Check What's in Google Sheets</button>
           
               <button onclick="forceResyncAll()" class="btn btn-warning">🔄 Force Re-sync All Configs</button>
@@ -933,7 +934,7 @@
                     <input type="text" id="action-input" class="form-control" placeholder="What did you try?" list="action-suggestions" autocomplete="off">
           
               <datalist id="action-suggestions"></datalist>
-                    <small id="action-help" style="color: #666;
+                    <small style="color: #666;
  font-size: 12px;">Start typing or select from previous actions</small>
                 </div>
 
@@ -1083,7 +1084,7 @@
         // ====== INITIALIZATION ======
         window.addEventListener('load', () => {
             loadLocalData();
-            loadFromCloud();
+            // loadFromCloud(); // <-- AUTO-LOAD REMOVED TO PREVENT UI FREEZE ON STARTUP
             updateHistoryMachineOptions();
             displayHistory(issues);
             loadAzureConfig();
@@ -1093,6 +1094,11 @@
             renderManualMappings();
             initializeDefaultDefinitions();
             renderDefinitions();
+            
+            // Show a prompt to manually load data if history is empty
+            if (issues.length === 0) {
+                 showSyncStatus('info', 'ℹ️ Application loaded from local data. Click "Manually Load/Sync All Data From Cloud" in the Setup tab to fetch history.');
+            }
         });
  // ====== CLOUD SYNC FUNCTIONS ======
         function showSyncStatus(type, message) {
@@ -1210,10 +1216,10 @@
                     
                     showSyncStatus('success', '✓ Loaded from Google Sheets successfully');
  // Refresh current view
-                    const activeTab = document.querySelector('.nav-tab.active').textContent;
- if (activeTab.includes('History')) {
+                    // Update history view if on that tab
+                    if (document.getElementById('history-tab').classList.contains('active')) {
                         displayHistory(issues);
- }
+                    }
                     
                     // Update suggestions if machine is already selected
                     updateSuggestions();
@@ -2736,15 +2742,14 @@
             
             // Group by category
             const categories = {
-                'Terminology': { emoji: '🏷️', items: [] },
-                'Equipment': { emoji: '⚙️', items: [] },
-       
-                'Issue': { emoji: '⚠️', items: [] },
-                'Process': { emoji: '🔄', items: [] }
+                'Terminology': [],
+                'Equipment': [],
+                'Issue': [],
+                'Process': []
             };
             filtered.forEach(def => {
                 if (categories[def.category]) {
-                    categories[def.category].items.push(def);
+                    categories[def.category].push(def);
                 }
             });
             let html = '';
