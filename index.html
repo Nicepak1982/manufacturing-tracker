@@ -689,7 +689,7 @@
         <div class="header">
             <h1>🏭 Manufacturing Issue Tracker</h1>
             <p>Track equipment issues and generate AI-powered work instructions</p>
-            <div class="version">v13.7</div>
+            <div class="version">v13.8</div>
         </div>
 
         <div id="sync-status" class="sync-status"></div>
@@ -798,7 +798,7 @@
 
             <div class="form-group">
                 <label for="ai-line">Production Line *</label>
-                <select id="ai-line" class="form-control" required>
+                <select id="ai-line" class="form-control" required onchange="updateAIMachines()">
                     <option value="">Select Line</option>
                     <option value="RX500">RX500</option>
                     <option value="RX300">RX300</option>
@@ -810,7 +810,9 @@
 
             <div class="form-group">
                 <label for="ai-machine">Machine/Equipment *</label>
-                <input type="text" id="ai-machine" class="form-control" required placeholder="e.g., Heat Sealer 2">
+                <input type="text" id="ai-machine" class="form-control" required placeholder="e.g., Heat Sealer 2" list="ai-machine-list" autocomplete="off">
+                <datalist id="ai-machine-list"></datalist>
+                <small id="ai-machine-help" style="color: #666; font-size: 12px; display: block; margin-top: 5px;">Select a production line above to see available machines</small>
             </div>
 
             <div class="form-group">
@@ -1597,6 +1599,45 @@
                 }
             } else {
                 keywordHelp.innerHTML = `<span style="color: #dc3545;">No previous issues found for this machine</span>`;
+            }
+        }
+
+        function updateAIMachines() {
+            const line = document.getElementById('ai-line').value;
+            const machineInput = document.getElementById('ai-machine');
+            const machineList = document.getElementById('ai-machine-list');
+            const machineHelp = document.getElementById('ai-machine-help');
+            
+            machineList.innerHTML = '';
+            machineInput.value = '';
+            
+            if (line) {
+                // Show machines from machinesByLine if available
+                if (machinesByLine[line]) {
+                    machinesByLine[line].forEach(machine => {
+                        const option = document.createElement('option');
+                        option.value = machine;
+                        machineList.appendChild(option);
+                    });
+                }
+                
+                // Also add machines from historical data for this line
+                const historicalMachines = [...new Set(issues
+                    .filter(issue => issue.line === line)
+                    .map(issue => issue.machine))];
+                
+                historicalMachines.forEach(machine => {
+                    // Only add if not already in the list
+                    if (!machinesByLine[line] || !machinesByLine[line].includes(machine)) {
+                        const option = document.createElement('option');
+                        option.value = machine;
+                        machineList.appendChild(option);
+                    }
+                });
+                
+                machineHelp.innerHTML = `<strong style="color: #28a745;">✓ Machine suggestions loaded for ${line}</strong> - Click ▼ to select`;
+            } else {
+                machineHelp.textContent = 'Select a production line above to see available machines';
             }
         }
 
@@ -4011,4 +4052,4 @@ Keep your response focused and actionable - help the technician understand the p
         }
     </script>
 </body>
-</html>
+</html>v1
