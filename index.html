@@ -484,6 +484,12 @@
             }
         }
 
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-10px); }
+            20%, 40%, 60%, 80% { transform: translateX(10px); }
+        }
+
         .action-buttons {
             display: flex;
             gap: 10px;
@@ -683,7 +689,7 @@
         <div class="header">
             <h1>🏭 Manufacturing Issue Tracker</h1>
             <p>Track equipment issues and generate AI-powered work instructions</p>
-            <div class="version">v13.5</div>
+            <div class="version">v13.7</div>
         </div>
 
         <div id="sync-status" class="sync-status"></div>
@@ -692,8 +698,8 @@
             <button class="nav-tab active" onclick="switchTab('report')">📝 Report Issue</button>
             <button class="nav-tab" onclick="switchTab('search')">🔍 Search Issues</button>
             <button class="nav-tab" onclick="switchTab('ai')">🤖 AI Work Instructions</button>
-            <button class="nav-tab" onclick="switchTab('definitions')">📖 Definitions</button>
             <button class="nav-tab" onclick="switchTab('history')">📊 History</button>
+            <button class="nav-tab" onclick="switchTab('definitions')">📖 Definitions</button>
             <button class="nav-tab" onclick="switchTab('settings')">⚙️ Setup</button>
         </div>
 
@@ -1064,6 +1070,32 @@
             </div>
         </div>
 
+        <div id="security-modal" class="modal" onclick="handleSecurityModalClick(event)">
+            <div class="modal-content" onclick="event.stopPropagation()" style="max-width: 400px;">
+                <h3 style="margin-bottom: 20px; color: #2c3e50; text-align: center;">🔒 Enter PIN</h3>
+                
+                <p style="color: #666; margin-bottom: 20px; text-align: center;">
+                    This tab is protected. Please enter the security PIN to continue.
+                </p>
+                
+                <div class="form-group">
+                    <input type="password" id="security-pin-entry" class="form-control" 
+                           placeholder="Enter PIN" maxlength="8" 
+                           onkeypress="if(event.key==='Enter') checkSecurityPIN()"
+                           style="text-align: center; font-size: 24px; letter-spacing: 10px; padding: 15px;">
+                </div>
+
+                <div id="security-error" style="color: #dc3545; text-align: center; margin-top: 10px; display: none;">
+                    ❌ Incorrect PIN. Please try again.
+                </div>
+                
+                <div style="margin-top: 20px; text-align: center;">
+                    <button type="button" class="btn" onclick="closeSecurityModal()" style="background: #6c757d; color: white; margin-right: 10px;">Cancel</button>
+                    <button type="button" class="btn btn-success" onclick="checkSecurityPIN()">🔓 Unlock</button>
+                </div>
+            </div>
+        </div>
+
         <div id="definition-modal" class="modal" onclick="handleDefinitionModalClick(event)">
             <div class="modal-content" onclick="event.stopPropagation()">
                 <h3 style="margin-bottom: 20px; color: #2c3e50;" id="definition-modal-title">Add Definition</h3>
@@ -1347,6 +1379,20 @@
 
         // ====== UI FUNCTIONS ======
         function switchTab(tabName) {
+            // Check if this is a protected tab and if security is enabled
+            const protectedTabs = ['settings', 'definitions'];
+            if (protectedTabs.includes(tabName) && SECURITY_ENABLED && !isAuthenticated) {
+                // Store which tab was requested
+                sessionStorage.setItem('requestedSecureTab', tabName + '-tab');
+                
+                // Show security modal
+                document.getElementById('security-modal').style.display = 'flex';
+                document.getElementById('security-pin-entry').value = '';
+                document.getElementById('security-error').style.display = 'none';
+                document.getElementById('security-pin-entry').focus();
+                return; // Don't switch tabs yet
+            }
+            
             document.querySelectorAll('.tab-content').forEach(tab => {
                 tab.classList.remove('active');
             });
@@ -2741,6 +2787,73 @@
                         </div>
                     </div>
                 `;
+            }
+        }
+
+        // ====== TAB SECURITY ======
+        
+        // ⚙️ CONFIGURATION: Change PIN here and deploy via GitHub
+        // Default PIN: 1111
+        // To change: Edit this value, commit to GitHub, deploy to all devices
+        const SECURITY_PIN = "1111";
+        const SECURITY_ENABLED = true; // Set to false to disable tab protection
+        
+        // Session authentication - cleared when browser closes
+        let isAuthenticated = sessionStorage.getItem('tabSecurityAuth') === 'true';
+
+        // Security modal handling
+        function handleSecurityModalClick(event) {
+            if (event.target.id === 'security-modal') {
+                closeSecurityModal();
+            }
+        }
+
+        function closeSecurityModal() {
+            document.getElementById('security-modal').style.display = 'none';
+            // Return to previous tab or default tab
+            const currentTab = document.querySelector('.tab-content.active');
+            if (currentTab && (currentTab.id === 'settings-tab' || currentTab.id === 'definitions-tab')) {
+                switchTab('report'); // Go back to report tab
+            }
+        }
+
+        function checkSecurityPIN() {
+            const enteredPIN = document.getElementById('security-pin-entry').value.trim();
+            const errorDiv = document.getElementById('security-error');
+            
+            if (enteredPIN === SECURITY_PIN) {
+                // Correct PIN
+                sessionStorage.setItem('tabSecurityAuth', 'true');
+                isAuthenticated = true;
+                document.getElementById('security-modal').style.display = 'none';
+                
+                // Now actually switch to the requested tab
+                const requestedTab = sessionStorage.getItem('requestedSecureTab');
+                if (requestedTab) {
+                    sessionStorage.removeItem('requestedSecureTab');
+                    // Actually switch to the tab
+                    document.querySelectorAll('.tab-content').forEach(content => {
+                        content.classList.remove('active');
+                    });
+                    document.querySelectorAll('.tab-button').forEach(button => {
+                        button.classList.remove('active');
+                    });
+                    
+                    document.getElementById(requestedTab).classList.add('active');
+                    document.querySelector(`[onclick="switchTab('${requestedTab.replace('-tab', '')}')"]`).classList.add('active');
+                }
+            } else {
+                // Incorrect PIN
+                errorDiv.style.display = 'block';
+                document.getElementById('security-pin-entry').value = '';
+                document.getElementById('security-pin-entry').focus();
+                
+                // Shake animation
+                const modal = document.querySelector('#security-modal .modal-content');
+                modal.style.animation = 'shake 0.5s';
+                setTimeout(() => {
+                    modal.style.animation = '';
+                }, 500);
             }
         }
 
