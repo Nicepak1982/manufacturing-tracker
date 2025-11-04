@@ -358,6 +358,67 @@
             font-weight: 600;
         }
 
+        /* AI Assistance specific styles */
+        .ai-assistance-content {
+            line-height: 1.8;
+            color: #495057;
+        }
+
+        .ai-section-header {
+            color: #2c3e50;
+            font-size: 16px;
+            font-weight: 600;
+            margin: 25px 0 15px 0;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .ai-content-line {
+            margin: 10px 0;
+            line-height: 1.7;
+            color: #495057;
+        }
+
+        .ai-step {
+            margin: 12px 0;
+            padding-left: 0;
+            line-height: 1.7;
+        }
+
+        /* Numbered steps in AI Assistance */
+        .ai-step.numbered {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin: 15px 0;
+        }
+
+        .ai-step.numbered .step-number {
+            flex-shrink: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+            border-radius: 50%;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .ai-step.numbered .step-text {
+            flex: 1;
+            padding-top: 4px;
+        }
+
+        /* Strong emphasis in AI content */
+        .ai-content-line strong,
+        .ai-step strong {
+            color: #2c3e50;
+            font-weight: 600;
+        }
+
         .wi-actions {
             padding: 25px;
             background: #f8f9fa;
@@ -622,7 +683,7 @@
         <div class="header">
             <h1>🏭 Manufacturing Issue Tracker</h1>
             <p>Track equipment issues and generate AI-powered work instructions</p>
-            <div class="version">v13.2</div>
+            <div class="version">v13.3</div>
         </div>
 
         <div id="sync-status" class="sync-status"></div>
@@ -3307,7 +3368,7 @@ Be STRICT in extracting it (only what's actually written, nothing more).`;
                         <div class="wi-caution-icon">⚠️</div>
                         <div>
                             <strong>CAUTION: AI-Generated Information</strong><br>
-                            <span style="font-size: 13px; opacity: 0.95;">This information is AI-generated. User is responsible for referencing work instructions and manuals for accuracy. Contact supervisor to review prior to implementing any procedure.</span>
+                            <span style="font-size: 13px; opacity: 0.95;">This information is AI-generated. User is responsible for referencing work instructions and manuals for accuracy.</span>
                         </div>
                     </div>
                     
@@ -3588,8 +3649,54 @@ Keep your response focused and actionable - help the technician understand the p
         function displayAIAssistance(aiResponse, line, machine, issue) {
             const aiAssistanceDiv = document.getElementById('ai-assistance-display');
             
-            // Parse the response into sections (similar to work instruction but simpler)
-            const sections = aiResponse.split('\n\n');
+            // Helper function to clean up markdown formatting
+            function cleanMarkdown(text) {
+                // Remove leading asterisks and bullet points
+                text = text.replace(/^\*\*(.+?)\*\*$/gm, '$1'); // Remove bold markers on whole lines
+                text = text.replace(/^\*\s+/gm, ''); // Remove bullet points
+                text = text.replace(/^[\*•-]\s*/gm, ''); // Remove asterisk, bullet, or dash bullets
+                
+                // Clean up inline formatting but keep citations
+                text = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>'); // Bold
+                text = text.replace(/\[Source:/g, '<span class="citation">[Source:'); // Start citation
+                text = text.replace(/\]/g, ']</span>'); // End citation
+                
+                return text.trim();
+            }
+            
+            // Helper function to format different line types
+            function formatLine(line) {
+                line = line.trim();
+                if (!line) return '';
+                
+                // Check if it's a numbered item (e.g., "1.", "2.", etc.)
+                const numberedMatch = line.match(/^(\d+)\.\s*(.+)$/);
+                if (numberedMatch) {
+                    const num = numberedMatch[1];
+                    const text = cleanMarkdown(numberedMatch[2]);
+                    return `<div class="ai-step numbered"><span class="step-number">${num}</span><span class="step-text">${text}</span></div>`;
+                }
+                
+                // Check if it's a section header (ALL CAPS followed by colon)
+                if (line.match(/^[A-Z][A-Z\s]+:$/)) {
+                    return `<h4 class="ai-section-header">${line.replace(':', '')}</h4>`;
+                }
+                
+                // Regular content line
+                const cleaned = cleanMarkdown(line);
+                return `<div class="ai-content-line">${cleaned}</div>`;
+            }
+            
+            // Parse and format the response
+            const lines = aiResponse.split('\n').filter(l => l.trim());
+            let formattedContent = '';
+            
+            lines.forEach(line => {
+                const formatted = formatLine(line);
+                if (formatted) {
+                    formattedContent += formatted;
+                }
+            });
             
             let html = `
                 <div class="work-instruction">
@@ -3627,7 +3734,9 @@ Keep your response focused and actionable - help the technician understand the p
                     </div>
                     
                     <div class="wi-section">
-                        <div class="wi-content" style="line-height: 1.8; white-space: pre-wrap;">${aiResponse}</div>
+                        <div class="ai-assistance-content">
+                            ${formattedContent}
+                        </div>
                     </div>
                     
                     <div class="wi-actions">
