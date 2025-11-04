@@ -87,30 +87,7 @@
             font-size: 16px;
             transition: all 0.3s ease;
         }
-        
-        /* ADMIN TAB STYLES - Hidden until authenticated */
-        .nav-tab.admin-protected {
-            display: none;
-            flex: 1; /* Ensure they take space when shown */
-        }
 
-        /* ADMIN ACCESS BUTTON STYLE */
-        .admin-access-button {
-            padding: 15px;
-            background: #6c757d;
-            color: white;
-            border: none;
-            cursor: pointer;
-            font-size: 16px;
-            transition: background 0.3s ease;
-            flex-shrink: 0; /* Prevents it from shrinking */
-        }
-        
-        .admin-access-button:hover {
-            background: #5a6268;
-        }
-        
-        /* Ensure the active tab styling works */
         .nav-tab.active {
             background: white;
             border-bottom: 3px solid #007bff;
@@ -118,7 +95,7 @@
             font-weight: bold;
         }
 
-        .nav-tab:not(.admin-access-button):hover {
+        .nav-tab:hover {
             background: #e9ecef;
         }
 
@@ -706,7 +683,7 @@
         <div class="header">
             <h1>🏭 Manufacturing Issue Tracker</h1>
             <p>Track equipment issues and generate AI-powered work instructions</p>
-            <div class="version">v13.7</div>
+            <div class="version">v13.5</div>
         </div>
 
         <div id="sync-status" class="sync-status"></div>
@@ -715,12 +692,9 @@
             <button class="nav-tab active" onclick="switchTab('report')">📝 Report Issue</button>
             <button class="nav-tab" onclick="switchTab('search')">🔍 Search Issues</button>
             <button class="nav-tab" onclick="switchTab('ai')">🤖 AI Work Instructions</button>
-            
-            <button class="nav-tab admin-protected" id="definitions-tab-button" onclick="switchTab('definitions')">📖 Definitions</button>
-            <button class="nav-tab admin-protected" id="history-tab-button" onclick="switchTab('history')">📊 History</button>
-            <button class="nav-tab admin-protected" id="settings-tab-button" onclick="switchTab('settings')">⚙️ Setup</button>
-            
-            <button class="admin-access-button" id="admin-access-btn" onclick="showAdminAccess()">🔑 Admin Access</button>
+            <button class="nav-tab" onclick="switchTab('definitions')">📖 Definitions</button>
+            <button class="nav-tab" onclick="switchTab('history')">📊 History</button>
+            <button class="nav-tab" onclick="switchTab('settings')">⚙️ Setup</button>
         </div>
 
         <div id="report-tab" class="tab-content active">
@@ -1144,11 +1118,6 @@
         let selectedProvider = localStorage.getItem('selectedProvider') || 'gemini'; // Default to free option
         let currentEditingDefinitionId = null; // Track which definition is being edited
         
-        // ** ADMIN SECURITY CONFIGURATION **
-        const ADMIN_PIN = '1111'; 
-        let isAuthenticated = false; 
-        // ** END ADMIN SECURITY CONFIGURATION **
-        
         const machinesByLine = {
             'RX500': ['Unwind', 'Festoon', 'Forming Table', 'Pull Station', 'Saw House', 'Diverter', 'Conveyor', 'Lidder', 'Wrapper', 'Case Erector', 'Case Packer', 'Weight Checker', 'Palletizer', 'Printer (Wrapper)', 'Printer (Case)'],
             'RX300': ['Unwind', 'Forming Table', 'Pull Station', 'Saw House', 'Doubler', 'Wig-Wag', 'Diverter', 'Conveyor', 'Wrapper', 'Lidder', 'Case Erector', 'Case Packer', 'Weight Checker', 'Palletizer', 'Printer (Wrapper)', 'Printer (Case)', 'Bundler'],
@@ -1169,12 +1138,6 @@
             renderManualMappings();
             initializeDefaultDefinitions();
             renderDefinitions();
-            
-            // Check if authenticated in localStorage (optional for persistence across reloads)
-            // isAuthenticated = localStorage.getItem('adminAuth') === 'true';
-            // if (isAuthenticated) {
-            //    showProtectedTabs();
-            // }
         });
 
         // ====== CLOUD SYNC FUNCTIONS ======
@@ -1383,46 +1346,7 @@
         }
 
         // ====== UI FUNCTIONS ======
-        
-        // Helper function to display protected tabs
-        function showProtectedTabs() {
-            document.getElementById('definitions-tab-button').classList.remove('admin-protected');
-            document.getElementById('history-tab-button').classList.remove('admin-protected'); 
-            document.getElementById('settings-tab-button').classList.remove('admin-protected');
-            document.getElementById('admin-access-btn').style.display = 'none';
-        }
-
-        // New function to handle the admin access button click
-        function showAdminAccess() {
-            if (isAuthenticated) {
-                // If already authenticated, just show the tabs
-                showProtectedTabs();
-                return;
-            }
-            
-            const pin = prompt(`Enter PIN to access the administrative tabs (Definitions, History, Setup). Default: 1111:`);
-            
-            if (pin === ADMIN_PIN) {
-                isAuthenticated = true;
-                // localStorage.setItem('adminAuth', 'true'); // Uncomment if you want auth to persist across reloads
-                alert('Access Granted! Administrative tabs are now visible.');
-                showProtectedTabs();
-            } else if (pin !== null && pin !== '') {
-                alert('Incorrect PIN. Access denied.');
-            }
-        }
-        
         function switchTab(tabName) {
-            
-            // Check if the target tab is protected
-            const protectedTabs = ['definitions', 'history', 'settings'];
-
-            if (protectedTabs.includes(tabName) && !isAuthenticated) {
-                // If not authenticated, force click on the Admin button to prompt for PIN
-                showAdminAccess();
-                return; 
-            }
-            
             document.querySelectorAll('.tab-content').forEach(tab => {
                 tab.classList.remove('active');
             });
@@ -1431,12 +1355,7 @@
             });
             
             document.getElementById(tabName + '-tab').classList.add('active');
-            
-            // Note: Use the target element or look up the button based on tabName
-            const clickedButton = document.getElementById(tabName + '-tab-button') || event.target;
-            if (clickedButton) {
-                 clickedButton.classList.add('active');
-            }
+            event.target.classList.add('active');
             
             if (tabName === 'history') {
                 displayHistory(issues);
@@ -3309,7 +3228,6 @@ Once you've found the right procedure in the manual:
 - Do NOT elaborate on brief instructions
 - Do NOT add tool specifications if not listed
 - Do NOT add measurements if not specified
-- Do NOT add safety warnings if not present
 - Keep it as brief or detailed as the manual states it
 - Cite everything: [Source: ${manualInfo.name}, Page X]
 
@@ -3671,7 +3589,13 @@ When referencing the manual, cite as: [Source: ${manualInfo.name}, Page X]
 ` : ''}
 
 YOUR ROLE:
-You are a skilled troubleshooting expert. You should think beyond just what's in the manual. If the manual doesn't cover this exact scenario, use your troubleshooting logic and experience to provide the best course of action. Combine manual knowledge with practical reasoning.
+You are a skilled troubleshooting expert. Use:
+1. **The manual** - for documented procedures and specifications
+2. **The definitions** - for facility-specific context
+3. **Your expertise** - apply logic and reasoning to the problem
+4. **Pattern recognition** - analyze what the actions taken tell us
+
+IMPORTANT: You should think beyond just what's in the manual. If the manual doesn't cover this exact scenario, use your troubleshooting logic and experience to provide the best course of action. Combine manual knowledge with practical reasoning.
 
 TASK: Based on the actions already taken and their results, recommend the BEST NEXT COURSE OF ACTION to resolve this issue.
 
