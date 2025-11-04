@@ -329,10 +329,8 @@
         }
 
         @keyframes spin {
-            0% { transform: rotate(0deg);
-            }
-            100% { transform: rotate(360deg);
-            }
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
         .modal {
@@ -348,10 +346,8 @@
         }
 
         @keyframes fadeIn {
-            from { opacity: 0;
-            }
-            to { opacity: 1;
-            }
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
 
         .modal-content {
@@ -575,74 +571,62 @@
         <div class="header">
             <h1>🏭 Manufacturing Issue Tracker</h1>
             <p>Track equipment issues and generate AI-powered work instructions</p>
-            <div class="version">v12.7</div>
+            <div class="version">v12.8</div>
         </div>
 
         <div id="sync-status" class="sync-status"></div>
 
         <div class="nav-tabs">
- 
             <button class="nav-tab active" onclick="switchTab('report')">📝 Report Issue</button>
             <button class="nav-tab" onclick="switchTab('search')">🔍 Search Issues</button>
             <button class="nav-tab" onclick="switchTab('ai')">🤖 AI Work Instructions</button>
             <button class="nav-tab" onclick="switchTab('definitions')">📖 Definitions</button>
             <button class="nav-tab" onclick="switchTab('history')">📊 History</button>
             <button class="nav-tab" onclick="switchTab('settings')">⚙️ Setup</button>
-      
-   </div>
+        </div>
 
         <div id="report-tab" class="tab-content active">
             <h2>Report New Issue</h2>
             <form id="issue-form" onsubmit="submitIssue(event)">
                 <div class="form-group">
                     <label for="operator">Operator Name *</label>
-                   
-  <input type="text" id="operator" class="form-control" required>
+                    <input type="text" id="operator" class="form-control" required>
                 </div>
 
                 <div class="form-group">
                     <label for="line">Production Line *</label>
-                    <select id="line" class="form-control" required onchange="updateMachineOptions();
- updateSuggestions();">
+                    <select id="line" class="form-control" required onchange="updateMachineOptions(); updateSuggestions();">
                         <option value="">Select Line</option>
                         <option value="RX500">RX500</option>
                         <option value="RX300">RX300</option>
-                        
- <option value="HH">HH</option>
+                        <option value="HH">HH</option>
                         <option value="JBFlex">JBFlex</option>
                         <option value="L80">L80</option>
                     </select>
                 </div>
 
-             
-    <div class="form-group">
+                <div class="form-group">
                     <label for="machine">Machine/Equipment *</label>
                     <input type="text" id="machine" class="form-control" required list="machine-list" autocomplete="off" onchange="updateSuggestions()">
                     <datalist id="machine-list"></datalist>
                 </div>
 
-          
-          <div class="form-group">
+                <div class="form-group">
                     <label for="description">Issue Description *</label>
                     <input type="text" id="description" class="form-control" required list="description-suggestions" autocomplete="off">
                     <datalist id="description-suggestions"></datalist>
-                    <small id="description-help" style="color: 
- #666; font-size: 12px;">Select line and machine to see previous issues</small>
+                    <small id="description-help" style="color: #666; font-size: 12px;">Select line and machine to see previous issues</small>
                 </div>
 
                 <div class="form-group">
                     <label>Actions Taken *</label>
-                    <div id="actions-display" style="background: #f8f9fa;
- border: 2px dashed #dee2e6; border-radius: 8px; padding: 15px; min-height: 100px;
- margin-bottom: 10px;">
-                        <p style="color: #999;
- text-align: center; margin: 20px 0;">No actions added yet. Click "Add Action" below to begin.</p>
+                    <div id="actions-display" style="background: #f8f9fa; border: 2px dashed #dee2e6; border-radius: 8px; padding: 15px; min-height: 100px; margin-bottom: 10px;">
+                        <p style="color: #999; text-align: center; margin: 20px 0;">No actions added yet. Click "Add Action" below to begin.</p>
                     </div>
                     <button type="button" class="btn btn-success" onclick="showAddActionModal()">+ Add Action</button>
                 </div>
 
                 <button type="submit" id="submit-issue-btn" class="btn btn-primary" style="display: none;">Submit Issue Report</button>
- 
                 <button type="button" id="ask-ai-btn" class="btn btn-info" style="display: none;" onclick="askAIForAssistance()">🤖 Ask AI For Assistance</button>
             </form>
         </div>
@@ -651,42 +635,36 @@
             <h2>Search Historical Issues</h2>
             
             <div class="form-group">
-     
                 <label for="search-line">Production Line</label>
                 <select id="search-line" class="form-control" onchange="updateSearchMachines()">
                     <option value="">All Lines</option>
                     <option value="RX500">RX500</option>
                     <option value="RX300">RX300</option>
-    
                     <option value="HH">HH</option>
                     <option value="JBFlex">JBFlex</option>
                     <option value="L80">L80</option>
                 </select>
             </div>
 
-            <div 
- class="form-group">
+            <div class="form-group">
                 <label>
                     <input type="checkbox" id="search-all-lines" onchange="updateSearchMachines()" style="margin-right: 8px;">
                     <strong>Search all production lines for this machine</strong>
                 </label>
-                <small 
- id="search-machine-help" style="color: #666; font-size: 12px; display: block; margin-top: 5px;">Select a production line above, or check this box to search across all lines</small>
+                <small id="search-machine-help" style="color: #666; font-size: 12px; display: block; margin-top: 5px;">Select a production line above, or check this box to search across all lines</small>
             </div>
 
             <div class="form-group">
                 <label for="search-machine">Machine/Equipment</label>
                 <input type="text" id="search-machine" class="form-control" list="search-machine-list" autocomplete="off" onchange="updateSearchKeywords()">
-               
-  <datalist id="search-machine-list"></datalist>
+                <datalist id="search-machine-list"></datalist>
             </div>
 
             <div class="form-group">
                 <label for="search-keyword">Issue Keywords (Optional)</label>
                 <input type="text" id="search-keyword" class="form-control" list="search-keyword-list" placeholder="e.g., jam, leak, error">
                 <datalist id="search-keyword-list"></datalist>
-             
-    <small id="search-keyword-help" style="color: #666; font-size: 12px;">Select a machine to see previous issues</small>
+                <small id="search-keyword-help" style="color: #666; font-size: 12px;">Select a machine to see previous issues</small>
             </div>
 
             <button onclick="searchIssues()" class="btn btn-primary">🔍 Search Issues</button>
@@ -695,37 +673,31 @@
         </div>
 
         <div id="ai-tab" class="tab-content">
-            <h2><span onclick="robotEasterEgg()" style="cursor: pointer;
- display: inline-block; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.2) rotate(10deg)'" onmouseout="this.style.transform='scale(1) rotate(0deg)'">🤖</span> AI-Generated Work Instructions</h2>
-            <p style="color: #666;
- margin-bottom: 20px;">
+            <h2><span onclick="robotEasterEgg()" style="cursor: pointer; display: inline-block; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.2) rotate(10deg)'" onmouseout="this.style.transform='scale(1) rotate(0deg)'">🤖</span> AI-Generated Work Instructions</h2>
+            <p style="color: #666; margin-bottom: 20px;">
                 Generate detailed work instructions based on your equipment manuals and definitions. The AI will only use information from your configured manuals and will indicate when no information is available.
             </p>
 
             <div class="form-group">
                 <label for="ai-line">Production Line *</label>
-           
-          <select id="ai-line" class="form-control" required>
+                <select id="ai-line" class="form-control" required>
                     <option value="">Select Line</option>
                     <option value="RX500">RX500</option>
                     <option value="RX300">RX300</option>
                     <option value="HH">HH</option>
-       
-                  <option value="JBFlex">JBFlex</option>
+                    <option value="JBFlex">JBFlex</option>
                     <option value="L80">L80</option>
                 </select>
             </div>
 
             <div class="form-group">
                 <label for="ai-machine">Machine/Equipment *</label>
-      
-              <input type="text" id="ai-machine" class="form-control" required placeholder="e.g., Heat Sealer 2">
+                <input type="text" id="ai-machine" class="form-control" required placeholder="e.g., Heat Sealer 2">
             </div>
 
             <div class="form-group">
                 <label for="ai-issue">How do I... *</label>
-                <textarea id="ai-issue" class="form-control" rows="4" required placeholder="Describe what you need help with... (e.g., 'replace the heating element on Heat Sealer 2' or 
- 'calibrate the tension sensor')"></textarea>
+                <textarea id="ai-issue" class="form-control" rows="4" required placeholder="Describe what you need help with... (e.g., 'replace the heating element on Heat Sealer 2' or 'calibrate the tension sensor')"></textarea>
             </div>
 
             <button onclick="generateWorkInstruction()" class="btn btn-primary">🤖 Generate Work Instruction</button>
@@ -736,47 +708,38 @@
         <div id="definitions-tab" class="tab-content">
             <h2>📖 Definitions & Terminology</h2>
             
-         
-    <div style="background: #e8f4f8; border: 2px solid #17a2b8; border-radius: 10px; padding: 20px;
- margin-bottom: 20px;">
-                <p style="color: #0c5460;
- line-height: 1.6;">
+            <div style="background: #e8f4f8; border: 2px solid #17a2b8; border-radius: 10px; padding: 20px; margin-bottom: 20px;">
+                <p style="color: #0c5460; line-height: 1.6;">
                     <strong>Manufacturing Knowledge Base:</strong> Manage definitions and terminology specific to your baby wipes production facility. 
                     These definitions are automatically included when generating AI work instructions to ensure accurate and relevant guidance.
                 </p>
             </div>
 
-  
-           <div style="display: flex; gap: 10px; margin-bottom: 20px;
- align-items: center;">
+            <div style="display: flex; gap: 10px; margin-bottom: 20px; align-items: center;">
                 <input type="text" id="definitions-search" class="form-control" placeholder="🔍 Search definitions..." 
                        onkeyup="filterDefinitions()" style="flex: 1;">
                 <button onclick="openDefinitionModal()" class="btn btn-success">➕ Add Definition</button>
             </div>
 
             <div id="definitions-list"></div>
-     
-    </div>
+        </div>
 
         <div id="history-tab" class="tab-content">
             <h2>Issue History</h2>
             
             <div style="margin-bottom: 20px;">
                 <label for="filter-line">Filter by Line:</label>
-                <select id="filter-line" class="form-control" onchange="filterHistory();
- updateHistoryMachineOptions();" style="display: inline-block; width: 200px; margin: 0 10px;">
+                <select id="filter-line" class="form-control" onchange="filterHistory(); updateHistoryMachineOptions();" style="display: inline-block; width: 200px; margin: 0 10px;">
                     <option value="">All Lines</option>
                     <option value="RX500">RX500</option>
                     <option value="RX300">RX300</option>
                     <option value="HH">HH</option>
-        
-              <option value="JBFlex">JBFlex</option>
+                    <option value="JBFlex">JBFlex</option>
                     <option value="L80">L80</option>
                 </select>
 
                 <label for="filter-machine">Machine:</label>
-                <select id="filter-machine" class="form-control" onchange="filterHistory()" style="display: inline-block;
- width: 200px; margin: 0 10px;">
+                <select id="filter-machine" class="form-control" onchange="filterHistory()" style="display: inline-block; width: 200px; margin: 0 10px;">
                     <option value="">All Machines</option>
                 </select>
             </div>
@@ -785,62 +748,49 @@
         </div>
 
         <div id="settings-tab" class="tab-content">
-            <h2>⚙️ Setup 
- & Configuration</h2>
+            <h2>⚙️ Setup & Configuration</h2>
             
             <div class="config-section">
                 <h3>🤖 AI Provider Selection</h3>
-                <p style="color: #666;
- margin-bottom: 15px;">Choose which AI service to use for generating work instructions</p>
+                <p style="color: #666; margin-bottom: 15px;">Choose which AI service to use for generating work instructions</p>
                 
                 <div class="provider-selector">
                     <div class="provider-card" id="gemini-card" onclick="selectProvider('gemini')">
                         <h4>🆓 Google Gemini</h4>
-        
-                  <p style="color: #666;
- font-size: 14px; margin: 10px 0;">FREE - No credit card needed</p>
-                        <p style="color: #28a745;
- font-weight: bold;">✓ Recommended for most users</p>
+                        <p style="color: #666; font-size: 14px; margin: 10px 0;">FREE - No credit card needed</p>
+                        <p style="color: #28a745; font-weight: bold;">✓ Recommended for most users</p>
                     </div>
                     
                     <div class="provider-card" id="azure-card" onclick="selectProvider('azure')">
                         <h4>💼 Azure OpenAI</h4>
-      
-                    <p style="color: #666;
- font-size: 14px; margin: 10px 0;">Requires Azure account</p>
-                        <p style="color: #007bff;
- font-weight: bold;">Best for enterprises</p>
+                        <p style="color: #666; font-size: 14px; margin: 10px 0;">Requires Azure account</p>
+                        <p style="color: #007bff; font-weight: bold;">Best for enterprises</p>
                     </div>
                 </div>
             </div>
 
             <div class="config-section" id="gemini-config">
                 <h3>🔑 Google Gemini Configuration</h3>
-                
- <div class="alert-box alert-success-box">
+                <div class="alert-box alert-success-box">
                     <strong>✓ FREE - No Credit Card Required</strong><br>
                     Get your free API key at: <a href="https://ai.google.dev" target="_blank">ai.google.dev</a>
                 </div>
 
                 <div class="form-group">
-           
-             <label for="gemini-key">API Key *</label>
+                    <label for="gemini-key">API Key *</label>
                     <input type="password" id="gemini-key" class="form-control" 
                            placeholder="Your Gemini API key (starts with AIza...)">
-                    <small style="color: #666;">Get it from Google AI Studio (ai.google.dev) - completely 
- free!</small>
+                    <small style="color: #666;">Get it from Google AI Studio (ai.google.dev) - completely free!</small>
                 </div>
 
                 <div class="form-group">
                     <label for="gemini-model">Model</label>
                     <select id="gemini-model" class="form-control">
-                        
- <option value="gemini-2.0-flash-exp">Gemini 2.0 Flash (Recommended - Fast & Free)</option>
+                        <option value="gemini-2.0-flash-exp">Gemini 2.0 Flash (Recommended - Fast & Free)</option>
                         <option value="gemini-1.5-pro">Gemini 1.5 Pro (More detailed)</option>
                         <option value="gemini-1.5-flash">Gemini 1.5 Flash (Faster)</option>
                     </select>
-               
-  </div>
+                </div>
 
                 <button onclick="saveGeminiConfig()" class="btn btn-primary">Save Gemini Configuration</button>
                 <button onclick="testGeminiConnection()" class="btn btn-info">Test Connection</button>
@@ -848,76 +798,63 @@
 
             <div class="config-section" id="azure-config" style="display: none;">
                 <h3>🔑 Azure OpenAI Configuration</h3>
-           
-          <div class="alert-box alert-info-box">
+                <div class="alert-box alert-info-box">
                     <strong>ℹ️ Azure Subscription Required</strong><br>
-                    You'll need an Azure account with OpenAI access.
- New accounts get $200 free credit.
+                    You'll need an Azure account with OpenAI access. New accounts get $200 free credit.
                 </div>
 
                 <div class="form-group">
                     <label for="azure-endpoint">Azure Endpoint URL *</label>
                     <input type="text" id="azure-endpoint" class="form-control" 
                            placeholder="https://your-resource.openai.azure.com/">
-  
                     <small style="color: #666;">Found in Azure Portal → Your OpenAI Resource → Endpoint</small>
                 </div>
 
                 <div class="form-group">
                     <label for="azure-key">API Key *</label>
-               
-             <input type="password" id="azure-key" class="form-control" 
+                    <input type="password" id="azure-key" class="form-control" 
                            placeholder="Your Azure OpenAI API key">
                     <small style="color: #666;">Found in Azure Portal → Keys and Endpoint</small>
                 </div>
 
-               
-  <div class="form-group">
+                <div class="form-group">
                     <label for="deployment-name">Deployment Name *</label>
                     <input type="text" id="deployment-name" class="form-control" 
                            placeholder="gpt-4">
-                    <small style="color: #666;">Your model 
- deployment name (e.g., gpt-4, gpt-35-turbo)</small>
+                    <small style="color: #666;">Your model deployment name (e.g., gpt-4, gpt-35-turbo)</small>
                 </div>
 
                 <button onclick="saveAzureConfig()" class="btn btn-primary">Save Azure Configuration</button>
                 <button onclick="testAzureConnection()" class="btn btn-info">Test Connection</button>
                 
                 <div class="alert-box alert-warning-box">
-     
-                <strong>💰 Azure Pricing:</strong><br>
+                    <strong>💰 Azure Pricing:</strong><br>
                     • New accounts: $200 free credit<br>
                     • GPT-4: ~$0.10-$0.30 per instruction<br>
                     • GPT-3.5: ~$0.01-$0.05 per instruction
-          
-              </div>
+                </div>
             </div>
 
             <div class="config-section">
                 <h3>📚 Equipment Manual Configuration</h3>
-                <p style="color: #666;
- margin-bottom: 15px;">
+                <p style="color: #666; margin-bottom: 15px;">
                     Link each piece of equipment to its manual stored in OneDrive, SharePoint, or GitHub.
                     <strong>Manuals are organized by Production Line and Machine.</strong>
                 </p>
 
                 <div id="manual-config-list" style="margin: 15px 0;"></div>
 
-   
-              <button onclick="addManualMapping()" class="btn btn-success">+ Add Manual Mapping</button>
+                <button onclick="addManualMapping()" class="btn btn-success">+ Add Manual Mapping</button>
             </div>
-            
+
             <div class="config-section">
-                <h3>🔍 Cloud Sync Verification & Data Load</h3>
-                <p style="color: #666;
- margin-bottom: 15px;">
-                    Use these tools to verify your manual mappings are properly syncing to Google Sheets and to manually pull data.
+                <h3>🔍 Cloud Sync Verification</h3>
+                <p style="color: #666; margin-bottom: 15px;">
+                    Use these tools to verify your manual mappings are properly syncing to Google Sheets.
                 </p>
                 
-                <button onclick="loadFromCloud()" class="btn btn-primary">⬇️ Manually Load/Sync All Data From Cloud</button>
                 <button onclick="verifyCloudSync()" class="btn btn-info">🔍 Check What's in Google Sheets</button>
-          
-              <button onclick="forceResyncAll()" class="btn btn-warning">🔄 Force Re-sync All Configs</button>
+                <button onclick="forceResyncAll()" class="btn btn-warning">🔄 Force Re-sync All Configs</button>
                 
                 <div id="sync-verification-result" style="margin-top: 15px;"></div>
             </div>
@@ -925,82 +862,66 @@
 
         <div id="action-modal" class="modal" onclick="handleModalClick(event)">
             <div class="modal-content" onclick="event.stopPropagation()">
-       
-             <h3 style="margin-bottom: 20px;
- color: #2c3e50;">Add Action Taken</h3>
+                <h3 style="margin-bottom: 20px; color: #2c3e50;">Add Action Taken</h3>
                 
                 <div class="form-group">
                     <label for="action-input">Describe the action taken: *</label>
                     <input type="text" id="action-input" class="form-control" placeholder="What did you try?" list="action-suggestions" autocomplete="off">
-          
-              <datalist id="action-suggestions"></datalist>
-                    <small style="color: #666;
- font-size: 12px;">Start typing or select from previous actions</small>
+                    <datalist id="action-suggestions"></datalist>
+                    <small id="action-help" style="color: #666; font-size: 12px;">Start typing or select from previous actions</small>
                 </div>
 
                 <div class="form-group">
                     <label>Did this action correct the problem? *</label>
                     <div class="action-buttons">
-             
                         <button type="button" class="btn btn-success" onclick="addActionWithStatus('corrected')">
                             ✅ Yes - Corrected
                         </button>
-                        <button type="button" class="btn" onclick="addActionWithStatus('not-corrected')" style="background: #dc3545;
- color: white;">
+                        <button type="button" class="btn" onclick="addActionWithStatus('not-corrected')" style="background: #dc3545; color: white;">
                             ❌ No - Not Corrected
                         </button>
                         <button type="button" class="btn btn-warning" onclick="addActionWithStatus('unsure')">
-               
-                          ❓ Unsure
+                            ❓ Unsure
                         </button>
                     </div>
                 </div>
 
-                <div style="margin-top: 20px;
- text-align: right;">
-                    <button type="button" class="btn" onclick="closeActionModal()" style="background: #6c757d;
- color: white;">Cancel</button>
+                <div style="margin-top: 20px; text-align: right;">
+                    <button type="button" class="btn" onclick="closeActionModal()" style="background: #6c757d; color: white;">Cancel</button>
                 </div>
             </div>
         </div>
 
         <div id="manual-modal" class="modal" onclick="handleManualModalClick(event)">
             <div class="modal-content" onclick="event.stopPropagation()">
-                <h3 style="margin-bottom: 20px;
- color: #2c3e50;">Add Equipment Manual Mapping</h3>
+                <h3 style="margin-bottom: 20px; color: #2c3e50;">Add Equipment Manual Mapping</h3>
                 
                 <div class="form-group">
                     <label for="manual-line">Production Line *</label>
                     <select id="manual-line" class="form-control" onchange="updateManualMachineOptions()">
-                 
-                          <option value="">Select Production Line</option>
+                        <option value="">Select Production Line</option>
                     </select>
                 </div>
 
                 <div class="form-group">
                     <label for="manual-machine">Machine/Equipment *</label>
-               
-                  <input type="text" id="manual-machine" class="form-control" list="manual-machine-list" placeholder="Select or type equipment name">
+                    <input type="text" id="manual-machine" class="form-control" list="manual-machine-list" placeholder="Select or type equipment name">
                     <datalist id="manual-machine-list"></datalist>
                 </div>
 
                 <div class="form-group">
                     <label for="manual-name">Manual Name *</label>
-         
                     <input type="text" id="manual-name" class="form-control" placeholder="e.g., Unwind Operation Manual v3.2">
                 </div>
 
                 <div class="form-group">
                     <label for="manual-url">Manual URL *</label>
-                    <input type="text" id="manual-url" class="form-control" placeholder="https://drive.google.com/file/d/... 
- (Google Drive link)">
-                    <small style="color: #666;">📁 Paste your Google Drive link - PDF will be automatically fetched when needed</small>
+                    <input type="text" id="manual-url" class="form-control" placeholder="https://drive.google.com/file/d/... (Google Drive link)">
+                    <small style="color: #666; font-size: 12px;">📁 Paste your Google Drive link - PDF will be automatically fetched when needed</small>
                 </div>
 
-                <div style="margin-top: 20px;
- text-align: right;">
-                    <button type="button" class="btn" onclick="closeManualModal()" style="background: #6c757d;
- color: white;">Cancel</button>
+                <div style="margin-top: 20px; text-align: right;">
+                    <button type="button" class="btn" onclick="closeManualModal()" style="background: #6c757d; color: white;">Cancel</button>
                     <button type="button" class="btn btn-success" onclick="saveManualMapping()">Save Manual Mapping</button>
                 </div>
             </div>
@@ -1008,45 +929,37 @@
 
         <div id="definition-modal" class="modal" onclick="handleDefinitionModalClick(event)">
             <div class="modal-content" onclick="event.stopPropagation()">
-            
-             <h3 style="margin-bottom: 20px; color: #2c3e50;" id="definition-modal-title">Add Definition</h3>
+                <h3 style="margin-bottom: 20px; color: #2c3e50;" id="definition-modal-title">Add Definition</h3>
                 
                 <div class="form-group">
                     <label for="definition-category">Category *</label>
                     <select id="definition-category" class="form-control">
-             
                         <option value="">Select Category</option>
                         <option value="Terminology">🏷️ Terminology</option>
                         <option value="Equipment">⚙️ Equipment</option>
                         <option value="Issue">⚠️ Common Issues</option>
-        
-                         <option value="Process">🔄 Process</option>
+                        <option value="Process">🔄 Process</option>
                     </select>
                 </div>
 
                 <div class="form-group">
                     <label for="definition-term">Term / Name *</label>
-     
                     <input type="text" id="definition-term" class="form-control" placeholder="e.g., Substrate, Web Walk, Forming Boards">
                 </div>
 
                 <div class="form-group">
                     <label for="definition-text">Definition *</label>
-                    <textarea 
- id="definition-text" class="form-control" rows="4" placeholder="Enter the definition or description..."></textarea>
+                    <textarea id="definition-text" class="form-control" rows="4" placeholder="Enter the definition or description..."></textarea>
                 </div>
 
                 <div class="form-group">
                     <label for="definition-equipment">Related Equipment (Optional)</label>
                     <input type="text" id="definition-equipment" class="form-control" placeholder="e.g., Wrapper, Forming, All">
-          
-              <small style="color: #666;">Specify which equipment this applies to, or leave blank for all</small>
+                    <small style="color: #666;">Specify which equipment this applies to, or leave blank for all</small>
                 </div>
 
-                <div style="margin-top: 20px;
- text-align: right;">
-                    <button type="button" class="btn" onclick="closeDefinitionModal()" style="background: #6c757d;
- color: white;">Cancel</button>
+                <div style="margin-top: 20px; text-align: right;">
+                    <button type="button" class="btn" onclick="closeDefinitionModal()" style="background: #6c757d; color: white;">Cancel</button>
                     <button type="button" class="btn btn-success" onclick="saveDefinition()">Save Definition</button>
                 </div>
             </div>
@@ -1055,8 +968,7 @@
 
     <script>
         // ====== CONFIGURATION ======
-        // UPDATE THIS URL WHEN YOU DEPLOY A NEW VERSION OF 
- THE GOOGLE APPS SCRIPT
+        // UPDATE THIS URL WHEN YOU DEPLOY A NEW VERSION OF THE GOOGLE APPS SCRIPT
         const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwkP07t0Yif8o1dChDFUiuijpcFyhzoEzqI21qLb0xG75Ifte0vR0Fu517zbsOo7D_a/exec';
         
         // ====== DATA STORAGE ======
@@ -1064,46 +976,37 @@
         let currentActions = []; // Track actions being added for current issue
         let azureConfig = JSON.parse(localStorage.getItem('azureConfig')) || {};
         let geminiConfig = JSON.parse(localStorage.getItem('geminiConfig')) || {};
-        let manualMappings 
- = JSON.parse(localStorage.getItem('manualMappings')) || {};
+        let manualMappings = JSON.parse(localStorage.getItem('manualMappings')) || {};
         let definitions = JSON.parse(localStorage.getItem('definitions')) || [];
         let selectedProvider = localStorage.getItem('selectedProvider') || 'gemini'; // Default to free option
-        let currentEditingDefinitionId = null;
-        // Track which definition is being edited
+        let currentEditingDefinitionId = null; // Track which definition is being edited
         
         const machinesByLine = {
             'RX500': ['Unwind', 'Festoon', 'Forming Table', 'Pull Station', 'Saw House', 'Diverter', 'Conveyor', 'Lidder', 'Wrapper', 'Case Erector', 'Case Packer', 'Weight Checker', 'Palletizer', 'Printer (Wrapper)', 'Printer (Case)'],
             'RX300': ['Unwind', 'Forming Table', 'Pull Station', 'Saw House', 'Doubler', 'Wig-Wag', 'Diverter', 'Conveyor', 'Wrapper', 'Lidder', 'Case Erector', 'Case Packer', 'Weight Checker', 'Palletizer', 'Printer (Wrapper)', 'Printer (Case)', 'Bundler'],
-   
-              'HH': ['Unwind', 'Forming Table', 'Pull Station', 'Saw House', 'Stacker', 'Conveyor', 'Wrapper', 'Lidder', 'Case Erector', 'Case Packer', 'Weight Checker', 'Palletizer', 'Printer (Wrapper)', 'Printer (Case)'],
+            'HH': ['Unwind', 'Forming Table', 'Pull Station', 'Saw House', 'Stacker', 'Conveyor', 'Wrapper', 'Lidder', 'Case Erector', 'Case Packer', 'Weight Checker', 'Palletizer', 'Printer (Wrapper)', 'Printer (Case)'],
             'JBFlex': ['Unwind', 'Forming Table', 'Pull Station', 'Saw House', 'Stacker', 'Diverter', 'Conveyor', 'Wrapper', 'Lidder', 'Case Erector', 'Case Packer', 'Weight Checker', 'Palletizer', 'Printer (Wrapper)', 'Printer (Case)'],
             'L80': ['Unwind 1', 'Unwind 2', 'Drum 1', 'Drum 2', 'Stacker 1', 'Stacker 2', 'Conveyor', 'Wrapper', 'Lidder']
-       
-  };
+        };
 
         // ====== INITIALIZATION ======
         window.addEventListener('load', () => {
             loadLocalData();
-            // loadFromCloud(); // <-- AUTO-LOAD REMOVED TO PREVENT UI FREEZE ON STARTUP
+            loadFromCloud();
             updateHistoryMachineOptions();
             displayHistory(issues);
             loadAzureConfig();
             loadGeminiConfig();
-            
- selectProvider(selectedProvider);
+            selectProvider(selectedProvider);
             renderManualMappings();
             initializeDefaultDefinitions();
             renderDefinitions();
-            
-            // Show a prompt to manually load data if history is empty
-            if (issues.length === 0) {
-                 showSyncStatus('info', 'ℹ️ Application loaded from local data. Click "Manually Load/Sync All Data From Cloud" in the Setup tab to fetch history.');
-            }
         });
- // ====== CLOUD SYNC FUNCTIONS ======
+
+        // ====== CLOUD SYNC FUNCTIONS ======
         function showSyncStatus(type, message) {
             const statusDiv = document.getElementById('sync-status');
- statusDiv.className = 'sync-status ' + type;
+            statusDiv.className = 'sync-status ' + type;
             statusDiv.textContent = message;
             
             if (type === 'success') {
@@ -1111,7 +1014,7 @@
                     statusDiv.className = 'sync-status';
                     statusDiv.textContent = '';
                 }, 3000);
- }
+            }
         }
 
         function syncToCloud(issue) {
@@ -1119,27 +1022,23 @@
                 showSyncStatus('syncing', '☁️ Syncing to Google Sheets...');
                 
                 try {
-            
-                  let iframe = document.getElementById('sync-iframe');
+                    let iframe = document.getElementById('sync-iframe');
                     if (!iframe) {
                         iframe = document.createElement('iframe');
                         iframe.id = 'sync-iframe';
-               
-              iframe.name = 'sync-iframe';
+                        iframe.name = 'sync-iframe';
                         iframe.style.display = 'none';
                         document.body.appendChild(iframe);
                     }
-                   
-  
+                    
                     let form = document.getElementById('sync-form');
                     if (form) form.remove();
                     
                     form = document.createElement('form');
-            
-                  form.id = 'sync-form';
+                    form.id = 'sync-form';
                     form.method = 'POST';
                     form.action = GOOGLE_SCRIPT_URL;
- form.target = 'sync-iframe';
+                    form.target = 'sync-iframe';
                     form.style.display = 'none';
                     
                     const actionInput = document.createElement('input');
@@ -1147,7 +1046,8 @@
                     actionInput.name = 'action';
                     actionInput.value = 'save';
                     form.appendChild(actionInput);
- const issueInput = document.createElement('input');
+                    
+                    const issueInput = document.createElement('input');
                     issueInput.type = 'hidden';
                     issueInput.name = 'issue';
                     issueInput.value = JSON.stringify(issue);
@@ -1155,84 +1055,85 @@
                     
                     document.body.appendChild(form);
                     form.submit();
-                    if (form) form.remove(); // Cleanup form element immediately
                     
- setTimeout(() => {
+                    setTimeout(() => {
                         showSyncStatus('success', '✓ Synced to Google Sheets successfully');
                         resolve(true);
                     }, 1000);
- } catch (error) {
+                    
+                } catch (error) {
                     console.error('Sync error:', error);
- showSyncStatus('error', '✗ Cloud sync failed - data saved locally');
+                    showSyncStatus('error', '✗ Cloud sync failed - data saved locally');
                     setTimeout(() => {
                         showSyncStatus('', '');
                     }, 5000);
- resolve(false);
+                    resolve(false);
                 }
             });
- }
+        }
 
         async function loadFromCloud() {
             showSyncStatus('syncing', '☁️ Loading from Google Sheets...');
- try {
+            
+            try {
                 const response = await fetch(GOOGLE_SCRIPT_URL + '?action=load');
                 const data = await response.json();
                 
                 if (data.success && data.issues) {
                     issues = data.issues;
- saveLocalData();
+                    saveLocalData();
                     
                     // Load AI configs if available
                     if (data.aiConfigs) {
                         if (data.aiConfigs.azureConfig) {
                             azureConfig = data.aiConfigs.azureConfig;
- localStorage.setItem('azureConfig', JSON.stringify(azureConfig));
+                            localStorage.setItem('azureConfig', JSON.stringify(azureConfig));
                             loadAzureConfig();
                         }
                         if (data.aiConfigs.geminiConfig) {
                             geminiConfig = data.aiConfigs.geminiConfig;
- localStorage.setItem('geminiConfig', JSON.stringify(geminiConfig));
+                            localStorage.setItem('geminiConfig', JSON.stringify(geminiConfig));
                             loadGeminiConfig();
                         }
                         if (data.aiConfigs.manualMappings) {
                             manualMappings = data.aiConfigs.manualMappings;
- localStorage.setItem('manualMappings', JSON.stringify(manualMappings));
+                            localStorage.setItem('manualMappings', JSON.stringify(manualMappings));
                             renderManualMappings();
                         }
                         if (data.aiConfigs.selectedProvider) {
                             selectedProvider = data.aiConfigs.selectedProvider;
- localStorage.setItem('selectedProvider', selectedProvider);
+                            localStorage.setItem('selectedProvider', selectedProvider);
                             selectProvider(selectedProvider);
                         }
                     }
                     
                     // Load definitions if available
                     if (data.definitions && Array.isArray(data.definitions)) {
-         
-                           definitions = data.definitions;
+                        definitions = data.definitions;
                         localStorage.setItem('definitions', JSON.stringify(definitions));
- renderDefinitions();
+                        renderDefinitions();
                     }
                     
                     showSyncStatus('success', '✓ Loaded from Google Sheets successfully');
- // Refresh current view
-                    // Update history view if on that tab
-                    if (document.getElementById('history-tab').classList.contains('active')) {
+                    
+                    // Refresh current view
+                    const activeTab = document.querySelector('.nav-tab.active').textContent;
+                    if (activeTab.includes('History')) {
                         displayHistory(issues);
                     }
                     
                     // Update suggestions if machine is already selected
                     updateSuggestions();
- } else {
+                } else {
                     throw new Error('Invalid response from server');
- }
+                }
             } catch (error) {
                 console.error('Load error:', error);
- showSyncStatus('error', '✗ Failed to load from cloud - using local data');
- setTimeout(() => {
+                showSyncStatus('error', '✗ Failed to load from cloud - using local data');
+                setTimeout(() => {
                     showSyncStatus('', '');
                 }, 5000);
- }
+            }
         }
 
         async function syncAIConfigsToCloud() {
@@ -1240,27 +1141,23 @@
                 showSyncStatus('syncing', '☁️ Syncing AI configs to Google Sheets...');
                 
                 try {
-         
-                   let iframe = document.getElementById('sync-iframe');
+                    let iframe = document.getElementById('sync-iframe');
                     if (!iframe) {
                         iframe = document.createElement('iframe');
                         iframe.id = 'sync-iframe';
-            
-              iframe.name = 'sync-iframe';
+                        iframe.name = 'sync-iframe';
                         iframe.style.display = 'none';
                         document.body.appendChild(iframe);
                     }
-                
-     
+                    
                     let form = document.getElementById('config-sync-form');
                     if (form) form.remove();
                     
                     form = document.createElement('form');
-         
-                   form.id = 'config-sync-form';
+                    form.id = 'config-sync-form';
                     form.method = 'POST';
                     form.action = GOOGLE_SCRIPT_URL;
- form.target = 'sync-iframe';
+                    form.target = 'sync-iframe';
                     form.style.display = 'none';
                     
                     const actionInput = document.createElement('input');
@@ -1268,47 +1165,47 @@
                     actionInput.name = 'action';
                     actionInput.value = 'saveAIConfigs';
                     form.appendChild(actionInput);
- const configsInput = document.createElement('input');
+                    
+                    const configsInput = document.createElement('input');
                     configsInput.type = 'hidden';
                     configsInput.name = 'aiConfigs';
- configsInput.value = JSON.stringify({
+                    configsInput.value = JSON.stringify({
                         azureConfig: azureConfig,
                         geminiConfig: geminiConfig,
                         manualMappings: manualMappings,
-                       
-                          selectedProvider: selectedProvider
+                        selectedProvider: selectedProvider
                     });
- form.appendChild(configsInput);
+                    form.appendChild(configsInput);
                     
                     document.body.appendChild(form);
                     form.submit();
-                    if (form) form.remove(); // Cleanup form element immediately
                     
                     setTimeout(() => {
                         showSyncStatus('success', '✓ AI configs synced to Google Sheets');
                         resolve(true);
                     }, 1000);
- } catch (error) {
+                    
+                } catch (error) {
                     console.error('Config sync error:', error);
- showSyncStatus('error', '✗ Config sync failed - saved locally');
+                    showSyncStatus('error', '✗ Config sync failed - saved locally');
                     setTimeout(() => {
                         showSyncStatus('', '');
                     }, 5000);
- resolve(false);
+                    resolve(false);
                 }
             });
- }
+        }
 
         // ====== LOCAL STORAGE ======
         function saveLocalData() {
             localStorage.setItem('equipmentIssues', JSON.stringify(issues));
- }
+        }
 
         function loadLocalData() {
             const stored = localStorage.getItem('equipmentIssues');
- if (stored) {
+            if (stored) {
                 issues = JSON.parse(stored);
- }
+            }
         }
 
         // ====== UI FUNCTIONS ======
@@ -1316,15 +1213,16 @@
             document.querySelectorAll('.tab-content').forEach(tab => {
                 tab.classList.remove('active');
             });
- document.querySelectorAll('.nav-tab').forEach(tab => {
+            document.querySelectorAll('.nav-tab').forEach(tab => {
                 tab.classList.remove('active');
             });
- document.getElementById(tabName + '-tab').classList.add('active');
+            
+            document.getElementById(tabName + '-tab').classList.add('active');
             event.target.classList.add('active');
             
             if (tabName === 'history') {
                 displayHistory(issues);
- }
+            }
         }
 
         function updateMachineOptions() {
@@ -1337,9 +1235,8 @@
                     const option = document.createElement('option');
                     option.value = machine;
                     machineList.appendChild(option);
-      
-                  });
- }
+                });
+            }
         }
 
         function updateSuggestions() {
@@ -1353,13 +1250,14 @@
                 document.getElementById('description-suggestions').innerHTML = '';
                 descriptionHelp.textContent = 'Select line and machine to see previous issues';
                 return;
- }
+            }
             
             // Filter issues for this specific line + machine
             const relevantIssues = issues.filter(issue => 
                 issue.line === line && 
                 issue.machine.toLowerCase() === machine.toLowerCase()
             );
+            
             // Extract unique descriptions
             const descriptions = new Set();
             relevantIssues.forEach(issue => {
@@ -1367,6 +1265,7 @@
                     descriptions.add(issue.description.trim());
                 }
             });
+            
             // Update description datalist
             const descriptionList = document.getElementById('description-suggestions');
             descriptionList.innerHTML = '';
@@ -1375,18 +1274,18 @@
                 option.value = desc;
                 descriptionList.appendChild(option);
             });
+            
             // Update helper text with counts
             if (descriptions.size > 0) {
-                descriptionHelp.innerHTML = `<strong style="color: #28a745;">✓ ${descriptions.size} previous issue${descriptions.size !== 1 ?
- 's' : ''} available</strong> - Start typing or click ▼ to select`;
- } else {
+                descriptionHelp.innerHTML = `<strong style="color: #28a745;">✓ ${descriptions.size} previous issue${descriptions.size !== 1 ? 's' : ''} available</strong> - Start typing or click ▼ to select`;
+            } else {
                 descriptionHelp.textContent = 'No previous issues found for this machine - enter a new description';
- }
+            }
             
             // Log for debugging
             if (descriptions.size > 0) {
                 console.log(`Loaded ${descriptions.size} previous issue descriptions for ${line} - ${machine}`);
- }
+            }
         }
 
         function updateSearchMachines() {
@@ -1409,37 +1308,35 @@
                 });
                 machineHelp.innerHTML = `<strong style="color: #007bff;">ℹ️ Showing machines from all production lines</strong>`;
                 allLinesCheckbox.parentElement.querySelector('strong').style.color = '#007bff';
- }
+            }
             // If a line is selected, show machines from that line
             else if (line) {
                 // Show machines from machinesByLine if available
                 if (machinesByLine[line]) {
                     machinesByLine[line].forEach(machine => {
- 
                         const option = document.createElement('option');
                         option.value = machine;
                         machineList.appendChild(option);
                     });
- }
+                }
                 
                 // Also add machines from historical data for this line
                 const historicalMachines = [...new Set(issues
                     .filter(issue => issue.line === line)
-               
-             .map(issue => issue.machine))];
+                    .map(issue => issue.machine))];
                 
                 historicalMachines.forEach(machine => {
                     // Only add if not already in the list
                     if (!machinesByLine[line] || !machinesByLine[line].includes(machine)) {
                         const option = document.createElement('option');
-           
-                          option.value = machine;
+                        option.value = machine;
                         machineList.appendChild(option);
                     }
                 });
+                
                 machineHelp.innerHTML = `<strong style="color: #28a745;">✓ Machine suggestions loaded for ${line}</strong>`;
                 allLinesCheckbox.parentElement.querySelector('strong').style.color = '#333';
- }
+            }
             // No line selected and checkbox not checked
             else {
                 const allMachines = [...new Set(issues.map(issue => issue.machine))];
@@ -1450,11 +1347,11 @@
                 });
                 machineHelp.textContent = 'All machines available - select a production line to filter';
                 allLinesCheckbox.parentElement.querySelector('strong').style.color = '#333';
- }
+            }
             
             // Update keyword suggestions when machine options change
             updateSearchKeywords();
- }
+        }
 
         function updateSearchKeywords() {
             const line = document.getElementById('search-line').value;
@@ -1464,6 +1361,7 @@
             const keywordHelp = document.getElementById('search-keyword-help');
             
             keywordList.innerHTML = '';
+            
             if (!machine) {
                 keywordHelp.textContent = 'Select a machine to see previous issues';
                 return;
@@ -1476,19 +1374,18 @@
                 relevantIssues = issues.filter(issue => 
                     issue.machine.toLowerCase() === machine.toLowerCase()
                 );
- } else if (line) {
+            } else if (line) {
                 // Search only within selected line
                 relevantIssues = issues.filter(issue => 
                     issue.line === line && 
                     issue.machine.toLowerCase() === machine.toLowerCase()
-         
                 );
             } else {
                 // No line selected and checkbox not checked - search all
                 relevantIssues = issues.filter(issue => 
                     issue.machine.toLowerCase() === machine.toLowerCase()
                 );
- }
+            }
             
             // Extract unique issue descriptions
             const descriptions = new Set();
@@ -1497,28 +1394,27 @@
                     descriptions.add(issue.description.trim());
                 }
             });
+            
             // Populate datalist
             descriptions.forEach(desc => {
                 const option = document.createElement('option');
                 option.value = desc;
                 keywordList.appendChild(option);
             });
+            
             // Update helper text
             if (descriptions.size > 0) {
                 if (allLinesCheckbox.checked) {
                     const linesWithIssues = [...new Set(relevantIssues.map(issue => issue.line))];
-                    keywordHelp.innerHTML = `<strong style="color: #007bff;">ℹ️ ${descriptions.size} previous issue${descriptions.size !== 1 ?
- 's' : ''} found across ${linesWithIssues.length} production line${linesWithIssues.length !== 1 ? 's' : ''}</strong> - Click ▼ to select`;
- } else if (line) {
-                    keywordHelp.innerHTML = `<strong style="color: #28a745;">✓ ${descriptions.size} previous issue${descriptions.size !== 1 ?
- 's' : ''} found for ${machine} on ${line}</strong> - Click ▼ to select`;
- } else {
-                    keywordHelp.innerHTML = `<strong style="color: #28a745;">✓ ${descriptions.size} previous issue${descriptions.size !== 1 ?
- 's' : ''} found for ${machine}</strong> - Click ▼ to select`;
- }
+                    keywordHelp.innerHTML = `<strong style="color: #007bff;">ℹ️ ${descriptions.size} previous issue${descriptions.size !== 1 ? 's' : ''} found across ${linesWithIssues.length} production line${linesWithIssues.length !== 1 ? 's' : ''}</strong> - Click ▼ to select`;
+                } else if (line) {
+                    keywordHelp.innerHTML = `<strong style="color: #28a745;">✓ ${descriptions.size} previous issue${descriptions.size !== 1 ? 's' : ''} found for ${machine} on ${line}</strong> - Click ▼ to select`;
+                } else {
+                    keywordHelp.innerHTML = `<strong style="color: #28a745;">✓ ${descriptions.size} previous issue${descriptions.size !== 1 ? 's' : ''} found for ${machine}</strong> - Click ▼ to select`;
+                }
             } else {
                 keywordHelp.innerHTML = `<span style="color: #dc3545;">No previous issues found for this machine</span>`;
- }
+            }
         }
 
         function updateHistoryMachineOptions() {
@@ -1531,13 +1427,13 @@
                 const machines = [...new Set(issues
                     .filter(issue => issue.line === line)
                     .map(issue => issue.machine))];
+                
                 machines.sort().forEach(machine => {
                     const option = document.createElement('option');
                     option.value = machine;
                     option.textContent = machine;
                     machineSelect.appendChild(option);
-           
-                  });
+                });
             } else {
                 const machines = [...new Set(issues.map(issue => issue.machine))];
                 machines.sort().forEach(machine => {
@@ -1545,8 +1441,7 @@
                     option.value = machine;
                     option.textContent = machine;
                     machineSelect.appendChild(option);
-           
-                  });
+                });
             }
         }
 
@@ -1566,7 +1461,6 @@
             const relevantIssues = issues.filter(issue => 
                 issue.line === line && 
                 issue.machine.toLowerCase() === machine.toLowerCase() &&
-              
                 issue.description.toLowerCase().includes(description.toLowerCase())
             );
             
@@ -1576,6 +1470,7 @@
                     actions.add(issue.solutions.trim());
                 }
             });
+            
             // Update action suggestions datalist
             const actionList = document.getElementById('action-suggestions');
             actionList.innerHTML = '';
@@ -1584,14 +1479,14 @@
                 option.value = action;
                 actionList.appendChild(option);
             });
+            
             // Update helper text
             const actionHelp = document.getElementById('action-help');
             if (actions.size > 0) {
-                actionHelp.innerHTML = `<strong style="color: #28a745;">✓ ${actions.size} previous action${actions.size !== 1 ?
- 's' : ''} available</strong> - Start typing or click ▼ to select`;
- } else {
+                actionHelp.innerHTML = `<strong style="color: #28a745;">✓ ${actions.size} previous action${actions.size !== 1 ? 's' : ''} available</strong> - Start typing or click ▼ to select`;
+            } else {
                 actionHelp.textContent = 'No previous actions found - enter a new action';
- }
+            }
             
             // Show modal
             document.getElementById('action-modal').style.display = 'block';
@@ -1606,11 +1501,12 @@
         function handleModalClick(event) {
             if (event.target.id === 'action-modal') {
                 closeActionModal();
- }
+            }
         }
 
         function addActionWithStatus(status) {
             const action = document.getElementById('action-input').value.trim();
+            
             if (!action) {
                 alert('Please describe the action taken.');
                 return;
@@ -1621,82 +1517,73 @@
                 'corrected': 'Corrected',
                 'not-corrected': 'Not Corrected',
                 'unsure': 'Unsure'
- 
             };
+            
             // Add action to current actions array
             currentActions.push({
                 action: action,
                 status: statusMap[status],
                 timestamp: new Date().toISOString()
             });
+            
             // Update display
             updateActionsDisplay();
+            
             // Close modal
             closeActionModal();
+            
             // Ask if they want to add another action
             setTimeout(() => {
                 const addAnother = confirm('Action added successfully!\n\nWould you like to add another action?');
                 if (addAnother) {
                     showAddActionModal();
-             
                 } else {
                     // Show submit button and AI assistance button now that we have at least one action
                     document.getElementById('submit-issue-btn').style.display = 'inline-block';
                     document.getElementById('ask-ai-btn').style.display = 'inline-block';
-                
- }
+                }
             }, 100);
- }
+        }
         
         function updateActionsDisplay() {
             const display = document.getElementById('actions-display');
+            
             if (currentActions.length === 0) {
-                display.innerHTML = '<p style="color: #999; text-align: center; margin: 20px 0;">No actions added yet.
- Click "Add Action" below to begin.</p>';
+                display.innerHTML = '<p style="color: #999; text-align: center; margin: 20px 0;">No actions added yet. Click "Add Action" below to begin.</p>';
             } else {
                 let html = '<div style="padding: 5px;">';
                 currentActions.forEach((act, index) => {
                     const statusEmoji = act.status === 'Corrected' ? '✅' : 
                                        act.status === 'Not Corrected' ? '❌' : '❓';
-                    const statusColor 
- = act.status === 'Corrected' ? '#28a745' : 
+                    const statusColor = act.status === 'Corrected' ? '#28a745' : 
                                        act.status === 'Not Corrected' ? '#dc3545' : '#ffc107';
                     
                     html += `
-     
-                       <div style="background: white; border-left: 4px solid ${statusColor}; padding: 12px; margin-bottom: 10px; border-radius: 5px;">
+                        <div style="background: white; border-left: 4px solid ${statusColor}; padding: 12px; margin-bottom: 10px; border-radius: 5px;">
                             <div style="display: flex; justify-content: space-between; align-items: start;">
                                 <div style="flex: 1;">
- 
                                     <strong>${index + 1}. ${act.action}</strong>
                                     <div style="margin-top: 5px; font-size: 14px; color: #666;">
-                    
-                     Status: ${statusEmoji} <span style="color: ${statusColor};
- font-weight: bold;">${act.status}</span>
+                                        Status: ${statusEmoji} <span style="color: ${statusColor}; font-weight: bold;">${act.status}</span>
                                     </div>
                                 </div>
-                               
-  <button onclick="removeAction(${index})" style="background: #dc3545; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer;
- font-size: 12px;">Remove</button>
+                                <button onclick="removeAction(${index})" style="background: #dc3545; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 12px;">Remove</button>
                             </div>
                         </div>
                     `;
                 });
-           
-              html += '</div>';
+                html += '</div>';
                 display.innerHTML = html;
             }
         }
         
         function removeAction(index) {
             if (confirm('Are you sure you want to remove this action?')) {
-               
-             currentActions.splice(index, 1);
+                currentActions.splice(index, 1);
                 updateActionsDisplay();
                 
                 // Hide submit button and AI button if no actions remain
                 if (currentActions.length === 0) {
-                    
                     document.getElementById('submit-issue-btn').style.display = 'none';
                     document.getElementById('ask-ai-btn').style.display = 'none';
                 }
@@ -1706,8 +1593,7 @@
         // ====== FORM SUBMISSION ======
         async function submitIssue(event) {
             event.preventDefault();
-     
-        
+            
             // Validate that at least one action has been added
             if (currentActions.length === 0) {
                 alert('Please add at least one action taken before submitting.');
@@ -1718,6 +1604,7 @@
             const line = document.getElementById('line').value;
             const machine = document.getElementById('machine').value;
             const description = document.getElementById('description').value;
+            
             // Create a separate issue entry for each action (matching Python version)
             const newIssues = [];
             for (const act of currentActions) {
@@ -1725,13 +1612,11 @@
                     id: Date.now().toString() + '-' + Math.random().toString(36).substr(2, 9),
                     timestamp: act.timestamp,
                     operator: operator,
-        
                     line: line,
                     machine: machine,
                     description: description,
                     solutions: act.action,
                     effectiveness: act.status.toLowerCase().replace(' ', '-')
- 
                 };
                 
                 newIssues.push(issue);
@@ -1739,12 +1624,14 @@
             }
             
             saveLocalData();
+            
             // Sync all new issues to cloud
             for (const issue of newIssues) {
                 await syncToCloud(issue);
             }
             
             alert('Issue logged successfully with ' + currentActions.length + ' action(s)!');
+            
             // Reset form and actions
             document.getElementById('issue-form').reset();
             currentActions = [];
@@ -1765,108 +1652,103 @@
             const machine = document.getElementById('search-machine').value.toLowerCase().trim();
             const keyword = document.getElementById('search-keyword').value.toLowerCase().trim();
             const searchAllLines = document.getElementById('search-all-lines').checked;
+            
             const results = issues.filter(issue => {
                 // If "search all lines" is checked, ignore the line filter for machine matching
                 let matchLine;
                 if (searchAllLines && machine) {
-                    // When searching all lines for a specific machine, 
+                    // When searching all lines for a specific machine, ignore line selection
                     matchLine = true;
                 } else {
                     // Normal line filtering
                     matchLine = !line || issue.line === line;
-         
                 }
                 
                 const matchMachine = !machine || issue.machine.toLowerCase().includes(machine);
                 const matchKeyword = !keyword || 
                     issue.description.toLowerCase().includes(keyword) ||
-              
-                   (issue.solutions && issue.solutions.toLowerCase().includes(keyword));
+                    (issue.solutions && issue.solutions.toLowerCase().includes(keyword));
                 
                 return matchLine && matchMachine && matchKeyword;
             });
+            
             displaySearchResults(results, searchAllLines);
         }
 
         function analyzeSolutions(results) {
             // Group solutions by text and track effectiveness
             const solutionStats = {};
+            
             results.forEach(issue => {
                 if (issue.solutions && issue.solutions.trim()) {
                     // Normalize solution text for grouping
                     const normalized = issue.solutions.trim()
                         .toLowerCase()
-      
                         .replace(/[.,!?;:]+$/, '')  // Remove trailing punctuation
                         .replace(/\s+/g, ' ')        // Normalize spaces
                         .trim();
-                
-     
+                    
                     if (!solutionStats[normalized]) {
                         solutionStats[normalized] = {
                             text: issue.solutions.trim().replace(/[.,!?;:]+$/, ''), // Clean version for display
-             
                             total: 0,
                             corrected: 0,
                             notCorrected: 0,
-                          
                             unsure: 0
                         };
                     }
                     
                     solutionStats[normalized].total++;
-             
-                
+                    
                     if (issue.effectiveness === 'corrected') {
                         solutionStats[normalized].corrected++;
- } else if (issue.effectiveness === 'not-corrected') {
+                    } else if (issue.effectiveness === 'not-corrected') {
                         solutionStats[normalized].notCorrected++;
- } else if (issue.effectiveness === 'unsure') {
+                    } else if (issue.effectiveness === 'unsure') {
                         solutionStats[normalized].unsure++;
- }
+                    }
                 }
             });
+            
             // Convert to array and calculate success rate
             const solutionArray = Object.values(solutionStats).map(stat => {
                 // Option B: Ignore "unsure" - only use known outcomes (corrected + not corrected)
                 const knownOutcomes = stat.corrected + stat.notCorrected;
                 
-          
                 if (knownOutcomes > 0) {
                     stat.successRate = (stat.corrected / knownOutcomes) * 100;
                 } else {
                     // If only "unsure" results, set to -1 to indicate unknown
-                
                     stat.successRate = -1;
                 }
                 
                 return stat;
             });
+            
             // Sort by success rate (descending) then by total attempts (descending)
             solutionArray.sort((a, b) => {
                 // First, put unknown rates at the end
                 if (a.successRate === -1 && b.successRate !== -1) return 1;
                 if (a.successRate !== -1 && b.successRate === -1) return -1;
-  
                 if (a.successRate === -1 && b.successRate === -1) {
                     return b.total - a.total; // Sort by attempts if both unknown
                 }
-                
                 
                 // Then sort by success rate
                 if (Math.abs(a.successRate - b.successRate) > 0.1) {
                     return b.successRate - a.successRate;
                 }
                 
-                // If 
-                success rates are similar, sort by total attempts
+                // If success rates are similar, sort by total attempts
                 return b.total - a.total;
             });
+            
             return solutionArray;
         }
 
         function displaySearchResults(results, searchAllLines = false) {
             const container = document.getElementById('search-results');
+            
             if (results.length === 0) {
                 container.innerHTML = '<p style="color: #666; text-align: center; padding: 40px;">No matching issues found.</p>';
                 return;
@@ -1874,82 +1756,69 @@
             
             // Calculate and display solution effectiveness analysis
             const solutionAnalysis = analyzeSolutions(results);
+            
             let html = `
                 <div style="background: linear-gradient(135deg, #e8f4f8, #f0f8ff); border: 2px solid #007bff; border-radius: 10px; padding: 20px; margin: 20px 0;">
                     <h3 style="color: #007bff; margin-bottom: 15px;">📊 Solution Effectiveness Analysis</h3>
                     <p style="color: #666; margin-bottom: 15px;">Found <strong>${results.length}</strong> matching issue${results.length !== 1 ? 's' : ''}. Here are the most effective solutions:</p>
             `;
+            
             if (solutionAnalysis.length > 0) {
                 html += '<div style="margin-top: 15px;">';
                 solutionAnalysis.slice(0, 5).forEach((stat, index) => {
                     const successColor = stat.successRate >= 70 ? '#28a745' : 
                                        stat.successRate >= 40 ? '#ffc107' : 
-                      
-                       stat.successRate >= 0 ? '#dc3545' : '#6c757d';
+                                       stat.successRate >= 0 ? '#dc3545' : '#6c757d';
                     
                     const successText = stat.successRate >= 0 
                         ? `${stat.successRate.toFixed(0)}% success rate` 
-   
-                         : 'Success rate unknown';
+                        : 'Success rate unknown';
                     
                     const rankEmoji = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}.`;
-             
-                
+                    
                     html += `
                         <div style="background: white; border-left: 4px solid ${successColor}; padding: 12px; margin-bottom: 10px; border-radius: 5px;">
-                            <div style="display: flex; justify-content: space-between; align-items: center; 
- margin-bottom: 8px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                                 <strong style="color: #2c3e50;">${rankEmoji} ${stat.text}</strong>
-                                <span style="background: ${successColor};
- color: white; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: bold;">
+                                <span style="background: ${successColor}; color: white; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: bold;">
                                     ${successText}
                                 </span>
-                      
-                      </div>
-                            <div style="font-size: 13px;
- color: #666;">
+                            </div>
+                            <div style="font-size: 13px; color: #666;">
                                 Tried <strong>${stat.total}</strong> time${stat.total !== 1 ? 's' : ''}: 
                                 <span style="color: #28a745;">✅ ${stat.corrected}</span> | 
-                     
-                        <span style="color: #dc3545;">❌ ${stat.notCorrected}</span>
+                                <span style="color: #dc3545;">❌ ${stat.notCorrected}</span>
                                 ${stat.unsure > 0 ? ` | <span style="color: #ffc107;">❓ ${stat.unsure}</span>` : ''}
                             </div>
-               
-                          </div>
+                        </div>
                     `;
                 });
                 html += '</div>';
             } else {
-                html += '<p style="color: #666;">No solution effectiveness 
- data available yet.</p>';
+                html += '<p style="color: #666;">No solution effectiveness data available yet.</p>';
             }
             
             html += '</div>';
             
             // Display individual issue cards
-            html += '<h3 style="margin-top: 30px;
- color: #2c3e50;">Individual Issue Reports:</h3>';
+            html += '<h3 style="margin-top: 30px; color: #2c3e50;">Individual Issue Reports:</h3>';
             
             // Group issues by line if searching all lines
             if (searchAllLines) {
                 const issuesByLine = {};
                 results.forEach(issue => {
-              
-                   if (!issuesByLine[issue.line]) {
+                    if (!issuesByLine[issue.line]) {
                         issuesByLine[issue.line] = [];
                     }
                     issuesByLine[issue.line].push(issue);
                 });
-          
                 
                 Object.keys(issuesByLine).sort().forEach(line => {
                     html += `
                         <h4 style="margin-top: 20px; color: #667eea; background: #f8f9fa; padding: 10px; border-radius: 5px;">
-                    
-                          ${line} (${issuesByLine[line].length} issue${issuesByLine[line].length !== 1 ? 's' : ''})
+                            ${line} (${issuesByLine[line].length} issue${issuesByLine[line].length !== 1 ? 's' : ''})
                         </h4>
                     `;
-                    
                     
                     issuesByLine[line].forEach(issue => {
                         html += formatIssueCard(issue);
@@ -1959,10 +1828,10 @@
                 results.forEach(issue => {
                     html += formatIssueCard(issue);
                 });
- }
+            }
             
             container.innerHTML = html;
- }
+        }
 
         function formatIssueCard(issue) {
             let effectivenessHTML = '';
@@ -1970,8 +1839,7 @@
                 const effectivenessMap = {
                     'corrected': '<span style="color: #28a745; font-weight: bold;">✅ Corrected</span>',
                     'not-corrected': '<span style="color: #dc3545; font-weight: bold;">❌ Not Corrected</span>',
-                    'unsure': '<span style="color: #ffc107; font-weight: bold;">❓ 
- Unsure</span>'
+                    'unsure': '<span style="color: #ffc107; font-weight: bold;">❓ Unsure</span>'
                 };
                 effectivenessHTML = ` | <strong>Effectiveness:</strong> ${effectivenessMap[issue.effectiveness]}`;
             }
@@ -1979,20 +1847,19 @@
             return `
                 <div class="issue-card">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                        
- <h4>${issue.line} - ${issue.machine}</h4>
+                        <h4>${issue.line} - ${issue.machine}</h4>
                         <small style="color: #666;">${new Date(issue.timestamp).toLocaleDateString()}</small>
                     </div>
                     <p><strong>Issue:</strong> ${issue.description}</p>
-                    <p><strong>Solutions Tried:</strong> ${issue.solutions ||
- 'None documented'}</p>
+                    <p><strong>Solutions Tried:</strong> ${issue.solutions || 'None documented'}</p>
                     <p><strong>Operator:</strong> ${issue.operator}${effectivenessHTML}</p>
                 </div>
             `;
- }
+        }
 
         function displayHistory(issuesToDisplay) {
             const container = document.getElementById('history-list');
+            
             if (issuesToDisplay.length === 0) {
                 container.innerHTML = '<p style="color: #666; text-align: center; padding: 40px;">No issues logged yet.</p>';
                 return;
@@ -2001,6 +1868,7 @@
             const html = issuesToDisplay.slice().reverse().map(issue => {
                 return formatIssueCard(issue);
             }).join('');
+            
             container.innerHTML = html;
         }
 
@@ -2012,19 +1880,19 @@
             
             if (line) {
                 filtered = filtered.filter(issue => issue.line === line);
- }
+            }
             
             if (machine) {
                 filtered = filtered.filter(issue => issue.machine === machine);
- }
+            }
             
             displayHistory(filtered);
- }
+        }
 
         // ====== AI PROVIDER SELECTION ======
         function selectProvider(provider) {
             selectedProvider = provider;
- localStorage.setItem('selectedProvider', provider);
+            localStorage.setItem('selectedProvider', provider);
             
             // Update UI
             document.getElementById('gemini-card').classList.remove('selected');
@@ -2036,83 +1904,82 @@
             const azureConfig = document.getElementById('azure-config');
             if (geminiConfig) geminiConfig.style.display = provider === 'gemini' ? 'block' : 'none';
             if (azureConfig) azureConfig.style.display = provider === 'azure' ? 'block' : 'none';
+            
             // Sync to cloud
             syncAIConfigsToCloud();
- }
+        }
 
         // ====== GOOGLE GEMINI API ======
         // SIMPLIFIED: Reverted to a single, direct API call
         async function callGeminiAPI(prompt, fileUri = null) {
             const apiKey = geminiConfig.apiKey;
             // UPDATED: Use the correct, available model name
-            const model = geminiConfig.model ||
- 'gemini-2.0-flash-exp';
+            const model = geminiConfig.model || 'gemini-2.0-flash-exp';
             
             // UPDATED: Use the v1beta endpoint which works with your key
             const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+            
             // Build parts array - include file if provided
             const parts = [];
+            
             // Add file first if provided (so AI reads it before the prompt)
             if (fileUri) {
                 parts.push({
                     fileData: {
                         mimeType: 'application/pdf',
-            
-              fileUri: fileUri
+                        fileUri: fileUri
                     }
                 });
- }
+            }
             
             // Add text prompt
             parts.push({
                 text: prompt
             });
+            
             const response = await fetch(url, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-       
-                      contents: [{
+                    contents: [{
                         parts: parts
                     }],
                     generationConfig: {
-                    
                         temperature: 0.7,
                         maxOutputTokens: 2048
                     }
                 })
             });
+
             if (!response.ok) {
                 const errorData = await response.json();
                 throw new Error(errorData.error?.message || `API request failed with status ${response.status}`);
- }
+            }
 
             const data = await response.json();
             return data.candidates[0].content.parts[0].text;
- }
+        }
 
         function loadGeminiConfig() {
             const keyInput = document.getElementById('gemini-key');
             const modelSelect = document.getElementById('gemini-model');
             if (keyInput && geminiConfig.apiKey) {
                 keyInput.value = geminiConfig.apiKey;
- }
+            }
             if (modelSelect && geminiConfig.model) {
                 modelSelect.value = geminiConfig.model;
- }
+            }
         }
 
         function saveGeminiConfig() {
             const keyInput = document.getElementById('gemini-key');
             const modelSelect = document.getElementById('gemini-model');
             geminiConfig = {
-                apiKey: keyInput ?
-                keyInput.value : '',
+                apiKey: keyInput ? keyInput.value : '',
                 // UPDATED: Use the correct, available model name
-                model: modelSelect ?
-                modelSelect.value : 'gemini-2.0-flash-exp'
+                model: modelSelect ? modelSelect.value : 'gemini-2.0-flash-exp'
             };
             
             localStorage.setItem('geminiConfig', JSON.stringify(geminiConfig));
@@ -2134,7 +2001,7 @@
 
             } catch (error) {
                 alert('❌ Connection failed:\n\n' + error.message);
- }
+            }
         }
 
         // ====== AZURE OPENAI API ======
@@ -2144,39 +2011,37 @@
             const apiVersion = '2024-02-15-preview';
             
             const url = `${endpoint}/openai/deployments/${deploymentName}/chat/completions?api-version=${apiVersion}`;
+            
             const response = await fetch(url, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'api-key': azureConfig.apiKey
                 },
-   
-                  body: JSON.stringify({
+                body: JSON.stringify({
                     messages: [
                         {
                             role: 'system',
-            
                             content: 'You are an expert manufacturing technician and technical writer who creates clear, detailed work instructions for equipment troubleshooting.'
                         },
                         {
-                  
-                          role: 'user',
+                            role: 'user',
                             content: prompt
                         }
                     ],
-                
-                        temperature: 0.7,
+                    temperature: 0.7,
                     max_tokens: 2000
                 })
             });
+
             if (!response.ok) {
                 const errorData = await response.json();
                 throw new Error(errorData.error?.message || `API request failed with status ${response.status}`);
- }
+            }
 
             const data = await response.json();
             return data.choices[0].message.content;
- }
+        }
 
         function loadAzureConfig() {
             const endpointInput = document.getElementById('azure-endpoint');
@@ -2185,13 +2050,13 @@
             
             if (endpointInput && azureConfig.endpoint) {
                 endpointInput.value = azureConfig.endpoint;
- }
+            }
             if (keyInput && azureConfig.apiKey) {
                 keyInput.value = azureConfig.apiKey;
- }
+            }
             if (deploymentInput && azureConfig.deploymentName) {
                 deploymentInput.value = azureConfig.deploymentName;
- }
+            }
         }
 
         function saveAzureConfig() {
@@ -2200,12 +2065,9 @@
             const deploymentInput = document.getElementById('deployment-name');
             
             azureConfig = {
-                endpoint: endpointInput ?
-                endpointInput.value : '',
-                apiKey: keyInput ?
-                keyInput.value : '',
-                deploymentName: deploymentInput ?
-                deploymentInput.value : 'gpt-4'
+                endpoint: endpointInput ? endpointInput.value : '',
+                apiKey: keyInput ? keyInput.value : '',
+                deploymentName: deploymentInput ? deploymentInput.value : 'gpt-4'
             };
             
             localStorage.setItem('azureConfig', JSON.stringify(azureConfig));
@@ -2224,7 +2086,7 @@
                 alert('✓ Connection successful!\n\n' + response);
             } catch (error) {
                 alert('❌ Connection failed:\n\n' + error.message);
- }
+            }
         }
 
         // ====== MANUAL MAPPINGS ======
@@ -2246,71 +2108,58 @@
                     manualsByLine[line] = [];
                 }
                 manualsByLine[line].push({ key, line, machine, info });
- }
+            }
 
             let html = '';
+            
             // Render each line group
             for (const [line, manuals] of Object.entries(manualsByLine).sort()) {
                 html += `
                     <div class="line-group">
                         <div class="line-group-header">
-              
-                          ${line} (${manuals.length} manual${manuals.length !== 1 ? 's' : ''})
+                            ${line} (${manuals.length} manual${manuals.length !== 1 ? 's' : ''})
                         </div>
                 `;
+                
                 manuals.forEach(({ key, machine, info }) => {
                     // Determine cache status
                     const hasPDF = info.geminiFileUri ? true : false;
                     const needsRefresh = info.lastUpdated ? needsCacheRefresh(info.lastUpdated) : true;
-                 
-                   const lastUpdatedText = info.lastUpdated 
+                    const lastUpdatedText = info.lastUpdated 
                         ? new Date(info.lastUpdated).toLocaleDateString() 
                         : 'Never';
                     
-                    let 
-                    statusBadge = '';
+                    let statusBadge = '';
                     if (hasPDF && !needsRefresh) {
                         statusBadge = '<span style="background: #28a745; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px;">✅ PDF Cached</span>';
                     } else if (hasPDF && needsRefresh) {
-         
                         statusBadge = '<span style="background: #ffc107; color: #212529; padding: 4px 8px; border-radius: 4px; font-size: 12px;">⚠️ Needs Refresh</span>';
                     } else {
-                        statusBadge = '<span style="background: #6c757d;
- color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px;">📄 Not Cached</span>';
+                        statusBadge = '<span style="background: #6c757d; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px;">📄 Not Cached</span>';
                     }
                     
                     html += `
                         <div class="manual-list-item">
-   
-                          <div style="display: flex;
- justify-content: space-between; align-items: start;">
+                            <div style="display: flex; justify-content: space-between; align-items: start;">
                                 <div style="flex: 1;">
                                     <h4>${machine} ${statusBadge}</h4>
-                          
-                            <p><strong>Manual:</strong> ${info.name}</p>
-                                    <p><strong>URL:</strong> <a href="${info.url}" target="_blank" style="color: #007bff;
- word-break: break-all;">${info.url}</a></p>
-                                    <p style="font-size: 12px;
- color: #666;"><strong>Last Updated:</strong> ${lastUpdatedText}</p>
+                                    <p><strong>Manual:</strong> ${info.name}</p>
+                                    <p><strong>URL:</strong> <a href="${info.url}" target="_blank" style="color: #007bff; word-break: break-all;">${info.url}</a></p>
+                                    <p style="font-size: 12px; color: #666;"><strong>Last Updated:</strong> ${lastUpdatedText}</p>
                                 </div>
-                                <div style="display: flex;
- gap: 5px; margin-left: 10px;">
+                                <div style="display: flex; gap: 5px; margin-left: 10px;">
                                     <button onclick="refreshSingleManual('${key}')" class="btn btn-info" title="Refresh PDF from Google Drive">
                                         🔄 Refresh
-            
-                            </button>
-                                    <button onclick="removeManualMapping('${key}')" class="btn" style="background: #dc3545;
- color: white;">
+                                    </button>
+                                    <button onclick="removeManualMapping('${key}')" class="btn" style="background: #dc3545; color: white;">
                                         Delete
                                     </button>
-                       
-                          </div>
+                                </div>
                             </div>
                         </div>
                     `;
                 });
-   
-              
+                
                 html += '</div>';
             }
             
@@ -2318,7 +2167,6 @@
         }
 
         function addManualMapping() {
-            // 
             // Populate line dropdown
             const lineSelect = document.getElementById('manual-line');
             lineSelect.innerHTML = '<option value="">Select Production Line</option>';
@@ -2326,8 +2174,7 @@
             // Get unique lines from machinesByLine and historical data
             const allLines = new Set(Object.keys(machinesByLine));
             issues.forEach(issue => allLines.add(issue.line));
-    
-         
+            
             Array.from(allLines).sort().forEach(line => {
                 const option = document.createElement('option');
                 option.value = line;
@@ -2342,7 +2189,7 @@
             
             // Show modal
             document.getElementById('manual-modal').style.display = 'block';
- }
+        }
 
         function updateManualMachineOptions() {
             const line = document.getElementById('manual-line').value;
@@ -2351,6 +2198,7 @@
             machineList.innerHTML = '';
             
             if (!line) return;
+            
             // Get machines from predefined list
             const machines = new Set();
             if (machinesByLine[line]) {
@@ -2361,22 +2209,23 @@
             issues
                 .filter(issue => issue.line === line)
                 .forEach(issue => machines.add(issue.machine));
+            
             // Populate datalist
             Array.from(machines).sort().forEach(machine => {
                 const option = document.createElement('option');
                 option.value = machine;
                 machineList.appendChild(option);
             });
- }
+        }
 
         function closeManualModal() {
             document.getElementById('manual-modal').style.display = 'none';
- }
+        }
 
         function handleManualModalClick(event) {
             if (event.target.id === 'manual-modal') {
                 closeManualModal();
- }
+            }
         }
 
         // ====== GOOGLE DRIVE & GEMINI FILE API HELPERS ======
@@ -2385,6 +2234,7 @@
         function convertGoogleDriveUrl(url) {
             // Extract file ID from various Google Drive URL formats
             let fileId = null;
+            
             // Format 1: https://drive.google.com/file/d/FILE_ID/view
             const viewMatch = url.match(/\/file\/d\/([^\/]+)/);
             if (viewMatch) {
@@ -2398,119 +2248,138 @@
             }
             
             if (fileId) {
-                // *** FIX APPLIED HERE: Use export=view format for more reliable direct access to public files. ***
-                return `https://drive.google.com/uc?id=${fileId}&export=view`; 
+                return `https://drive.google.com/uc?export=download&id=${fileId}`;
             }
             
             // If already a direct link or not a Google Drive link, return as-is
             return url;
- }
+        }
         
-        // Download PDF from Google Drive
+        // Download PDF from Google Drive via Google Apps Script proxy
         async function downloadPDFFromGoogleDrive(url) {
-            const downloadUrl = convertGoogleDriveUrl(url);
+            if (!GOOGLE_SCRIPT_URL) {
+                throw new Error('Google Apps Script URL not configured. Please set it in the Setup tab.');
+            }
+            
             try {
-                const response = await fetch(downloadUrl);
+                // Call Google Apps Script to download the PDF
+                const scriptUrl = `${GOOGLE_SCRIPT_URL}?action=downloadPDF&url=${encodeURIComponent(url)}`;
+                
+                const response = await fetch(scriptUrl);
                 if (!response.ok) {
                     throw new Error(`Failed to download PDF: ${response.status}`);
- }
+                }
                 
-                const blob = await response.blob();
+                const data = await response.json();
+                
+                if (!data.success) {
+                    throw new Error(data.message || 'Failed to download PDF');
+                }
+                
+                // Convert base64 back to blob
+                const binaryString = atob(data.data);
+                const bytes = new Uint8Array(binaryString.length);
+                for (let i = 0; i < binaryString.length; i++) {
+                    bytes[i] = binaryString.charCodeAt(i);
+                }
+                
+                const blob = new Blob([bytes], { type: data.mimeType || 'application/pdf' });
                 return blob;
             } catch (error) {
-                console.error('Error downloading PDF:', error);
-                throw new Error('Failed to download PDF from Google Drive. Please check the link is public and accessible.');
- }
+                console.error('Error downloading PDF via Google Apps Script:', error);
+                throw new Error('Failed to download PDF from Google Drive. Please check the link is accessible and Google Apps Script is configured correctly.');
+            }
         }
         
         // Upload PDF to Gemini File API
         async function uploadPDFToGemini(pdfBlob, fileName) {
             if (!geminiConfig.apiKey) {
                 throw new Error('Gemini API key not configured');
- }
+            }
             
             // Step 1: Start resumable upload session
             const initialMetadata = {
                 file: {
                     display_name: fileName
                 }
- 
             };
+            
             const initResponse = await fetch(
                 `https://generativelanguage.googleapis.com/upload/v1beta/files?key=${geminiConfig.apiKey}`,
                 {
                     method: 'POST',
                     headers: {
-                      
                         'X-Goog-Upload-Protocol': 'resumable',
                         'X-Goog-Upload-Command': 'start',
                         'X-Goog-Upload-Header-Content-Type': 'application/pdf',
                         'Content-Type': 'application/json'
                     },
-  
-                   body: JSON.stringify(initialMetadata)
+                    body: JSON.stringify(initialMetadata)
                 }
             );
+            
             if (!initResponse.ok) {
                 throw new Error(`Failed to start upload: ${initResponse.status}`);
- }
+            }
             
             const uploadUrl = initResponse.headers.get('X-Goog-Upload-URL');
             if (!uploadUrl) {
                 throw new Error('No upload URL received from Gemini');
- }
+            }
             
             // Step 2: Upload the actual file
             const uploadResponse = await fetch(uploadUrl, {
                 method: 'POST',
                 headers: {
-                   
-                      'X-Goog-Upload-Command': 'upload, finalize',
+                    'X-Goog-Upload-Command': 'upload, finalize',
                     'X-Goog-Upload-Offset': '0',
                     'Content-Type': 'application/pdf'
                 },
                 body: pdfBlob
             });
+            
             if (!uploadResponse.ok) {
                 const errorText = await uploadResponse.text();
                 console.error('Upload error:', errorText);
                 throw new Error(`Failed to upload PDF: ${uploadResponse.status}`);
- }
+            }
             
             const fileData = await uploadResponse.json();
+            
             // Step 3: Wait for file to be processed (Gemini needs time to process PDFs)
             let file = fileData.file;
             while (file.state === 'PROCESSING') {
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                // Wait 1 second
+                await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
                 
                 const statusResponse = await fetch(
                     `https://generativelanguage.googleapis.com/v1beta/${file.name}?key=${geminiConfig.apiKey}`
                 );
+                
                 if (statusResponse.ok) {
                     const statusData = await statusResponse.json();
                     file = statusData;
                 } else {
                     break;
- }
+                }
             }
             
             if (file.state !== 'ACTIVE') {
                 throw new Error('PDF processing failed or timed out');
- }
+            }
             
             return file.uri;
- }
+        }
         
         // Check if manual cache needs refresh (7 days)
         function needsCacheRefresh(lastUpdated) {
             if (!lastUpdated) return true;
+            
             const lastUpdate = new Date(lastUpdated);
             const now = new Date();
             const daysSinceUpdate = (now - lastUpdate) / (1000 * 60 * 60 * 24);
             
             return daysSinceUpdate >= 7;
- }
+        }
         
         // Refresh manual from Google Drive and upload to Gemini
         async function refreshManualCache(key, showProgress = true) {
@@ -2521,62 +2390,65 @@
             
             if (showProgress) {
                 showSyncStatus('syncing', '📥 Downloading PDF from Google Drive...');
- }
+            }
             
             try {
                 // Download PDF from Google Drive
                 const pdfBlob = await downloadPDFFromGoogleDrive(mapping.url);
+                
                 if (showProgress) {
                     showSyncStatus('syncing', '☁️ Uploading PDF to Gemini...');
- }
+                }
                 
                 // Upload to Gemini File API
                 const geminiFileUri = await uploadPDFToGemini(pdfBlob, mapping.name);
+                
                 // Update cache
                 mapping.geminiFileUri = geminiFileUri;
                 mapping.lastUpdated = new Date().toISOString();
                 
                 // Save to localStorage
                 localStorage.setItem('manualMappings', JSON.stringify(manualMappings));
+                
                 // Sync to cloud
                 await syncAIConfigsToCloud();
+                
                 if (showProgress) {
                     showSyncStatus('success', '✓ Manual cached successfully!');
- }
+                }
                 
                 return geminiFileUri;
- } catch (error) {
+            } catch (error) {
                 console.error('Error refreshing manual cache:', error);
                 if (showProgress) {
                     showSyncStatus('error', '✗ Failed to cache manual: ' + error.message);
- }
+                }
                 throw error;
- }
+            }
         }
         
         // Get manual file URI (with auto-refresh if needed)
         async function getManualFileUri(key, showProgress = true) {
             const mapping = manualMappings[key];
             if (!mapping) {
-                return null;
-                // No manual mapped
+                return null; // No manual mapped
             }
             
             // Check if we have a cached file URI and if it needs refresh
             if (mapping.geminiFileUri && !needsCacheRefresh(mapping.lastUpdated)) {
-                return mapping.geminiFileUri;
-                // Use cached version
+                return mapping.geminiFileUri; // Use cached version
             }
             
             // Need to refresh
             return await refreshManualCache(key, showProgress);
- }
+        }
 
         async function saveManualMapping() {
             const line = document.getElementById('manual-line').value.trim();
             const machine = document.getElementById('manual-machine').value.trim();
             const manualName = document.getElementById('manual-name').value.trim();
             const url = document.getElementById('manual-url').value.trim();
+            
             // Validate inputs
             if (!line) {
                 alert('Please select a production line');
@@ -2597,11 +2469,12 @@
             
             // Create key in format "LINE-MACHINE"
             const key = `${line}-${machine}`;
+            
             // Check if already exists
             if (manualMappings[key]) {
                 if (!confirm(`A manual already exists for ${line} - ${machine}.\n\nDo you want to replace it?`)) {
                     return;
- }
+                }
             }
             
             // Save mapping
@@ -2609,41 +2482,48 @@
                 name: manualName,
                 url: url
             };
+            
             // Save to localStorage
             localStorage.setItem('manualMappings', JSON.stringify(manualMappings));
+            
             // Close modal
             closeManualModal();
+            
             // Update display
             renderManualMappings();
+            
             // Sync to cloud with better feedback
             showSyncStatus('syncing', '☁️ Syncing manual mapping to Google Sheets...');
+            
             try {
                 const success = await syncAIConfigsToCloud();
                 if (success) {
                     showSyncStatus('success', `✓ Manual mapping for ${line} - ${machine} saved and synced to cloud!`);
- } else {
+                } else {
                     showSyncStatus('error', '✗ Cloud sync may have failed - manual saved locally. Check Google Sheet to verify.');
- }
+                }
             } catch (error) {
                 console.error('Sync error:', error);
                 showSyncStatus('error', '✗ Cloud sync failed - manual saved locally only');
- }
+            }
         }
 
         function removeManualMapping(key) {
             // Extract line and machine from key for display
             const [line, machine] = key.split('-', 2);
+            
             if (confirm(`Remove manual mapping for ${line} - ${machine}?`)) {
                 delete manualMappings[key];
                 localStorage.setItem('manualMappings', JSON.stringify(manualMappings));
                 renderManualMappings();
                 syncAIConfigsToCloud();
                 alert('✓ Manual mapping removed and synced to cloud!');
- }
+            }
         }
 
         async function refreshSingleManual(key) {
             const [line, machine] = key.split('-', 2);
+            
             if (!confirm(`Refresh PDF for ${line} - ${machine}?\n\nThis will download the latest version from Google Drive.`)) {
                 return;
             }
@@ -2654,64 +2534,47 @@
                 alert(`✓ PDF for ${line} - ${machine} refreshed successfully!`);
             } catch (error) {
                 alert(`✗ Failed to refresh PDF: ${error.message}`);
- }
+            }
         }
 
         // ====== DEFINITIONS MANAGEMENT ======
         function initializeDefaultDefinitions() {
             // Only initialize if no definitions exist
             if (definitions.length > 0) return;
+            
             const defaultDefinitions = [
                 // Terminology
-                { id: 'def-1', category: 'Terminology', term: 'Substrate / Applicator', definition: 'The raw material (dry fabric/paper) that becomes wipes.
- Pre-slit rolls arrive at correct width for most lines.', equipment: 'All' },
+                { id: 'def-1', category: 'Terminology', term: 'Substrate / Applicator', definition: 'The raw material (dry fabric/paper) that becomes wipes. Pre-slit rolls arrive at correct width for most lines.', equipment: 'All' },
                 { id: 'def-2', category: 'Terminology', term: 'Solution', definition: 'The liquid (lotion) applied to substrate at the wetting tube to create wet wipes.', equipment: 'Forming' },
-                { id: 'def-3', category: 'Terminology', term: 'Log / Ribbon', definition: 'Continuous stream of interleaved sheets before cutting.
- Created by forming boards layering sheets from multiple rolls.', equipment: 'Forming' },
-                { id: 'def-4', category: 'Terminology', term: 'Clip', definition: 'A cut section of the log with specific count (e.g., 50 wipes, 80 wipes).
- Cut by saw house/clipper.', equipment: 'Saw House' },
-                { id: 'def-5', category: 'Terminology', term: 'Stack', definition: 'Final unit ready for wrapping.
- May be single clip or multiple clips stacked together to reach target count (e.g., two 50-count clips = one 100-count stack).', equipment: 'Stacker' },
+                { id: 'def-3', category: 'Terminology', term: 'Log / Ribbon', definition: 'Continuous stream of interleaved sheets before cutting. Created by forming boards layering sheets from multiple rolls.', equipment: 'Forming' },
+                { id: 'def-4', category: 'Terminology', term: 'Clip', definition: 'A cut section of the log with specific count (e.g., 50 wipes, 80 wipes). Cut by saw house/clipper.', equipment: 'Saw House' },
+                { id: 'def-5', category: 'Terminology', term: 'Stack', definition: 'Final unit ready for wrapping. May be single clip or multiple clips stacked together to reach target count (e.g., two 50-count clips = one 100-count stack).', equipment: 'Stacker' },
                 { id: 'def-6', category: 'Terminology', term: 'Interleaf / Interleaving', definition: 'Layering sheets from multiple substrate rolls in alternating pattern so each wipe pulls the next one up when dispensed.', equipment: 'Forming' },
-                { id: 'def-7', category: 'Terminology', term: 'Film', definition: 'Plastic wrapping material used at wrapper 
- stage to seal the wipe packages.', equipment: 'Wrapper' },
-                { id: 'def-8', category: 'Terminology', term: 'Pre-slit vs Jumbo Rolls', definition: 'Pre-slit: Rolls already cut to correct width (JBFlex, HH, RX300, L80).
- Jumbo: Full-width rolls requiring on-machine slitting (RX500 only).', equipment: 'Unwind' },
+                { id: 'def-7', category: 'Terminology', term: 'Film', definition: 'Plastic wrapping material used at wrapper stage to seal the wipe packages.', equipment: 'Wrapper' },
+                { id: 'def-8', category: 'Terminology', term: 'Pre-slit vs Jumbo Rolls', definition: 'Pre-slit: Rolls already cut to correct width (JBFlex, HH, RX300, L80). Jumbo: Full-width rolls requiring on-machine slitting (RX500 only).', equipment: 'Unwind' },
                 
                 // Equipment
-                { id: 'def-9', category: 'Equipment', term: 'Unwind', definition: 'Holds and feeds substrate rolls at the start of the line.
- RX500 has slitting units; other lines use pre-slit rolls.', equipment: 'Unwind' },
+                { id: 'def-9', category: 'Equipment', term: 'Unwind', definition: 'Holds and feeds substrate rolls at the start of the line. RX500 has slitting units; other lines use pre-slit rolls.', equipment: 'Unwind' },
                 { id: 'def-10', category: 'Equipment', term: 'Wetting Tube', definition: 'Applies solution (lotion) to substrate as it travels across to create wet wipes.', equipment: 'Forming' },
                 { id: 'def-11', category: 'Equipment', term: 'Forming Boards', definition: 'Folds individual sheets and interleafs them to create the continuous log/ribbon.', equipment: 'Forming' },
-           
-             { id: 'def-12', category: 'Equipment', term: 'Saw House / Clipper', definition: 'Cuts the continuous log into clips of specific lengths/counts.', equipment: 'Saw House' },
+                { id: 'def-12', category: 'Equipment', term: 'Saw House / Clipper', definition: 'Cuts the continuous log into clips of specific lengths/counts.', equipment: 'Saw House' },
                 { id: 'def-13', category: 'Equipment', term: 'Stacker', definition: 'Stacks multiple clips together when needed to reach final product count (e.g., stacking two 50-count clips for 100-count product).', equipment: 'Stacker' },
-                { id: 'def-14', category: 'Equipment', term: 'Wrapper', definition: 'Wraps product in 
- plastic film and applies lid to create final packaged wipe container.', equipment: 'Wrapper' },
+                { id: 'def-14', category: 'Equipment', term: 'Wrapper', definition: 'Wraps product in plastic film and applies lid to create final packaged wipe container.', equipment: 'Wrapper' },
                 { id: 'def-15', category: 'Equipment', term: 'Case Erector', definition: 'Creates cardboard shipping cases for packaging.', equipment: 'Case Packer' },
                 { id: 'def-16', category: 'Equipment', term: 'Case Packer', definition: 'Uses robots to place wrapped products into shipping cases.', equipment: 'Case Packer' },
-                
-                { id: 'def-17', category: 'Equipment', term: 'Palletizer', definition: 'Stacks completed cases onto pallets for shipping.
- Includes stretch wrapping.', equipment: 'Palletizer' },
+                { id: 'def-17', category: 'Equipment', term: 'Palletizer', definition: 'Stacks completed cases onto pallets for shipping. Includes stretch wrapping.', equipment: 'Palletizer' },
                 
                 // Common Issues
-                { id: 'def-18', category: 'Issue', term: 'Web Walk', definition: 'LOCATION-SPECIFIC ISSUE:\n• At Clipper/Forming/Unwind: Substrate/applicator moving off forming boards or drifting left/right on rollers instead of tracking straight.\n• At Wrapper: Plastic film coming out crooked or off-center from forming box.\nCauses misalignment, jams, and quality issues.', equipment: 
- 'Wrapper, Forming, Unwind' },
-                { id: 'def-19', category: 'Issue', term: 'Sheet Peel / Peel', definition: 'Bottom sheet of clip or stack pulling back or falling loose from the unit.
- Typically occurs between stacker and wrapper. Causes wrapper sealing failures as film cannot seal properly when bottom sheet is loose.
- Often results in product rejects.', equipment: 'Stacker, Wrapper' },
-                { id: 'def-20', category: 'Issue', term: 'Slits in Packs', definition: 'Cuts, tears, or breaks in the plastic film wrapper.
- Product defect that compromises package integrity, may cause leaking or drying out.
- When reported "at the wrapper," refers specifically to film damage, not substrate issues.', equipment: 'Wrapper' },
+                { id: 'def-18', category: 'Issue', term: 'Web Walk', definition: 'LOCATION-SPECIFIC ISSUE:\n• At Clipper/Forming/Unwind: Substrate/applicator moving off forming boards or drifting left/right on rollers instead of tracking straight.\n• At Wrapper: Plastic film coming out crooked or off-center from forming box.\nCauses misalignment, jams, and quality issues.', equipment: 'Wrapper, Forming, Unwind' },
+                { id: 'def-19', category: 'Issue', term: 'Sheet Peel / Peel', definition: 'Bottom sheet of clip or stack pulling back or falling loose from the unit. Typically occurs between stacker and wrapper. Causes wrapper sealing failures as film cannot seal properly when bottom sheet is loose. Often results in product rejects.', equipment: 'Stacker, Wrapper' },
+                { id: 'def-20', category: 'Issue', term: 'Slits in Packs', definition: 'Cuts, tears, or breaks in the plastic film wrapper. Product defect that compromises package integrity, may cause leaking or drying out. When reported "at the wrapper," refers specifically to film damage, not substrate issues.', equipment: 'Wrapper' },
                 
                 // Process
                 { id: 'def-21', category: 'Process', term: 'Forming Process', definition: 'Substrate travels across wetting tube (solution applied), then across forming boards which fold and interleaf sheets from multiple rolls to create the continuous log/ribbon.', equipment: 'Forming' },
- 
-                { id: 'def-22', category: 'Process', term: 'Slitting', definition: 'Cutting substrate to required width.
- RX500 has on-machine slitting units for jumbo rolls. Other lines (JBFlex, HH, RX300, L80) use pre-slit rolls.', equipment: 'Unwind' },
-                { id: 'def-23', category: 'Process', term: 'Stacking', definition: 'Combining multiple clips to reach final product count.
- Example: two 50-count clips stacked to make 100-count product. Some products skip this step (single clip = final stack).', equipment: 'Stacker' }
+                { id: 'def-22', category: 'Process', term: 'Slitting', definition: 'Cutting substrate to required width. RX500 has on-machine slitting units for jumbo rolls. Other lines (JBFlex, HH, RX300, L80) use pre-slit rolls.', equipment: 'Unwind' },
+                { id: 'def-23', category: 'Process', term: 'Stacking', definition: 'Combining multiple clips to reach final product count. Example: two 50-count clips stacked to make 100-count product. Some products skip this step (single clip = final stack).', equipment: 'Stacker' }
             ];
+            
             definitions = defaultDefinitions;
             localStorage.setItem('definitions', JSON.stringify(definitions));
             syncDefinitionsToCloud();
@@ -2730,57 +2593,54 @@
                     def.term.toLowerCase().includes(searchTerm) ||
                     def.definition.toLowerCase().includes(searchTerm) ||
                     (def.equipment && def.equipment.toLowerCase().includes(searchTerm))
-              
                 );
             }
             
             if (filtered.length === 0) {
-                container.innerHTML = '<div class="no-definitions">No definitions found.
- Click "Add Definition" to create one.</div>';
+                container.innerHTML = '<div class="no-definitions">No definitions found. Click "Add Definition" to create one.</div>';
                 return;
             }
             
             // Group by category
             const categories = {
-                'Terminology': [],
-                'Equipment': [],
-                'Issue': [],
-                'Process': []
+                'Terminology': { emoji: '🏷️', items: [] },
+                'Equipment': { emoji: '⚙️', items: [] },
+                'Issue': { emoji: '⚠️', items: [] },
+                'Process': { emoji: '🔄', items: [] }
             };
+            
             filtered.forEach(def => {
                 if (categories[def.category]) {
-                    categories[def.category].push(def);
+                    categories[def.category].items.push(def);
                 }
             });
+            
             let html = '';
             
             for (const [catName, catData] of Object.entries(categories)) {
                 if (catData.items.length === 0) continue;
+                
                 html += `
                     <div class="definition-category">
                         <div class="definition-category-header">
                             <span>${catData.emoji} ${catName.toUpperCase()} (${catData.items.length})</span>
-                      
-                </div>
+                        </div>
                 `;
+                
                 catData.items.forEach(def => {
                     html += `
                         <div class="definition-item">
                             <div class="definition-term">${def.term}</div>
-                      
-                      <div class="definition-text">${def.definition.replace(/\n/g, '<br>')}</div>
+                            <div class="definition-text">${def.definition.replace(/\n/g, '<br>')}</div>
                             <div class="definition-meta">
                                 <div class="definition-equipment">
-                              
-                          ${def.equipment ? `📍 ${def.equipment}` : ''}
+                                    ${def.equipment ? `📍 ${def.equipment}` : ''}
                                 </div>
                                 <div class="definition-actions">
-                        
-                            <button class="btn btn-info" onclick="editDefinition('${def.id}')">Edit</button>
+                                    <button class="btn btn-info" onclick="editDefinition('${def.id}')">Edit</button>
                                     <button class="btn" onclick="deleteDefinition('${def.id}')" style="background: #dc3545; color: white;">Delete</button>
                                 </div>
-           
-                          </div>
+                            </div>
                         </div>
                     `;
                 });
@@ -2789,11 +2649,11 @@
             }
             
             container.innerHTML = html;
- }
+        }
 
         function filterDefinitions() {
             renderDefinitions();
- }
+        }
 
         function openDefinitionModal(defId = null) {
             const modal = document.getElementById('definition-modal');
@@ -2808,8 +2668,7 @@
                 document.getElementById('definition-category').value = def.category;
                 document.getElementById('definition-term').value = def.term;
                 document.getElementById('definition-text').value = def.definition;
-                document.getElementById('definition-equipment').value = def.equipment ||
- '';
+                document.getElementById('definition-equipment').value = def.equipment || '';
                 currentEditingDefinitionId = defId;
             } else {
                 // Add mode
@@ -2819,10 +2678,10 @@
                 document.getElementById('definition-text').value = '';
                 document.getElementById('definition-equipment').value = '';
                 currentEditingDefinitionId = null;
- }
+            }
             
             modal.style.display = 'block';
- }
+        }
 
         function closeDefinitionModal() {
             document.getElementById('definition-modal').style.display = 'none';
@@ -2832,7 +2691,7 @@
         function handleDefinitionModalClick(event) {
             if (event.target.id === 'definition-modal') {
                 closeDefinitionModal();
- }
+            }
         }
 
         async function saveDefinition() {
@@ -2840,6 +2699,7 @@
             const term = document.getElementById('definition-term').value.trim();
             const definition = document.getElementById('definition-text').value.trim();
             const equipment = document.getElementById('definition-equipment').value.trim();
+            
             if (!category) {
                 alert('Please select a category');
                 return;
@@ -2861,22 +2721,20 @@
                         id: currentEditingDefinitionId,
                         category,
                         term,
- 
                         definition,
                         equipment
                     };
- }
+                }
             } else {
                 // Add new
                 const newDef = {
                     id: 'def-' + Date.now(),
                     category,
-      
                     term,
                     definition,
                     equipment
                 };
-            definitions.push(newDef);
+                definitions.push(newDef);
             }
             
             localStorage.setItem('definitions', JSON.stringify(definitions));
@@ -2891,12 +2749,12 @@
             } catch (error) {
                 console.error('Sync error:', error);
                 showSyncStatus('error', '✗ Cloud sync failed - definition saved locally only');
- }
+            }
         }
 
         function editDefinition(defId) {
             openDefinitionModal(defId);
- }
+        }
 
         async function deleteDefinition(defId) {
             const def = definitions.find(d => d.id === defId);
@@ -2912,33 +2770,30 @@
             
             await syncDefinitionsToCloud();
             showSyncStatus('success', '✓ Definition deleted and synced!');
- }
+        }
 
         async function syncDefinitionsToCloud() {
             return new Promise((resolve) => {
                 try {
                     let iframe = document.getElementById('sync-iframe');
                     if (!iframe) {
-           
-             iframe = document.createElement('iframe');
+                        iframe = document.createElement('iframe');
                         iframe.id = 'sync-iframe';
                         iframe.name = 'sync-iframe';
                         iframe.style.display = 'none';
-       
-                      document.body.appendChild(iframe);
+                        document.body.appendChild(iframe);
                     }
                     
                     let form = document.getElementById('definitions-sync-form');
-                    
- if (form) form.remove();
+                    if (form) form.remove();
                     
                     form = document.createElement('form');
                     form.id = 'definitions-sync-form';
                     form.method = 'POST';
-            
-                form.action = GOOGLE_SCRIPT_URL;
+                    form.action = GOOGLE_SCRIPT_URL;
                     form.target = 'sync-iframe';
                     form.style.display = 'none';
+                    
                     const actionInput = document.createElement('input');
                     actionInput.type = 'hidden';
                     actionInput.name = 'action';
@@ -2953,20 +2808,21 @@
                     
                     document.body.appendChild(form);
                     form.submit();
-                    if (form) form.remove(); // Cleanup form element immediately
                     
                     setTimeout(() => {
                         resolve(true);
                     }, 1000);
- } catch (error) {
+                    
+                } catch (error) {
                     console.error('Definitions sync error:', error);
- resolve(false);
+                    resolve(false);
                 }
             });
- }
+        }
 
         function getDefinitionsContext() {
             if (definitions.length === 0) return '';
+            
             let context = '\n\n=== MANUFACTURING FACILITY CONTEXT ===\n';
             context += 'Facility: Baby Wipes Production\n';
             context += 'Lines: JBFlex, HH, RX500, RX300, L80\n\n';
@@ -2977,19 +2833,21 @@
                 'Issue': [],
                 'Process': []
             };
+            
             definitions.forEach(def => {
                 if (categories[def.category]) {
                     categories[def.category].push(def);
                 }
             });
+            
             for (const [catName, items] of Object.entries(categories)) {
                 if (items.length === 0) continue;
+                
                 context += `${catName.toUpperCase()}:\n`;
                 items.forEach(def => {
                     context += `• ${def.term}: ${def.definition}`;
                     if (def.equipment) {
                         context += ` [Applies to: ${def.equipment}]`;
-                    
                     }
                     context += '\n';
                 });
@@ -2997,7 +2855,7 @@
             }
             
             return context;
- }
+        }
 
         // ====== AI WORK INSTRUCTION ======
         async function generateWorkInstruction() {
@@ -3027,82 +2885,76 @@
             document.getElementById('generated-instruction').innerHTML = `
                 <div class="work-instruction">
                     <div class="wi-header">🤖 GENERATING AI WORK INSTRUCTION</div>
-                
-                      <div style="padding: 60px 20px; text-align: center; background: white;">
+                    <div style="padding: 60px 20px; text-align: center; background: white;">
                         <div class="loading-spinner"></div>
                         <p style="margin-top: 25px; color: #666; font-size: 15px;">
-                            <strong>Retrieving information from equipment manuals and 
- definitions...</strong><br>
-                            <span style="font-size: 14px;">Consulting ${selectedProvider === 'gemini' ?
- 'Google Gemini' : 'Azure OpenAI'} AI...</span>
+                            <strong>Retrieving information from equipment manuals and definitions...</strong><br>
+                            <span style="font-size: 14px;">Consulting ${selectedProvider === 'gemini' ? 'Google Gemini' : 'Azure OpenAI'} AI...</span>
                         </p>
                     </div>
                 </div>
             `;
+
             try {
                 // Get manual info and file URI using LINE-MACHINE key
                 const manualKey = `${line}-${machine}`;
                 const manualInfo = manualMappings[manualKey];
                 let manualContext = '';
                 let geminiFileUri = null;
+                
                 if (manualInfo && manualInfo.url) {
                     manualContext = `\n\nEquipment Manual Reference: ${manualInfo.name}\nManual URL: ${manualInfo.url}`;
+                    
                     // Try to get Gemini file URI (with auto-refresh if needed)
                     if (selectedProvider === 'gemini') {
                         try {
                             // Update loading message
-          
                             document.getElementById('generated-instruction').innerHTML = `
                                 <div class="work-instruction">
                                     <div class="wi-header">🤖 GENERATING AI WORK INSTRUCTION</div>
-      
-                                      <div style="padding: 60px 20px; text-align: center; background: white;">
+                                    <div style="padding: 60px 20px; text-align: center; background: white;">
                                         <div class="loading-spinner"></div>
-                      
-                                          <p style="margin-top: 25px; color: #666; font-size: 15px;">
+                                        <p style="margin-top: 25px; color: #666; font-size: 15px;">
                                             <strong>Fetching equipment manual from Google Drive...</strong><br>
-                           
-                                              <span style="font-size: 14px;">This may take a moment if manual needs updating...</span>
+                                            <span style="font-size: 14px;">This may take a moment if manual needs updating...</span>
                                         </p>
-                                 
                                     </div>
                                 </div>
                             `;
+                            
                             geminiFileUri = await getManualFileUri(manualKey, false);
                             
                             if (geminiFileUri) {
                                 manualContext += `\n(PDF manual content is included and accessible to AI)`;
- }
+                            }
                         } catch (error) {
                             console.error('Error fetching manual:', error);
                             manualContext += `\n(Note: PDF could not be fetched - ${error.message})`;
- }
+                        }
                     }
                 }
 
                 // Update loading message for AI generation
                 document.getElementById('generated-instruction').innerHTML = `
                     <div class="work-instruction">
-   
-                          <div class="wi-header">🤖 GENERATING AI WORK INSTRUCTION</div>
+                        <div class="wi-header">🤖 GENERATING AI WORK INSTRUCTION</div>
                         <div style="padding: 60px 20px; text-align: center; background: white;">
                             <div class="loading-spinner"></div>
-              
-                              <p style="margin-top: 25px; color: #666; font-size: 15px;">
-                                <strong>Generating instructions from ${geminiFileUri ?
- 'equipment manual' : 'available information'}...</strong><br>
-                                <span style="font-size: 14px;">Consulting ${selectedProvider === 'gemini' ?
- 'Google Gemini' : 'Azure OpenAI'} AI...</span>
+                            <p style="margin-top: 25px; color: #666; font-size: 15px;">
+                                <strong>Generating instructions from ${geminiFileUri ? 'equipment manual' : 'available information'}...</strong><br>
+                                <span style="font-size: 14px;">Consulting ${selectedProvider === 'gemini' ? 'Google Gemini' : 'Azure OpenAI'} AI...</span>
                             </p>
                         </div>
                     </div>
                 `;
+
                 // Get definitions context
                 const definitionsContext = getDefinitionsContext();
+
                 // Create the prompt
-                const prompt = `You are a technical documentation assistant at a baby wipes production facility.
- Your role is to create work instructions using information from the provided definitions and manual references.
- ${definitionsContext}
+                const prompt = `You are a technical documentation assistant at a baby wipes production facility. Your role is to create work instructions using information from the provided definitions and manual references.
+
+${definitionsContext}
 EQUIPMENT INFORMATION:
 - Production Line: ${line}
 - Machine/Equipment: ${machine}
@@ -3110,19 +2962,16 @@ EQUIPMENT INFORMATION:
 ${manualContext}
 
 IMPORTANT INSTRUCTIONS:
-${geminiFileUri ?
- `
-1. PRIMARY SOURCE: The equipment manual PDF is attached and available for you to read.
- Search it thoroughly for the requested procedure.
+${geminiFileUri ? `
+1. PRIMARY SOURCE: The equipment manual PDF is attached and available for you to read. Search it thoroughly for the requested procedure.
 2. DEFINITIONS: Also reference the definitions provided above for facility-specific context.
- 3. CITATIONS: When using information from the PDF, cite it as: [Source: ${manualInfo.name}, Page X] or [Source: ${manualInfo.name}, Section Y]
+3. CITATIONS: When using information from the PDF, cite it as: [Source: ${manualInfo.name}, Page X] or [Source: ${manualInfo.name}, Section Y]
 4. BE THOROUGH: Extract the complete procedure from the manual including all steps, tools, specifications, and safety information.
- 5. IF NOT FOUND: If the specific procedure is not in the PDF, state clearly: "This procedure is not documented in the ${manualInfo.name}."
- ` : `
+5. IF NOT FOUND: If the specific procedure is not in the PDF, state clearly: "This procedure is not documented in the ${manualInfo.name}."
+` : `
 1. PRIMARY SOURCE: Use information from the definitions provided above (if available)
 2. MANUAL REFERENCE: If a manual URL is provided but specific procedure details are not in definitions, provide general guidance and prominently reference the manual for detailed steps
-3. CITATIONS: When using definition content, cite it.
- When providing general guidance, reference the manual URL
+3. CITATIONS: When using definition content, cite it. When providing general guidance, reference the manual URL
 4. BE HELPFUL: If you have relevant general knowledge about the task and a manual is referenced, provide helpful guidance while directing user to verify in the manual
 5. NO FABRICATION: Do not make up specific measurements, part numbers, or technical specifications
 `}
@@ -3134,78 +2983,66 @@ WORK INSTRUCTION - ${machine.toUpperCase()}
 
 SAFETY PRECAUTIONS:
 All company policies and LOTO (Lockout/Tagout) procedures must be followed at all times.
- ${geminiFileUri ? '[Extract specific safety information from the manual with citations]' : '[Include relevant safety guidance and reference manual for complete safety procedures if available]'}
+${geminiFileUri ? '[Extract specific safety information from the manual with citations]' : '[Include relevant safety guidance and reference manual for complete safety procedures if available]'}
 
 REQUIRED TOOLS & MATERIALS:
- ${geminiFileUri ?
- '[Extract tool list from manual with citations]' : '[List typical tools if known, reference manual for complete list]'}
+${geminiFileUri ? '[Extract tool list from manual with citations]' : '[List typical tools if known, reference manual for complete list]'}
 
 PROCEDURE STEPS:
- ${geminiFileUri ?
- '[Extract detailed step-by-step procedure from manual with citations]' : '[Provide helpful step-by-step guidance. Reference manual for verification]'}
+${geminiFileUri ? '[Extract detailed step-by-step procedure from manual with citations]' : '[Provide helpful step-by-step guidance. Reference manual for verification]'}
 
 VERIFICATION:
- ${geminiFileUri ?
- '[Extract verification steps from manual with citations]' : '[Suggest verification steps and reference manual for specifications]'}
+${geminiFileUri ? '[Extract verification steps from manual with citations]' : '[Suggest verification steps and reference manual for specifications]'}
 
 IMPORTANT NOTES:
- ${geminiFileUri ?
- '- All information extracted from equipment manual\n- Verify page numbers and sections in original manual' : '- This instruction provides general guidance based on common procedures\n- User MUST verify all steps, specifications, and safety procedures in the equipment manual'}
- ${manualContext && manualInfo && manualInfo.name ?
- '\n- Equipment Manual: ' + manualInfo.name : ''}
- ${manualContext && manualInfo && manualInfo.url ?
- '\n- Manual URL: ' + manualInfo.url : ''}`;
+${geminiFileUri ? '- All information extracted from equipment manual\n- Verify page numbers and sections in original manual' : '- This instruction provides general guidance based on common procedures\n- User MUST verify all steps, specifications, and safety procedures in the equipment manual'}
+${manualContext && manualInfo && manualInfo.name ? '\n- Equipment Manual: ' + manualInfo.name : ''}
+${manualContext && manualInfo && manualInfo.url ? '\n- Manual URL: ' + manualInfo.url : ''}`;
 
                 // Call the appropriate AI service
                 let response;
                 if (selectedProvider === 'gemini') {
                     response = await callGeminiAPI(prompt, geminiFileUri);
- } else {
+                } else {
                     response = await callAzureOpenAI(prompt);
- }
+                }
                 
                 // Display the result
                 displayWorkInstruction(response, line, machine, issue);
- } catch (error) {
+
+            } catch (error) {
                 console.error('Error generating work instruction:', error);
                 document.getElementById('generated-instruction').innerHTML = `
                     <div class="work-instruction">
                         <div class="wi-header" style="background: linear-gradient(135deg, #dc3545, #c82333);">❌ ERROR</div>
                         <div style="padding: 40px 25px; text-align: center; background: white;">
-                
-                          <div style="font-size: 48px; margin-bottom: 20px;">⚠️</div>
+                            <div style="font-size: 48px; margin-bottom: 20px;">⚠️</div>
                             <h3 style="color: #dc3545; margin-bottom: 15px;">Failed to Generate Work Instruction</h3>
                             <p style="color: #666; margin-bottom: 20px; font-size: 15px;">${error.message}</p>
-              
-                              <p style="color: #666; font-size: 14px;">
-                                Please check your ${selectedProvider === 'gemini' ?
- 'Google Gemini' : 'Azure OpenAI'} configuration in the Setup tab.
- </p>
+                            <p style="color: #666; font-size: 14px;">
+                                Please check your ${selectedProvider === 'gemini' ? 'Google Gemini' : 'Azure OpenAI'} configuration in the Setup tab.
+                            </p>
                             <button onclick="switchTab('settings')" class="btn btn-primary" style="margin-top: 20px;">
                                 Go to Setup
                             </button>
-     
                         </div>
                     </div>
                 `;
- }
+            }
         }
 
         function showConfigurationRequired(providerName, message) {
             const html = `
                 <div class="work-instruction">
                     <div class="wi-header" style="background: linear-gradient(135deg, #ffc107, #ff9800);">⚙️ CONFIGURATION REQUIRED</div>
-                    <div style="padding: 
- 60px 25px; text-align: center; background: white;">
+                    <div style="padding: 60px 25px; text-align: center; background: white;">
                         <div style="font-size: 64px; margin-bottom: 20px;">🔧</div>
                         <h3 style="color: #ff9800; margin-bottom: 15px;">${providerName} Not Configured</h3>
                         <p style="color: #666; margin: 20px auto; max-width: 500px; font-size: 15px;">
-    
                             ${message}
                         </p>
                         <button onclick="switchTab('settings')" class="btn btn-primary" style="margin-top: 20px; padding: 15px 30px; font-size: 16px;">
-                  
-                      Go to Setup Tab
+                            Go to Setup Tab
                         </button>
                     </div>
                 </div>
@@ -3216,94 +3053,80 @@ IMPORTANT NOTES:
         function displayWorkInstruction(content, line, machine, issue) {
             // Parse the content and format it nicely
             const sections = content.split(/\n(?=[A-Z][A-Z\s]+:)/);
+            
             let html = `
                 <div class="work-instruction">
                     <div class="wi-header">
                         🤖 AI-GENERATED WORK INSTRUCTION
                     </div>
-            
-                
+                    
                     <div class="wi-caution">
                         <div class="wi-caution-icon">⚠️</div>
                         <div>
-                      
-                          <strong>CAUTION: AI-Generated Information</strong><br>
-                            <span style="font-size: 13px; opacity: 0.95;">This information is AI-generated.
- User is responsible for referencing work instructions and manuals for accuracy.
- Contact supervisor to review prior to implementing any procedure.</span>
+                            <strong>CAUTION: AI-Generated Information</strong><br>
+                            <span style="font-size: 13px; opacity: 0.95;">This information is AI-generated. User is responsible for referencing work instructions and manuals for accuracy. Contact supervisor to review prior to implementing any procedure.</span>
                         </div>
                     </div>
                     
                     <div class="wi-metadata">
-       
-                          <div class="wi-metadata-item">
+                        <div class="wi-metadata-item">
                             <span class="wi-metadata-label">Production Line</span>
                             <span class="wi-metadata-value">${line}</span>
-                       
-                      </div>
+                        </div>
                         <div class="wi-metadata-item">
                             <span class="wi-metadata-label">Equipment</span>
                             <span class="wi-metadata-value">${machine}</span>
-                
                         </div>
                         <div class="wi-metadata-item">
                             <span class="wi-metadata-label">Task/Procedure</span>
                             <span class="wi-metadata-value">${issue}</span>
-         
                         </div>
                         <div class="wi-metadata-item">
                             <span class="wi-metadata-label">Generated</span>
                             <span class="wi-metadata-value">${new Date().toLocaleString()}</span>
- 
                         </div>
                         <div class="wi-metadata-item">
                             <span class="wi-metadata-label">AI Provider</span>
-                      
-                      <span class="wi-metadata-value">${selectedProvider === 'gemini' ?
- 'Google Gemini' : 'Azure OpenAI'}</span>
+                            <span class="wi-metadata-value">${selectedProvider === 'gemini' ? 'Google Gemini' : 'Azure OpenAI'}</span>
                         </div>
                     </div>
             `;
+
             sections.forEach(section => {
                 if (section.trim()) {
                     const lines = section.split('\n').filter(line => line.trim());
                     if (lines.length === 0) return;
                     
-           
-                      const title = lines[0].replace(':', '').trim();
+                    const title = lines[0].replace(':', '').trim();
                     const items = lines.slice(1);
 
                     html += `
                         <div class="wi-section">
-                 
                             <h4>${title}</h4>
                             <div class="wi-content">
                     `;
 
                     items.forEach(item => {
-                  
-                      if (item.trim()) {
+                        if (item.trim()) {
                             html += `<div class="wi-step">${item.trim()}</div>`;
                         }
                     });
 
-                 
-                   html += `
+                    html += `
                             </div>
                         </div>
                     `;
                 }
-       
-              });
+            });
 
             html += `
                     <div class="wi-actions">
                         <button onclick="window.print()" class="btn btn-primary">🖨️ Print Instruction</button>
                         <button onclick="downloadWorkInstruction()" class="btn btn-info">💾 Download as Text</button>
-            
-                        </div>
+                    </div>
                 </div>
             `;
+
             document.getElementById('generated-instruction').innerHTML = html;
         }
 
@@ -3357,20 +3180,19 @@ IMPORTANT NOTES:
             aiAssistanceDiv.innerHTML = `
                 <div class="work-instruction">
                     <div class="wi-header">🤖 AI ANALYZING YOUR ISSUE</div>
-                    <div style="padding: 
- 60px 20px; text-align: center; background: white;">
+                    <div style="padding: 60px 20px; text-align: center; background: white;">
                         <div class="loading-spinner"></div>
                         <p style="margin-top: 25px; color: #666; font-size: 15px;">
                             <strong>Analyzing your issue and actions taken...</strong><br>
-       
-                          <span style="font-size: 14px;">Consulting ${selectedProvider === 'gemini' ?
- 'Google Gemini' : 'Azure OpenAI'} AI for best course of action...</span>
+                            <span style="font-size: 14px;">Consulting ${selectedProvider === 'gemini' ? 'Google Gemini' : 'Azure OpenAI'} AI for best course of action...</span>
                         </p>
                     </div>
                 </div>
             `;
+
             // Scroll to the AI assistance display
             aiAssistanceDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
             try {
                 // Get manual URL if available using LINE-MACHINE key
                 const manualKey = `${line}-${machine}`;
@@ -3379,26 +3201,29 @@ IMPORTANT NOTES:
                 
                 if (manualInfo && manualInfo.url) {
                     manualContext = `\n\nEquipment Manual Reference: ${manualInfo.name}\nManual URL: ${manualInfo.url}\n(Note: Reference specific sections of this manual for detailed procedures)`;
- }
+                }
 
                 // Get definitions context
                 const definitionsContext = getDefinitionsContext();
+
                 // Format the actions taken
                 let actionsText = '\n\nACTIONS ALREADY TAKEN:\n';
                 currentActions.forEach((act, index) => {
                     actionsText += `${index + 1}. ${act.action}\n   Result: ${act.status}\n`;
                 });
+
                 // Create the prompt - focused on next best action, not full work instruction
                 const prompt = `You are an expert manufacturing technician helping troubleshoot equipment issues at a baby wipes production facility.
- ${definitionsContext}
+${definitionsContext}
 CURRENT SITUATION:
 - Production Line: ${line}
 - Machine/Equipment: ${machine}
 - Issue Description: ${description}
 ${actionsText}${manualContext}
 
-TASK: Based on the actions already taken and their results, recommend the BEST NEXT COURSE OF ACTION to resolve this issue.
- DO NOT provide a full work instruction. Instead, provide:
+TASK: Based on the actions already taken and their results, recommend the BEST NEXT COURSE OF ACTION to resolve this issue. 
+
+DO NOT provide a full work instruction. Instead, provide:
 1. A brief analysis of what the actions taken tell us about the problem
 2. The most likely root cause based on the information
 3. Specific next steps that should be taken (2-4 recommended actions)
@@ -3406,106 +3231,94 @@ TASK: Based on the actions already taken and their results, recommend the BEST N
 5. References to relevant manual sections or documentation if applicable
 
 Keep your response concise, focused, and actionable - aimed at helping the technician decide what to try next.`;
+
                 // Call the appropriate AI service
                 let response;
                 if (selectedProvider === 'gemini') {
                     response = await callGeminiAPI(prompt);
- } else {
+                } else {
                     response = await callAzureOpenAI(prompt);
- }
+                }
                 
                 // Display the result
                 displayAIAssistance(response, line, machine, description);
- } catch (error) {
+
+            } catch (error) {
                 console.error('Error getting AI assistance:', error);
                 aiAssistanceDiv.innerHTML = `
                     <div class="work-instruction">
                         <div class="wi-header" style="background: linear-gradient(135deg, #dc3545, #c82333);">❌ ERROR</div>
                         <div style="padding: 40px 25px; text-align: center; background: white;">
-                
-                          <div style="font-size: 48px; margin-bottom: 20px;">⚠️</div>
+                            <div style="font-size: 48px; margin-bottom: 20px;">⚠️</div>
                             <h3 style="color: #dc3545; margin-bottom: 15px;">Failed to Get AI Assistance</h3>
                             <p style="color: #666; margin-bottom: 20px; font-size: 15px;">${error.message}</p>
-              
-                              <p style="color: #666; font-size: 14px;">
-                                Please check your ${selectedProvider === 'gemini' ?
- 'Google Gemini' : 'Azure OpenAI'} configuration in the Setup tab.
- </p>
+                            <p style="color: #666; font-size: 14px;">
+                                Please check your ${selectedProvider === 'gemini' ? 'Google Gemini' : 'Azure OpenAI'} configuration in the Setup tab.
+                            </p>
                             <button onclick="switchTab('settings')" class="btn btn-primary" style="margin-top: 20px;">
                                 Go to Setup
                             </button>
-     
                         </div>
                     </div>
                 `;
- }
+            }
         }
 
         function displayAIAssistance(aiResponse, line, machine, issue) {
             const aiAssistanceDiv = document.getElementById('ai-assistance-display');
+            
             // Parse the response into sections (similar to work instruction but simpler)
             const sections = aiResponse.split('\n\n');
+            
             let html = `
                 <div class="work-instruction">
                     <div class="wi-header">🤖 AI RECOMMENDED COURSE OF ACTION</div>
                     
                     <div class="wi-caution">
-             
-                          <div class="wi-caution-icon">⚠️</div>
+                        <div class="wi-caution-icon">⚠️</div>
                         <div>
                             <strong>CAUTION: AI-Generated Recommendation</strong><br>
-                            <span style="font-size: 13px; opacity: 0.95;">Contact supervisor 
- to review prior to implementing these recommendations. Always follow company safety protocols.</span>
+                            <span style="font-size: 13px; opacity: 0.95;">Contact supervisor to review prior to implementing these recommendations. Always follow company safety protocols.</span>
                         </div>
                     </div>
                     
                     <div class="wi-metadata">
-    
                         <div class="wi-metadata-item">
                             <span class="wi-metadata-label">Production Line</span>
                             <span class="wi-metadata-value">${line}</span>
-                    
-                      </div>
+                        </div>
                         <div class="wi-metadata-item">
                             <span class="wi-metadata-label">Equipment</span>
                             <span class="wi-metadata-value">${machine}</span>
-             
                         </div>
                         <div class="wi-metadata-item">
                             <span class="wi-metadata-label">Issue</span>
                             <span class="wi-metadata-value">${issue}</span>
-      
-                          </div>
+                        </div>
                         <div class="wi-metadata-item">
                             <span class="wi-metadata-label">Generated</span>
-                            
                             <span class="wi-metadata-value">${new Date().toLocaleString()}</span>
                         </div>
                         <div class="wi-metadata-item">
                             <span class="wi-metadata-label">AI Provider</span>
-                   
-                          <span class="wi-metadata-value">${selectedProvider === 'gemini' ?
- 'Google Gemini' : 'Azure OpenAI'}</span>
+                            <span class="wi-metadata-value">${selectedProvider === 'gemini' ? 'Google Gemini' : 'Azure OpenAI'}</span>
                         </div>
                     </div>
                     
                     <div class="wi-section">
-           
-                          <div class="wi-content" style="line-height: 1.8; white-space: pre-wrap;">${aiResponse}</div>
+                        <div class="wi-content" style="line-height: 1.8; white-space: pre-wrap;">${aiResponse}</div>
                     </div>
                     
                     <div class="wi-actions">
-                     
                         <button onclick="window.print()" class="btn btn-primary">🖨️ Print Recommendation</button>
                         <button onclick="downloadAIAssistance()" class="btn btn-info">💾 Download as Text</button>
                         <button onclick="document.getElementById('ai-assistance-display').innerHTML = ''" class="btn btn-warning">✖️ Close</button>
                     </div>
-            
                 </div>
             `;
 
             aiAssistanceDiv.innerHTML = html;
- }
+        }
 
         function downloadAIAssistance() {
             const content = document.getElementById('ai-assistance-display').innerText;
@@ -3525,13 +3338,12 @@ Keep your response concise, focused, and actionable - aimed at helping the techn
                 "Ouch!",
                 "Hey!",
                 "Boop!",
-          
                 "Woah!",
                 "Beep boop!",
                 "Uh oh!",
                 "Yikes!",
                 "Haha!"
- ];
+            ];
 
             const columnB = [
                 "That felt like",
@@ -3539,32 +3351,33 @@ Keep your response concise, focused, and actionable - aimed at helping the techn
                 "My circuits are",
                 "That really",
                 "I'm going to",
-       
-                  "That tickled",
+                "That tickled",
                 "Did you just",
                 "My processor is"
             ];
+
             const columnC = [
                 "a giant mosquito.",
                 "my metal nose.",
                 "doing a silly dance.",
                 "woke up my brain.",
                 "think about pizza now.",
-    
                 "my secret power button.",
                 "pop a memory bubble?",
                 "giggling really loud."
- ];
+            ];
 
             // Pick random items from each column
             const randomA = columnA[Math.floor(Math.random() * columnA.length)];
             const randomB = columnB[Math.floor(Math.random() * columnB.length)];
             const randomC = columnC[Math.floor(Math.random() * columnC.length)];
+
             // Combine them into a funny phrase
             const funnyPhrase = `${randomA} ${randomB} ${randomC}`;
+
             // Display in a fun alert
             alert('🤖 ' + funnyPhrase);
- }
+        }
 
         // ====== CLOUD SYNC VERIFICATION ======
         async function verifyCloudSync() {
@@ -3578,12 +3391,14 @@ Keep your response concise, focused, and actionable - aimed at helping the techn
                 if (data.success) {
                     let html = '<div style="background: #e8f5e9; border: 1px solid #4caf50; border-radius: 8px; padding: 15px; margin-top: 10px;">';
                     html += '<h4 style="color: #2e7d32; margin-bottom: 10px;">✓ Cloud Connection Successful</h4>';
+                    
                     // Show what's stored
                     if (data.aiConfigs && data.aiConfigs.manualMappings) {
                         const cloudMappings = data.aiConfigs.manualMappings;
                         const mappingCount = Object.keys(cloudMappings).length;
                         
                         html += `<p><strong>Manual Mappings in Google Sheets:</strong> ${mappingCount} mapping${mappingCount !== 1 ? 's' : ''}</p>`;
+                        
                         if (mappingCount > 0) {
                             html += '<ul style="margin: 10px 0; padding-left: 20px;">';
                             for (const [key, info] of Object.entries(cloudMappings)) {
@@ -3591,44 +3406,40 @@ Keep your response concise, focused, and actionable - aimed at helping the techn
                                 html += `<li>${line} - ${machine}: ${info.name}</li>`;
                             }
                             html += '</ul>';
- }
+                        }
                         
                         // Compare with local
                         const localCount = Object.keys(manualMappings).length;
                         if (localCount !== mappingCount) {
                             html += `<p style="color: #ff9800; margin-top: 10px;"><strong>⚠️ Warning:</strong> Local storage has ${localCount} mapping${localCount !== 1 ? 's' : ''}, but cloud has ${mappingCount}. They may be out of sync!</p>`;
- } else {
+                        } else {
                             html += '<p style="color: #4caf50; margin-top: 10px;">✓ Local and cloud are in sync!</p>';
- }
+                        }
                     } else {
                         html += '<p style="color: #ff9800;">⚠️ No manual mappings found in Google Sheets</p>';
- }
+                    }
                     
                     html += '</div>';
                     resultDiv.innerHTML = html;
                 } else {
                     throw new Error(data.message || 'Unknown error');
- }
+                }
             } catch (error) {
                 resultDiv.innerHTML = `
                     <div style="background: #ffebee; border: 1px solid #f44336; border-radius: 8px; padding: 15px; margin-top: 10px;">
                         <h4 style="color: #c62828;">❌ Cloud Connection Failed</h4>
-      
-                      <p style="color: #666; margin-top: 10px;">Error: ${error.message}</p>
+                        <p style="color: #666; margin-top: 10px;">Error: ${error.message}</p>
                         <p style="color: #666; margin-top: 10px;"><strong>Possible causes:</strong></p>
                         <ul style="margin: 10px 0; padding-left: 20px; color: #666;">
-                 
-                          <li>Google Apps Script URL not set correctly</li>
+                            <li>Google Apps Script URL not set correctly</li>
                             <li>Script not deployed as web app</li>
                             <li>Script permissions not set to "Anyone"</li>
-                 
-                          <li>Network connection issue</li>
+                            <li>Network connection issue</li>
                         </ul>
                         <p style="color: #666; margin-top: 10px;">Your manual mappings are saved locally but won't sync to other devices until this is fixed.</p>
-                    
- </div>
+                    </div>
                 `;
- }
+            }
         }
 
         async function forceResyncAll() {
@@ -3641,19 +3452,19 @@ Keep your response concise, focused, and actionable - aimed at helping the techn
             
             try {
                 await syncAIConfigsToCloud();
+                
                 // Verify it worked
                 setTimeout(async () => {
                     await verifyCloudSync();
                 }, 2000);
- } catch (error) {
+            } catch (error) {
                 resultDiv.innerHTML = `
                     <div style="background: #ffebee; border: 1px solid #f44336; border-radius: 8px; padding: 15px; margin-top: 10px;">
                         <h4 style="color: #c62828;">❌ Re-sync Failed</h4>
-                   
-             <p style="color: #666; margin-top: 10px;">Error: ${error.message}</p>
+                        <p style="color: #666; margin-top: 10px;">Error: ${error.message}</p>
                     </div>
                 `;
- }
+            }
         }
     </script>
 </body>
