@@ -571,7 +571,7 @@
         <div class="header">
             <h1>🏭 Manufacturing Issue Tracker</h1>
             <p>Track equipment issues and generate AI-powered work instructions</p>
-            <div class="version">v12.9</div>
+            <div class="version">v13.0</div>
         </div>
 
         <div id="sync-status" class="sync-status"></div>
@@ -844,7 +844,10 @@
 
                 <div id="manual-config-list" style="margin: 15px 0;"></div>
 
-                <button onclick="addManualMapping()" class="btn btn-success">+ Add Manual Mapping</button>
+                <div style="display: flex; gap: 10px;">
+                    <button onclick="addManualMapping()" class="btn btn-success">+ Add Manual Mapping</button>
+                    <button onclick="openTestPDFModal()" class="btn btn-info">🔍 Test PDF Download</button>
+                </div>
             </div>
 
             <div class="config-section">
@@ -923,6 +926,28 @@
                 <div style="margin-top: 20px; text-align: right;">
                     <button type="button" class="btn" onclick="closeManualModal()" style="background: #6c757d; color: white;">Cancel</button>
                     <button type="button" class="btn btn-success" onclick="saveManualMapping()">Save Manual Mapping</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="test-pdf-modal" class="modal" onclick="handleTestPDFModalClick(event)">
+            <div class="modal-content" onclick="event.stopPropagation()">
+                <h3 style="margin-bottom: 20px; color: #2c3e50;">🔍 Test PDF Download</h3>
+                
+                <p style="color: #666; margin-bottom: 20px;">
+                    This will test if your Google Apps Script can download PDFs from Google Drive.
+                </p>
+                
+                <div class="form-group">
+                    <label for="test-pdf-url">Google Drive PDF URL</label>
+                    <input type="text" id="test-pdf-url" class="form-control" placeholder="https://drive.google.com/file/d/...">
+                </div>
+                
+                <div id="test-pdf-result" style="margin-top: 15px;"></div>
+                
+                <div style="margin-top: 20px; text-align: right;">
+                    <button type="button" class="btn" onclick="closeTestPDFModal()" style="background: #6c757d; color: white;">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="testPDFDownload()">Test Download</button>
                 </div>
             </div>
         </div>
@@ -2537,6 +2562,76 @@
             }
         }
 
+        // ====== PDF DOWNLOAD TESTING ======
+        function openTestPDFModal() {
+            document.getElementById('test-pdf-modal').style.display = 'flex';
+            document.getElementById('test-pdf-result').innerHTML = '';
+            
+            // Pre-fill with first manual's URL if available
+            const firstManual = Object.values(manualMappings)[0];
+            if (firstManual && firstManual.url) {
+                document.getElementById('test-pdf-url').value = firstManual.url;
+            }
+        }
+
+        function closeTestPDFModal() {
+            document.getElementById('test-pdf-modal').style.display = 'none';
+        }
+
+        function handleTestPDFModalClick(event) {
+            if (event.target.id === 'test-pdf-modal') {
+                closeTestPDFModal();
+            }
+        }
+
+        async function testPDFDownload() {
+            const url = document.getElementById('test-pdf-url').value.trim();
+            const resultDiv = document.getElementById('test-pdf-result');
+            
+            if (!url) {
+                resultDiv.innerHTML = '<div style="color: #dc3545;">Please enter a Google Drive URL</div>';
+                return;
+            }
+            
+            if (!GOOGLE_SCRIPT_URL) {
+                resultDiv.innerHTML = '<div style="color: #dc3545;">❌ Google Apps Script URL not configured. Please set it in the Setup tab.</div>';
+                return;
+            }
+            
+            resultDiv.innerHTML = '<div style="color: #666;">🔄 Testing PDF download...</div>';
+            
+            try {
+                // Test the download
+                const blob = await downloadPDFFromGoogleDrive(url);
+                
+                resultDiv.innerHTML = `
+                    <div style="background: #d4edda; border: 1px solid #c3e6cb; border-radius: 4px; padding: 15px; color: #155724;">
+                        <strong>✓ Success!</strong><br>
+                        <span style="font-size: 14px;">
+                            PDF downloaded successfully from Google Drive via Google Apps Script proxy.<br>
+                            Size: ${(blob.size / 1024).toFixed(2)} KB<br>
+                            Type: ${blob.type}
+                        </span>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Test error:', error);
+                resultDiv.innerHTML = `
+                    <div style="background: #f8d7da; border: 1px solid #f5c6cb; border-radius: 4px; padding: 15px; color: #721c24;">
+                        <strong>❌ Failed</strong><br>
+                        <span style="font-size: 14px;">${error.message}</span>
+                        <div style="margin-top: 10px; font-size: 13px;">
+                            <strong>Common Issues:</strong><br>
+                            • Google Apps Script not deployed with v13 code<br>
+                            • Google Script URL not configured<br>
+                            • File not publicly accessible<br>
+                            • Invalid file ID in URL
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
         // ====== DEFINITIONS MANAGEMENT ======
         function initializeDefaultDefinitions() {
             // Only initialize if no definitions exist
@@ -2926,10 +3021,47 @@
                             
                             if (geminiFileUri) {
                                 manualContext += `\n(PDF manual content is included and accessible to AI)`;
+                            } else {
+                                // PDF was not available - should not happen if getManualFileUri succeeds
+                                throw new Error('Failed to obtain PDF file reference');
                             }
                         } catch (error) {
                             console.error('Error fetching manual:', error);
-                            manualContext += `\n(Note: PDF could not be fetched - ${error.message})`;
+                            
+                            // CRITICAL: If manual is mapped but we can't get the PDF, don't generate
+                            document.getElementById('generated-instruction').innerHTML = `
+                                <div class="work-instruction">
+                                    <div class="wi-header" style="background: linear-gradient(135deg, #dc3545, #c82333);">❌ MANUAL ACCESS FAILED</div>
+                                    <div style="padding: 40px 25px; background: white;">
+                                        <div style="font-size: 48px; margin-bottom: 20px; text-align: center;">📄</div>
+                                        <h3 style="color: #dc3545; margin-bottom: 15px;">Cannot Access Equipment Manual</h3>
+                                        <p style="color: #666; margin-bottom: 20px;">
+                                            A manual is configured for ${line} - ${machine}, but it could not be downloaded from Google Drive.
+                                        </p>
+                                        <div style="background: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; padding: 15px; margin-bottom: 20px;">
+                                            <strong style="color: #856404;">Error:</strong><br>
+                                            <span style="color: #856404; font-size: 14px;">${error.message}</span>
+                                        </div>
+                                        <h4 style="margin-top: 20px; margin-bottom: 10px;">Troubleshooting Steps:</h4>
+                                        <ol style="text-align: left; color: #666; line-height: 1.8;">
+                                            <li><strong>Check Google Drive Link:</strong> Verify the file is publicly accessible (Anyone with link can view)</li>
+                                            <li><strong>Check Google Apps Script:</strong> Ensure you've deployed v13 with PDF download proxy</li>
+                                            <li><strong>Check Script URL:</strong> Verify Google Apps Script URL is configured in Setup tab</li>
+                                            <li><strong>Test Manually:</strong> Try clicking the 🔄 Refresh button on the manual in Setup tab</li>
+                                        </ol>
+                                        <p style="color: #666; margin-top: 20px; font-size: 14px;">
+                                            <strong>Manual Reference:</strong> ${manualInfo.name}<br>
+                                            <strong>URL:</strong> <a href="${manualInfo.url}" target="_blank">${manualInfo.url}</a>
+                                        </p>
+                                        <div style="text-align: center; margin-top: 30px;">
+                                            <button onclick="switchTab('settings')" class="btn btn-primary">
+                                                Go to Setup
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                            return; // Stop - don't generate without the manual
                         }
                     }
                 }
