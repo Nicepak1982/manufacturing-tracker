@@ -87,6 +87,11 @@
             font-size: 16px;
             transition: all 0.3s ease;
         }
+        
+        /* New CSS to hide protected tabs by default */
+        .nav-tab.protected {
+            display: none;
+        }
 
         .nav-tab.active {
             background: white;
@@ -683,7 +688,7 @@
         <div class="header">
             <h1>🏭 Manufacturing Issue Tracker</h1>
             <p>Track equipment issues and generate AI-powered work instructions</p>
-            <div class="version">v13.3</div>
+            <div class="version">v13.5</div>
         </div>
 
         <div id="sync-status" class="sync-status"></div>
@@ -691,10 +696,10 @@
         <div class="nav-tabs">
             <button class="nav-tab active" onclick="switchTab('report')">📝 Report Issue</button>
             <button class="nav-tab" onclick="switchTab('search')">🔍 Search Issues</button>
-            <button class="nav-tab" onclick="switchTab('ai')">🤖 AI Work Instructions</button>
-            <button class="nav-tab" onclick="switchTab('definitions')">📖 Definitions</button>
-            <button class="nav-tab" onclick="switchTab('history')">📊 History</button>
-            <button class="nav-tab" onclick="switchTab('settings')">⚙️ Setup</button>
+            <button class="nav-tab protected" id="ai-tab-button" onclick="switchTab('ai')">🤖 AI Work Instructions</button>
+            <button class="nav-tab protected" id="definitions-tab-button" onclick="switchTab('definitions')">📖 Definitions</button>
+            <button class="nav-tab protected" id="history-tab-button" onclick="switchTab('history')">📊 History</button>
+            <button class="nav-tab protected" id="settings-tab-button" onclick="switchTab('settings')">⚙️ Setup</button>
         </div>
 
         <div id="report-tab" class="tab-content active">
@@ -1118,6 +1123,11 @@
         let selectedProvider = localStorage.getItem('selectedProvider') || 'gemini'; // Default to free option
         let currentEditingDefinitionId = null; // Track which definition is being edited
         
+        // ** NEW SECURITY VARIABLE **
+        const ADMIN_PIN = '1111'; // <--- SET TO DEFAULT PIN '1111'
+        let isAuthenticated = false; // <--- Tracks if the user has entered the PIN
+        // ** END NEW SECURITY VARIABLE **
+        
         const machinesByLine = {
             'RX500': ['Unwind', 'Festoon', 'Forming Table', 'Pull Station', 'Saw House', 'Diverter', 'Conveyor', 'Lidder', 'Wrapper', 'Case Erector', 'Case Packer', 'Weight Checker', 'Palletizer', 'Printer (Wrapper)', 'Printer (Case)'],
             'RX300': ['Unwind', 'Forming Table', 'Pull Station', 'Saw House', 'Doubler', 'Wig-Wag', 'Diverter', 'Conveyor', 'Wrapper', 'Lidder', 'Case Erector', 'Case Packer', 'Weight Checker', 'Palletizer', 'Printer (Wrapper)', 'Printer (Case)', 'Bundler'],
@@ -1347,6 +1357,37 @@
 
         // ====== UI FUNCTIONS ======
         function switchTab(tabName) {
+            
+            // ** SECURITY CHECK FOR ADMIN TABS **
+            // Added 'history' to the protectedTabs list
+            const protectedTabs = ['ai', 'definitions', 'history', 'settings'];
+
+            if (protectedTabs.includes(tabName)) {
+                if (!isAuthenticated) {
+                    // Added a prompt with the expected pin for clarity
+                    const pin = prompt(`Enter PIN to access the ${tabName.toUpperCase()} features (Default: 1111):`);
+                    
+                    if (pin === ADMIN_PIN) {
+                        isAuthenticated = true;
+                        alert('Access Granted! Protected tabs are now visible.');
+                        
+                        // ** NEW CODE: Make protected tabs visible **
+                        document.getElementById('ai-tab-button').classList.remove('protected');
+                        document.getElementById('definitions-tab-button').classList.remove('protected');
+                        document.getElementById('history-tab-button').classList.remove('protected'); // Added history
+                        document.getElementById('settings-tab-button').classList.remove('protected');
+                        // ** END NEW CODE **
+                        
+                    } else if (pin !== null && pin !== '') {
+                        alert('Incorrect PIN. Access denied.');
+                        return; // Stop the tab switch
+                    } else {
+                        return; // Stop the tab switch if user clicks Cancel
+                    }
+                }
+            }
+            // ** END SECURITY CHECK **
+            
             document.querySelectorAll('.tab-content').forEach(tab => {
                 tab.classList.remove('active');
             });
@@ -3228,6 +3269,7 @@ Once you've found the right procedure in the manual:
 - Do NOT elaborate on brief instructions
 - Do NOT add tool specifications if not listed
 - Do NOT add measurements if not specified
+- Do NOT add safety warnings if not present
 - Keep it as brief or detailed as the manual states it
 - Cite everything: [Source: ${manualInfo.name}, Page X]
 
@@ -3368,7 +3410,7 @@ Be STRICT in extracting it (only what's actually written, nothing more).`;
                         <div class="wi-caution-icon">⚠️</div>
                         <div>
                             <strong>CAUTION: AI-Generated Information</strong><br>
-                            <span style="font-size: 13px; opacity: 0.95;">This information is AI-generated. User is responsible for referencing work instructions and manuals for accuracy.</span>
+                            <span style="font-size: 13px; opacity: 0.95;">This information is AI-generated. User is responsible for referencing work instructions and manuals for accuracy. Contact supervisor to review prior to implementing any procedure.</span>
                         </div>
                     </div>
                     
@@ -3589,13 +3631,7 @@ When referencing the manual, cite as: [Source: ${manualInfo.name}, Page X]
 ` : ''}
 
 YOUR ROLE:
-You are a skilled troubleshooting expert. Use:
-1. **The manual** - for documented procedures and specifications
-2. **The definitions** - for facility-specific context
-3. **Your expertise** - apply logic and reasoning to the problem
-4. **Pattern recognition** - analyze what the actions taken tell us
-
-IMPORTANT: You should think beyond just what's in the manual. If the manual doesn't cover this exact scenario, use your troubleshooting logic and experience to provide the best course of action. Combine manual knowledge with practical reasoning.
+You are a skilled troubleshooting expert. You should think beyond just what's in the manual. If the manual doesn't cover this exact scenario, use your troubleshooting logic and experience to provide the best course of action. Combine manual knowledge with practical reasoning.
 
 TASK: Based on the actions already taken and their results, recommend the BEST NEXT COURSE OF ACTION to resolve this issue.
 
