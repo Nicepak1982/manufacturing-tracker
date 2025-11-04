@@ -571,7 +571,7 @@
         <div class="header">
             <h1>🏭 Manufacturing Issue Tracker</h1>
             <p>Track equipment issues and generate AI-powered work instructions</p>
-            <div class="version">v13.0</div>
+            <div class="version">v13.1</div>
         </div>
 
         <div id="sync-status" class="sync-status"></div>
@@ -3084,29 +3084,49 @@
                 const definitionsContext = getDefinitionsContext();
 
                 // Create the prompt
-                const prompt = `You are a technical documentation assistant. Your ONLY job is to extract information EXACTLY as written in the provided PDF manual. Do NOT add any information, assumptions, or general knowledge.
+                const prompt = `You are a technical documentation assistant. Your job is to help users find and extract procedures from equipment manuals.
 
 ${definitionsContext}
 EQUIPMENT INFORMATION:
 - Production Line: ${line}
 - Machine/Equipment: ${machine}
-- Task/Procedure: ${issue}
+- User Request: ${issue}
 ${manualContext}
 
-CRITICAL RULES - READ CAREFULLY:
+YOUR TWO-STEP PROCESS:
+
+STEP 1 - UNDERSTAND THE REQUEST (Be Smart & Flexible):
 ${geminiFileUri ? `
-1. PDF IS ATTACHED: Search the PDF for the requested procedure
-2. EXTRACT ONLY: Copy the exact steps, tools, and information AS WRITTEN in the PDF
-3. DO NOT ADD: Do not add any steps, tools, or information not explicitly stated in the PDF
-4. DO NOT ELABORATE: Do not expand on brief instructions - keep them as brief as the manual states them
-5. DO NOT ASSUME: If a detail is missing (like tool sizes, torque values), do NOT make them up - just note "See manual for specifications"
-6. CITE EVERYTHING: Every piece of information must have [Source: ${manualInfo.name}, Page X]
-7. IF NOT FOUND: If the procedure is not in the PDF, state clearly: "This procedure is not documented in the ${manualInfo.name}. Consult supervisor or manufacturer."
-8. WORD-FOR-WORD: When possible, use the exact wording from the manual, not your interpretation
+- The user may not use exact manual terminology
+- They might ask: "fix the conveyor" when they mean "adjust clip conveyor height"
+- They might say: "change the blade" when they mean "replace cutting blade assembly"
+- Use your intelligence to interpret what procedure they're most likely asking for
+- Search the manual for the procedure that best matches their intent
+- Consider common variations and related procedures
 ` : `
-1. NO PDF ATTACHED: Provide only general safety guidance
-2. DO NOT FABRICATE: Do not make up specific procedures, measurements, or part numbers
-3. REFER TO MANUAL: Direct user to consult equipment manual for specific procedures
+- Understand what the user is asking for
+- No manual available - explain that specific procedure cannot be provided
+`}
+
+STEP 2 - EXTRACT THE PROCEDURE (Be Strict & Accurate):
+${geminiFileUri ? `
+Once you've found the right procedure in the manual:
+- Extract ONLY what is explicitly written in the manual
+- Do NOT add steps that aren't there
+- Do NOT elaborate on brief instructions
+- Do NOT add tool specifications if not listed
+- Do NOT add measurements if not specified
+- Keep it as brief or detailed as the manual states it
+- Cite everything: [Source: ${manualInfo.name}, Page X]
+
+If the procedure is NOT in the manual:
+- State clearly: "This procedure is not documented in the ${manualInfo.name}"
+- Do NOT make up a procedure from general knowledge
+- Suggest consulting supervisor or manufacturer
+` : `
+- Manual not available
+- Cannot provide specific procedure
+- Direct user to consult equipment manual and supervisor
 `}
 
 RESPONSE FORMAT:
@@ -3115,25 +3135,28 @@ WORK INSTRUCTION - ${machine.toUpperCase()}
 
 SAFETY PRECAUTIONS:
 All company policies and LOTO (Lockout/Tagout) procedures must be followed at all times.
-${geminiFileUri ? '[Extract ONLY the safety warnings explicitly stated in the manual - do not add generic safety advice]' : '[Consult equipment manual for specific safety procedures]'}
+${geminiFileUri ? '[Extract ONLY the safety warnings explicitly stated in the manual for this procedure]' : '[Consult equipment manual for specific safety procedures]'}
 
 REQUIRED TOOLS & MATERIALS:
 ${geminiFileUri ? '[List ONLY tools explicitly mentioned in the manual - if none listed, state "Tools not specified in manual"]' : '[Consult manual for required tools]'}
 
 PROCEDURE STEPS:
-${geminiFileUri ? '[Extract steps EXACTLY as written in the manual - do not add, expand, or elaborate. If steps are brief, keep them brief. Number them as they appear in the manual.]' : '[Procedure not available - consult equipment manual]'}
+${geminiFileUri ? '[Extract steps EXACTLY as written in the manual - word-for-word when possible. Number them as they appear. Do not add, expand, or interpret.]' : '[Procedure not available - consult equipment manual]'}
 
 VERIFICATION:
 ${geminiFileUri ? '[Include ONLY verification steps explicitly stated in the manual - if none, state "No verification steps provided in manual"]' : '[Consult manual for verification procedures]'}
 
 IMPORTANT NOTES:
-${geminiFileUri ? `- All information extracted EXACTLY from the manual without additions or interpretations
-- Any missing details should be noted as "See ${manualInfo.name} for additional details"
-- User must verify all information against original manual before implementing` : '- Consult equipment manual and supervisor for specific procedures'}
+${geminiFileUri ? `- All information extracted directly from manual without additions
+- Brief instructions kept brief, detailed instructions kept detailed
+- Missing details noted as "See ${manualInfo.name} for specifications"
+- User must verify against original manual before implementing` : '- Consult equipment manual and supervisor for specific procedures'}
 ${manualContext && manualInfo && manualInfo.name ? '\n- Equipment Manual: ' + manualInfo.name : ''}
 ${manualContext && manualInfo && manualInfo.url ? '\n- Manual URL: ' + manualInfo.url : ''}
 
-REMEMBER: You are a documentation extractor, NOT a technical expert. Only extract what is explicitly written in the PDF. Do not add your own knowledge or assumptions.`;
+CRITICAL REMINDER: 
+Be SMART in finding the right procedure (the user may not use exact terms).
+Be STRICT in extracting it (only what's actually written, nothing more).`;
 
                 // Call the appropriate AI service
                 let response;
@@ -3330,14 +3353,63 @@ REMEMBER: You are a documentation extractor, NOT a technical expert. Only extrac
             aiAssistanceDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
             try {
-                // Get manual URL if available using LINE-MACHINE key
+                // Get manual info and file URI using LINE-MACHINE key
                 const manualKey = `${line}-${machine}`;
                 const manualInfo = manualMappings[manualKey];
                 let manualContext = '';
+                let geminiFileUri = null;
                 
                 if (manualInfo && manualInfo.url) {
-                    manualContext = `\n\nEquipment Manual Reference: ${manualInfo.name}\nManual URL: ${manualInfo.url}\n(Note: Reference specific sections of this manual for detailed procedures)`;
+                    manualContext = `\n\nEquipment Manual Reference: ${manualInfo.name}\nManual URL: ${manualInfo.url}`;
+                    
+                    // Try to get Gemini file URI (with auto-refresh if needed)
+                    if (selectedProvider === 'gemini') {
+                        try {
+                            // Update loading message
+                            aiAssistanceDiv.innerHTML = `
+                                <div class="work-instruction">
+                                    <div class="wi-header">🤖 AI ANALYZING YOUR ISSUE</div>
+                                    <div style="padding: 60px 20px; text-align: center; background: white;">
+                                        <div class="loading-spinner"></div>
+                                        <p style="margin-top: 25px; color: #666; font-size: 15px;">
+                                            <strong>Fetching equipment manual from Google Drive...</strong><br>
+                                            <span style="font-size: 14px;">Reading manual to provide accurate guidance...</span>
+                                        </p>
+                                    </div>
+                                </div>
+                            `;
+                            
+                            geminiFileUri = await getManualFileUri(manualKey, false);
+                            
+                            if (geminiFileUri) {
+                                manualContext += `\n(PDF manual content is included and accessible to AI)`;
+                            } else {
+                                // PDF was not available - should not happen if getManualFileUri succeeds
+                                throw new Error('Failed to obtain PDF file reference');
+                            }
+                        } catch (error) {
+                            console.error('Error fetching manual:', error);
+                            
+                            // Show warning but continue (Ask AI is less critical than Work Instructions)
+                            manualContext += `\n(Note: Could not access PDF manual - ${error.message}. AI will provide general troubleshooting guidance.)`;
+                            geminiFileUri = null; // Continue without PDF
+                        }
+                    }
                 }
+
+                // Update loading message for AI analysis
+                aiAssistanceDiv.innerHTML = `
+                    <div class="work-instruction">
+                        <div class="wi-header">🤖 AI ANALYZING YOUR ISSUE</div>
+                        <div style="padding: 60px 20px; text-align: center; background: white;">
+                            <div class="loading-spinner"></div>
+                            <p style="margin-top: 25px; color: #666; font-size: 15px;">
+                                <strong>Analyzing issue and actions taken...</strong><br>
+                                <span style="font-size: 14px;">Consulting ${selectedProvider === 'gemini' ? 'Google Gemini' : 'Azure OpenAI'} AI${geminiFileUri ? ' with equipment manual' : ''}...</span>
+                            </p>
+                        </div>
+                    </div>
+                `;
 
                 // Get definitions context
                 const definitionsContext = getDefinitionsContext();
@@ -3348,8 +3420,9 @@ REMEMBER: You are a documentation extractor, NOT a technical expert. Only extrac
                     actionsText += `${index + 1}. ${act.action}\n   Result: ${act.status}\n`;
                 });
 
-                // Create the prompt - focused on next best action, not full work instruction
-                const prompt = `You are an expert manufacturing technician helping troubleshoot equipment issues at a baby wipes production facility.
+                // Create the prompt - focused on next best action, expert troubleshooting
+                const prompt = `You are an expert manufacturing technician with years of experience troubleshooting equipment at baby wipes production facilities. You combine manual knowledge with practical troubleshooting logic to help solve problems.
+
 ${definitionsContext}
 CURRENT SITUATION:
 - Production Line: ${line}
@@ -3357,21 +3430,47 @@ CURRENT SITUATION:
 - Issue Description: ${description}
 ${actionsText}${manualContext}
 
-TASK: Based on the actions already taken and their results, recommend the BEST NEXT COURSE OF ACTION to resolve this issue. 
+${geminiFileUri ? `
+EQUIPMENT MANUAL AVAILABLE:
+The equipment manual PDF is attached. Use it as a reference for:
+- Known troubleshooting procedures
+- Diagnostic steps
+- Technical specifications
+- Safety requirements
 
-DO NOT provide a full work instruction. Instead, provide:
-1. A brief analysis of what the actions taken tell us about the problem
-2. The most likely root cause based on the information
-3. Specific next steps that should be taken (2-4 recommended actions)
-4. Any safety considerations for these next steps
-5. References to relevant manual sections or documentation if applicable
+When referencing the manual, cite as: [Source: ${manualInfo.name}, Page X]
+` : ''}
 
-Keep your response concise, focused, and actionable - aimed at helping the technician decide what to try next.`;
+YOUR ROLE:
+You are a skilled troubleshooting expert. Use:
+1. **The manual** - for documented procedures and specifications
+2. **The definitions** - for facility-specific context
+3. **Your expertise** - apply logic and reasoning to the problem
+4. **Pattern recognition** - analyze what the actions taken tell us
+
+IMPORTANT: You should think beyond just what's in the manual. If the manual doesn't cover this exact scenario, use your troubleshooting logic and experience to provide the best course of action. Combine manual knowledge with practical reasoning.
+
+TASK: Based on the actions already taken and their results, recommend the BEST NEXT COURSE OF ACTION to resolve this issue.
+
+PROVIDE:
+1. **Analysis:** What do the actions taken tell us about the problem? Use logic to interpret the patterns.
+2. **Root Cause:** What is most likely causing this issue? Consider both manual troubleshooting sections and your technical reasoning.
+3. **Recommended Next Steps:** 2-4 specific actions to take next. These should be:
+   - Based on manual procedures when available
+   - Based on sound troubleshooting logic when manual doesn't cover it
+   - Practical and actionable
+   - In logical diagnostic order
+4. **Safety Considerations:** Any safety warnings from manual or general safety practices for these actions
+5. **References:** Cite relevant manual sections if applicable, or note if this is based on general troubleshooting principles
+
+Be practical, logical, and helpful. Think like an experienced technician who knows how to diagnose problems systematically, not just someone reading from a manual.
+
+Keep your response focused and actionable - help the technician understand the problem and know exactly what to try next.`;
 
                 // Call the appropriate AI service
                 let response;
                 if (selectedProvider === 'gemini') {
-                    response = await callGeminiAPI(prompt);
+                    response = await callGeminiAPI(prompt, geminiFileUri);
                 } else {
                     response = await callAzureOpenAI(prompt);
                 }
