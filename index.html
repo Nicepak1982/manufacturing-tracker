@@ -297,6 +297,7 @@
             padding-left: 15px;
             position: relative;
             color: #495057;
+            line-height: 1.6;
         }
 
         .wi-step::before {
@@ -305,6 +306,56 @@
             left: 0;
             color: #28a745;
             font-weight: bold;
+        }
+
+        /* Numbered steps - cleaner format */
+        .wi-step.numbered {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding-left: 0;
+            margin: 15px 0;
+        }
+
+        .wi-step.numbered::before {
+            content: none; /* Remove bullet for numbered items */
+        }
+
+        .wi-step.numbered .step-number {
+            flex-shrink: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            border-radius: 50%;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .wi-step.numbered .step-text {
+            flex: 1;
+            padding-top: 4px;
+        }
+
+        /* Citations - subtle gray styling */
+        .citation {
+            color: #6c757d;
+            font-size: 13px;
+            font-style: italic;
+            background: #f8f9fa;
+            padding: 2px 6px;
+            border-radius: 3px;
+            margin-left: 4px;
+            white-space: nowrap;
+        }
+
+        /* Clean up bold text in steps */
+        .wi-step strong {
+            color: #2c3e50;
+            font-weight: 600;
         }
 
         .wi-actions {
@@ -571,7 +622,7 @@
         <div class="header">
             <h1>🏭 Manufacturing Issue Tracker</h1>
             <p>Track equipment issues and generate AI-powered work instructions</p>
-            <div class="version">v13.1</div>
+            <div class="version">v13.2</div>
         </div>
 
         <div id="sync-status" class="sync-status"></div>
@@ -3210,7 +3261,40 @@ Be STRICT in extracting it (only what's actually written, nothing more).`;
         }
 
         function displayWorkInstruction(content, line, machine, issue) {
-            // Parse the content and format it nicely
+            // Helper function to clean up markdown formatting
+            function cleanMarkdown(text) {
+                // Remove leading asterisks and bullet points
+                text = text.replace(/^\*\*(.+?)\*\*$/gm, '$1'); // Remove bold markers on whole lines
+                text = text.replace(/^\*\s+/gm, ''); // Remove bullet points
+                text = text.replace(/^[\*•]\s*/gm, ''); // Remove asterisk or bullet bullets
+                
+                // Clean up inline formatting but keep citations
+                text = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>'); // Bold
+                text = text.replace(/\[Source:/g, '<span class="citation">[Source:'); // Start citation
+                text = text.replace(/\]/g, ']</span>'); // End citation (will catch citations)
+                
+                return text.trim();
+            }
+            
+            // Helper function to identify and format different line types
+            function formatLine(line) {
+                line = line.trim();
+                if (!line) return '';
+                
+                // Check if it's a numbered step (e.g., "1.", "2.", etc.)
+                const numberedMatch = line.match(/^(\d+)\.\s*(.+)$/);
+                if (numberedMatch) {
+                    const num = numberedMatch[1];
+                    const text = cleanMarkdown(numberedMatch[2]);
+                    return `<div class="wi-step numbered"><span class="step-number">${num}</span><span class="step-text">${text}</span></div>`;
+                }
+                
+                // Regular content line
+                const cleaned = cleanMarkdown(line);
+                return `<div class="wi-step">${cleaned}</div>`;
+            }
+            
+            // Parse the content into sections
             const sections = content.split(/\n(?=[A-Z][A-Z\s]+:)/);
             
             let html = `
@@ -3256,7 +3340,8 @@ Be STRICT in extracting it (only what's actually written, nothing more).`;
                     const lines = section.split('\n').filter(line => line.trim());
                     if (lines.length === 0) return;
                     
-                    const title = lines[0].replace(':', '').trim();
+                    // Extract title (first line, remove asterisks and colon)
+                    const title = lines[0].replace(/^\*\*/g, '').replace(/\*\*$/g, '').replace(':', '').trim();
                     const items = lines.slice(1);
 
                     html += `
@@ -3266,8 +3351,9 @@ Be STRICT in extracting it (only what's actually written, nothing more).`;
                     `;
 
                     items.forEach(item => {
-                        if (item.trim()) {
-                            html += `<div class="wi-step">${item.trim()}</div>`;
+                        const formatted = formatLine(item);
+                        if (formatted) {
+                            html += formatted;
                         }
                     });
 
