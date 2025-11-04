@@ -571,7 +571,7 @@
         <div class="header">
             <h1>🏭 Manufacturing Issue Tracker</h1>
             <p>Track equipment issues and generate AI-powered work instructions</p>
-            <div class="version">v12.8</div>
+            <div class="version">v12.9</div>
         </div>
 
         <div id="sync-status" class="sync-status"></div>
@@ -2952,7 +2952,7 @@
                 const definitionsContext = getDefinitionsContext();
 
                 // Create the prompt
-                const prompt = `You are a technical documentation assistant at a baby wipes production facility. Your role is to create work instructions using information from the provided definitions and manual references.
+                const prompt = `You are a technical documentation assistant. Your ONLY job is to extract information EXACTLY as written in the provided PDF manual. Do NOT add any information, assumptions, or general knowledge.
 
 ${definitionsContext}
 EQUIPMENT INFORMATION:
@@ -2961,21 +2961,21 @@ EQUIPMENT INFORMATION:
 - Task/Procedure: ${issue}
 ${manualContext}
 
-IMPORTANT INSTRUCTIONS:
+CRITICAL RULES - READ CAREFULLY:
 ${geminiFileUri ? `
-1. PRIMARY SOURCE: The equipment manual PDF is attached and available for you to read. Search it thoroughly for the requested procedure.
-2. DEFINITIONS: Also reference the definitions provided above for facility-specific context.
-3. CITATIONS: When using information from the PDF, cite it as: [Source: ${manualInfo.name}, Page X] or [Source: ${manualInfo.name}, Section Y]
-4. BE THOROUGH: Extract the complete procedure from the manual including all steps, tools, specifications, and safety information.
-5. IF NOT FOUND: If the specific procedure is not in the PDF, state clearly: "This procedure is not documented in the ${manualInfo.name}."
+1. PDF IS ATTACHED: Search the PDF for the requested procedure
+2. EXTRACT ONLY: Copy the exact steps, tools, and information AS WRITTEN in the PDF
+3. DO NOT ADD: Do not add any steps, tools, or information not explicitly stated in the PDF
+4. DO NOT ELABORATE: Do not expand on brief instructions - keep them as brief as the manual states them
+5. DO NOT ASSUME: If a detail is missing (like tool sizes, torque values), do NOT make them up - just note "See manual for specifications"
+6. CITE EVERYTHING: Every piece of information must have [Source: ${manualInfo.name}, Page X]
+7. IF NOT FOUND: If the procedure is not in the PDF, state clearly: "This procedure is not documented in the ${manualInfo.name}. Consult supervisor or manufacturer."
+8. WORD-FOR-WORD: When possible, use the exact wording from the manual, not your interpretation
 ` : `
-1. PRIMARY SOURCE: Use information from the definitions provided above (if available)
-2. MANUAL REFERENCE: If a manual URL is provided but specific procedure details are not in definitions, provide general guidance and prominently reference the manual for detailed steps
-3. CITATIONS: When using definition content, cite it. When providing general guidance, reference the manual URL
-4. BE HELPFUL: If you have relevant general knowledge about the task and a manual is referenced, provide helpful guidance while directing user to verify in the manual
-5. NO FABRICATION: Do not make up specific measurements, part numbers, or technical specifications
+1. NO PDF ATTACHED: Provide only general safety guidance
+2. DO NOT FABRICATE: Do not make up specific procedures, measurements, or part numbers
+3. REFER TO MANUAL: Direct user to consult equipment manual for specific procedures
 `}
-6. LOTO: Always emphasize lockout/tagout and company safety policies
 
 RESPONSE FORMAT:
 
@@ -2983,21 +2983,25 @@ WORK INSTRUCTION - ${machine.toUpperCase()}
 
 SAFETY PRECAUTIONS:
 All company policies and LOTO (Lockout/Tagout) procedures must be followed at all times.
-${geminiFileUri ? '[Extract specific safety information from the manual with citations]' : '[Include relevant safety guidance and reference manual for complete safety procedures if available]'}
+${geminiFileUri ? '[Extract ONLY the safety warnings explicitly stated in the manual - do not add generic safety advice]' : '[Consult equipment manual for specific safety procedures]'}
 
 REQUIRED TOOLS & MATERIALS:
-${geminiFileUri ? '[Extract tool list from manual with citations]' : '[List typical tools if known, reference manual for complete list]'}
+${geminiFileUri ? '[List ONLY tools explicitly mentioned in the manual - if none listed, state "Tools not specified in manual"]' : '[Consult manual for required tools]'}
 
 PROCEDURE STEPS:
-${geminiFileUri ? '[Extract detailed step-by-step procedure from manual with citations]' : '[Provide helpful step-by-step guidance. Reference manual for verification]'}
+${geminiFileUri ? '[Extract steps EXACTLY as written in the manual - do not add, expand, or elaborate. If steps are brief, keep them brief. Number them as they appear in the manual.]' : '[Procedure not available - consult equipment manual]'}
 
 VERIFICATION:
-${geminiFileUri ? '[Extract verification steps from manual with citations]' : '[Suggest verification steps and reference manual for specifications]'}
+${geminiFileUri ? '[Include ONLY verification steps explicitly stated in the manual - if none, state "No verification steps provided in manual"]' : '[Consult manual for verification procedures]'}
 
 IMPORTANT NOTES:
-${geminiFileUri ? '- All information extracted from equipment manual\n- Verify page numbers and sections in original manual' : '- This instruction provides general guidance based on common procedures\n- User MUST verify all steps, specifications, and safety procedures in the equipment manual'}
+${geminiFileUri ? `- All information extracted EXACTLY from the manual without additions or interpretations
+- Any missing details should be noted as "See ${manualInfo.name} for additional details"
+- User must verify all information against original manual before implementing` : '- Consult equipment manual and supervisor for specific procedures'}
 ${manualContext && manualInfo && manualInfo.name ? '\n- Equipment Manual: ' + manualInfo.name : ''}
-${manualContext && manualInfo && manualInfo.url ? '\n- Manual URL: ' + manualInfo.url : ''}`;
+${manualContext && manualInfo && manualInfo.url ? '\n- Manual URL: ' + manualInfo.url : ''}
+
+REMEMBER: You are a documentation extractor, NOT a technical expert. Only extract what is explicitly written in the PDF. Do not add your own knowledge or assumptions.`;
 
                 // Call the appropriate AI service
                 let response;
