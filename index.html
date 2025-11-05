@@ -689,7 +689,7 @@
         <div class="header">
             <h1>🏭 Manufacturing Issue Tracker</h1>
             <p>Track equipment issues and generate AI-powered work instructions</p>
-            <div class="version">v13.9</div>
+            <div class="version">v14.0</div>
         </div>
 
         <div id="sync-status" class="sync-status"></div>
@@ -2135,7 +2135,7 @@
 
         // ====== GOOGLE GEMINI API ======
         // SIMPLIFIED: Reverted to a single, direct API call
-        async function callGeminiAPI(prompt, fileUri = null) {
+        async function callGeminiAPI(prompt, fileUris = null) {
             const apiKey = geminiConfig.apiKey;
             // UPDATED: Use the correct, available model name
             const model = geminiConfig.model || 'gemini-2.0-flash-exp';
@@ -2143,17 +2143,31 @@
             // UPDATED: Use the v1beta endpoint which works with your key
             const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
             
-            // Build parts array - include file if provided
+            // Build parts array - include files if provided
             const parts = [];
             
-            // Add file first if provided (so AI reads it before the prompt)
-            if (fileUri) {
-                parts.push({
-                    fileData: {
-                        mimeType: 'application/pdf',
-                        fileUri: fileUri
-                    }
-                });
+            // Add files first if provided (so AI reads them before the prompt)
+            // Handle both old single URI format and new array format
+            if (fileUris) {
+                if (Array.isArray(fileUris)) {
+                    // New format: array of {uri, name} objects
+                    fileUris.forEach(fileData => {
+                        parts.push({
+                            fileData: {
+                                mimeType: 'application/pdf',
+                                fileUri: fileData.uri
+                            }
+                        });
+                    });
+                } else {
+                    // Old format: single URI string (for backward compatibility)
+                    parts.push({
+                        fileData: {
+                            mimeType: 'application/pdf',
+                            fileUri: fileUris
+                        }
+                    });
+                }
             }
             
             // Add text prompt
@@ -2325,63 +2339,82 @@
 
             // Group by production line
             const manualsByLine = {};
-            for (const [key, info] of Object.entries(manualMappings)) {
+            for (const [key, manualsArray] of Object.entries(manualMappings)) {
                 // key format is "LINE-MACHINE"
                 const [line, machine] = key.split('-', 2);
                 if (!manualsByLine[line]) {
                     manualsByLine[line] = [];
                 }
-                manualsByLine[line].push({ key, line, machine, info });
+                
+                // Handle both old single-object format and new array format for migration
+                const manuals = Array.isArray(manualsArray) ? manualsArray : [manualsArray];
+                
+                manualsByLine[line].push({ key, line, machine, manuals });
             }
 
             let html = '';
             
             // Render each line group
-            for (const [line, manuals] of Object.entries(manualsByLine).sort()) {
+            for (const [line, equipmentList] of Object.entries(manualsByLine).sort()) {
+                const totalManuals = equipmentList.reduce((sum, eq) => sum + eq.manuals.length, 0);
                 html += `
                     <div class="line-group">
                         <div class="line-group-header">
-                            ${line} (${manuals.length} manual${manuals.length !== 1 ? 's' : ''})
+                            ${line} (${equipmentList.length} equipment, ${totalManuals} manual${totalManuals !== 1 ? 's' : ''})
                         </div>
                 `;
                 
-                manuals.forEach(({ key, machine, info }) => {
-                    // Determine cache status
-                    const hasPDF = info.geminiFileUri ? true : false;
-                    const needsRefresh = info.lastUpdated ? needsCacheRefresh(info.lastUpdated) : true;
-                    const lastUpdatedText = info.lastUpdated 
-                        ? new Date(info.lastUpdated).toLocaleDateString() 
-                        : 'Never';
-                    
-                    let statusBadge = '';
-                    if (hasPDF && !needsRefresh) {
-                        statusBadge = '<span style="background: #28a745; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px;">✅ PDF Cached</span>';
-                    } else if (hasPDF && needsRefresh) {
-                        statusBadge = '<span style="background: #ffc107; color: #212529; padding: 4px 8px; border-radius: 4px; font-size: 12px;">⚠️ Needs Refresh</span>';
-                    } else {
-                        statusBadge = '<span style="background: #6c757d; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px;">📄 Not Cached</span>';
-                    }
-                    
+                equipmentList.forEach(({ key, machine, manuals }) => {
                     html += `
                         <div class="manual-list-item">
-                            <div style="display: flex; justify-content: space-between; align-items: start;">
-                                <div style="flex: 1;">
-                                    <h4>${machine} ${statusBadge}</h4>
-                                    <p><strong>Manual:</strong> ${info.name}</p>
-                                    <p><strong>URL:</strong> <a href="${info.url}" target="_blank" style="color: #007bff; word-break: break-all;">${info.url}</a></p>
-                                    <p style="font-size: 12px; color: #666;"><strong>Last Updated:</strong> ${lastUpdatedText}</p>
-                                </div>
-                                <div style="display: flex; gap: 5px; margin-left: 10px;">
-                                    <button onclick="refreshSingleManual('${key}')" class="btn btn-info" title="Refresh PDF from Google Drive">
-                                        🔄 Refresh
-                                    </button>
-                                    <button onclick="removeManualMapping('${key}')" class="btn" style="background: #dc3545; color: white;">
-                                        Delete
-                                    </button>
+                            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
+                                <h4 style="margin: 0; color: #2c3e50;">${machine}</h4>
+                                <button onclick="addManualMapping('${key}')" class="btn btn-success" style="padding: 6px 12px; font-size: 13px;">
+                                    ➕ Add Manual
+                                </button>
+                            </div>
+                    `;
+                    
+                    // Display each manual for this equipment
+                    manuals.forEach((manual, index) => {
+                        // Determine cache status
+                        const hasPDF = manual.geminiFileUri ? true : false;
+                        const needsRefresh = manual.lastUpdated ? needsCacheRefresh(manual.lastUpdated) : true;
+                        const lastUpdatedText = manual.lastUpdated 
+                            ? new Date(manual.lastUpdated).toLocaleDateString() 
+                            : 'Never';
+                        
+                        let statusBadge = '';
+                        if (hasPDF && !needsRefresh) {
+                            statusBadge = '<span style="background: #28a745; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px;">✅ PDF Cached</span>';
+                        } else if (hasPDF && needsRefresh) {
+                            statusBadge = '<span style="background: #ffc107; color: #212529; padding: 4px 8px; border-radius: 4px; font-size: 12px;">⚠️ Needs Refresh</span>';
+                        } else {
+                            statusBadge = '<span style="background: #6c757d; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px;">📄 Not Cached</span>';
+                        }
+                        
+                        html += `
+                            <div style="background: ${index % 2 === 0 ? '#f8f9fa' : '#ffffff'}; border: 1px solid #dee2e6; border-radius: 6px; padding: 12px; margin-bottom: 8px;">
+                                <div style="display: flex; justify-content: space-between; align-items: start;">
+                                    <div style="flex: 1;">
+                                        <p style="margin: 0 0 8px 0;"><strong>📘 ${manual.name}</strong> ${statusBadge}</p>
+                                        <p style="margin: 0 0 5px 0; font-size: 13px;"><strong>URL:</strong> <a href="${manual.url}" target="_blank" style="color: #007bff; word-break: break-all;">${manual.url}</a></p>
+                                        <p style="margin: 0; font-size: 12px; color: #666;"><strong>Last Updated:</strong> ${lastUpdatedText}</p>
+                                    </div>
+                                    <div style="display: flex; gap: 5px; margin-left: 10px;">
+                                        <button onclick="refreshSingleManual('${key}', '${manual.id}')" class="btn btn-info" style="padding: 6px 12px; font-size: 13px;" title="Refresh PDF from Google Drive">
+                                            🔄
+                                        </button>
+                                        <button onclick="removeManualMapping('${key}', '${manual.id}')" class="btn" style="background: #dc3545; color: white; padding: 6px 12px; font-size: 13px;">
+                                            🗑️
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    `;
+                        `;
+                    });
+                    
+                    html += '</div>';
                 });
                 
                 html += '</div>';
@@ -2390,7 +2423,7 @@
             container.innerHTML = html;
         }
 
-        function addManualMapping() {
+        function addManualMapping(prefillKey = null) {
             // Populate line dropdown
             const lineSelect = document.getElementById('manual-line');
             lineSelect.innerHTML = '<option value="">Select Production Line</option>';
@@ -2406,10 +2439,20 @@
                 lineSelect.appendChild(option);
             });
             
-            // Clear form
-            document.getElementById('manual-machine').value = '';
-            document.getElementById('manual-name').value = '';
-            document.getElementById('manual-url').value = '';
+            // Pre-fill if adding to existing equipment
+            if (prefillKey) {
+                const [line, machine] = prefillKey.split('-', 2);
+                lineSelect.value = line;
+                updateManualMachineOptions();
+                document.getElementById('manual-machine').value = machine;
+                document.getElementById('manual-name').value = '';
+                document.getElementById('manual-url').value = '';
+            } else {
+                // Clear form
+                document.getElementById('manual-machine').value = '';
+                document.getElementById('manual-name').value = '';
+                document.getElementById('manual-url').value = '';
+            }
             
             // Show modal
             document.getElementById('manual-modal').style.display = 'block';
@@ -2606,30 +2649,35 @@
         }
         
         // Refresh manual from Google Drive and upload to Gemini
-        async function refreshManualCache(key, showProgress = true) {
-            const mapping = manualMappings[key];
-            if (!mapping || !mapping.url) {
+        async function refreshManualCache(key, manualId, showProgress = true) {
+            const manuals = manualMappings[key];
+            if (!manuals || !Array.isArray(manuals)) {
+                throw new Error('No manuals found for this equipment');
+            }
+            
+            const manual = manuals.find(m => m.id === manualId);
+            if (!manual || !manual.url) {
                 throw new Error('No manual URL found');
             }
             
             if (showProgress) {
-                showSyncStatus('syncing', '📥 Downloading PDF from Google Drive...');
+                showSyncStatus('syncing', `📥 Downloading "${manual.name}" from Google Drive...`);
             }
             
             try {
                 // Download PDF from Google Drive
-                const pdfBlob = await downloadPDFFromGoogleDrive(mapping.url);
+                const pdfBlob = await downloadPDFFromGoogleDrive(manual.url);
                 
                 if (showProgress) {
-                    showSyncStatus('syncing', '☁️ Uploading PDF to Gemini...');
+                    showSyncStatus('syncing', `☁️ Uploading "${manual.name}" to Gemini...`);
                 }
                 
                 // Upload to Gemini File API
-                const geminiFileUri = await uploadPDFToGemini(pdfBlob, mapping.name);
+                const geminiFileUri = await uploadPDFToGemini(pdfBlob, manual.name);
                 
-                // Update cache
-                mapping.geminiFileUri = geminiFileUri;
-                mapping.lastUpdated = new Date().toISOString();
+                // Update cache in the specific manual object
+                manual.geminiFileUri = geminiFileUri;
+                manual.lastUpdated = new Date().toISOString();
                 
                 // Save to localStorage
                 localStorage.setItem('manualMappings', JSON.stringify(manualMappings));
@@ -2638,7 +2686,7 @@
                 await syncAIConfigsToCloud();
                 
                 if (showProgress) {
-                    showSyncStatus('success', '✓ Manual cached successfully!');
+                    showSyncStatus('success', `✓ "${manual.name}" cached successfully!`);
                 }
                 
                 return geminiFileUri;
@@ -2651,20 +2699,38 @@
             }
         }
         
-        // Get manual file URI (with auto-refresh if needed)
-        async function getManualFileUri(key, showProgress = true) {
-            const mapping = manualMappings[key];
-            if (!mapping) {
-                return null; // No manual mapped
+        // Get manual file URIs for all manuals of this equipment (with auto-refresh if needed)
+        async function getManualFileUris(key, showProgress = true) {
+            const manuals = manualMappings[key];
+            if (!manuals || !Array.isArray(manuals) || manuals.length === 0) {
+                return []; // No manuals mapped
             }
             
-            // Check if we have a cached file URI and if it needs refresh
-            if (mapping.geminiFileUri && !needsCacheRefresh(mapping.lastUpdated)) {
-                return mapping.geminiFileUri; // Use cached version
+            const fileUris = [];
+            
+            for (const manual of manuals) {
+                try {
+                    // Check if we have a cached file URI and if it needs refresh
+                    if (manual.geminiFileUri && !needsCacheRefresh(manual.lastUpdated)) {
+                        fileUris.push({
+                            uri: manual.geminiFileUri,
+                            name: manual.name
+                        });
+                    } else {
+                        // Need to refresh this manual
+                        const uri = await refreshManualCache(key, manual.id, showProgress);
+                        fileUris.push({
+                            uri: uri,
+                            name: manual.name
+                        });
+                    }
+                } catch (error) {
+                    console.error(`Error loading manual "${manual.name}":`, error);
+                    // Continue with other manuals even if one fails
+                }
             }
             
-            // Need to refresh
-            return await refreshManualCache(key, showProgress);
+            return fileUris;
         }
 
         async function saveManualMapping() {
@@ -2694,18 +2760,25 @@
             // Create key in format "LINE-MACHINE"
             const key = `${line}-${machine}`;
             
-            // Check if already exists
-            if (manualMappings[key]) {
-                if (!confirm(`A manual already exists for ${line} - ${machine}.\n\nDo you want to replace it?`)) {
-                    return;
-                }
+            // Initialize array if doesn't exist
+            if (!manualMappings[key]) {
+                manualMappings[key] = [];
             }
             
-            // Save mapping
-            manualMappings[key] = {
+            // Check if this exact manual URL already exists
+            const existingManual = manualMappings[key].find(m => m.url === url);
+            if (existingManual) {
+                alert(`This manual URL is already added for ${line} - ${machine}.`);
+                return;
+            }
+            
+            // Add manual to array with unique ID
+            const manualId = Date.now().toString();
+            manualMappings[key].push({
+                id: manualId,
                 name: manualName,
                 url: url
-            };
+            });
             
             // Save to localStorage
             localStorage.setItem('manualMappings', JSON.stringify(manualMappings));
@@ -2732,30 +2805,62 @@
             }
         }
 
-        function removeManualMapping(key) {
+        function removeManualMapping(key, manualId) {
             // Extract line and machine from key for display
             const [line, machine] = key.split('-', 2);
             
-            if (confirm(`Remove manual mapping for ${line} - ${machine}?`)) {
-                delete manualMappings[key];
+            // Get the manual to display its name
+            const manuals = manualMappings[key];
+            if (!manuals || !Array.isArray(manuals)) {
+                alert('Error: Manual not found');
+                return;
+            }
+            
+            const manual = manuals.find(m => m.id === manualId);
+            if (!manual) {
+                alert('Error: Manual not found');
+                return;
+            }
+            
+            if (confirm(`Remove "${manual.name}" from ${line} - ${machine}?`)) {
+                // Remove this specific manual from the array
+                manualMappings[key] = manuals.filter(m => m.id !== manualId);
+                
+                // If no manuals left, remove the key entirely
+                if (manualMappings[key].length === 0) {
+                    delete manualMappings[key];
+                }
+                
                 localStorage.setItem('manualMappings', JSON.stringify(manualMappings));
                 renderManualMappings();
                 syncAIConfigsToCloud();
-                alert('✓ Manual mapping removed and synced to cloud!');
+                alert(`✓ Manual "${manual.name}" removed and synced to cloud!`);
             }
         }
 
-        async function refreshSingleManual(key) {
+        async function refreshSingleManual(key, manualId) {
             const [line, machine] = key.split('-', 2);
             
-            if (!confirm(`Refresh PDF for ${line} - ${machine}?\n\nThis will download the latest version from Google Drive.`)) {
+            const manuals = manualMappings[key];
+            if (!manuals || !Array.isArray(manuals)) {
+                alert('Error: Manual not found');
+                return;
+            }
+            
+            const manual = manuals.find(m => m.id === manualId);
+            if (!manual) {
+                alert('Error: Manual not found');
+                return;
+            }
+            
+            if (!confirm(`Refresh "${manual.name}" for ${line} - ${machine}?\n\nThis will download the latest version from Google Drive.`)) {
                 return;
             }
             
             try {
-                await refreshManualCache(key, true);
+                await refreshManualCache(key, manualId, true);
                 renderManualMappings();
-                alert(`✓ PDF for ${line} - ${machine} refreshed successfully!`);
+                alert(`✓ "${manual.name}" refreshed successfully!`);
             } catch (error) {
                 alert(`✗ Failed to refresh PDF: ${error.message}`);
             }
@@ -3257,16 +3362,23 @@
             `;
 
             try {
-                // Get manual info and file URI using LINE-MACHINE key
+                // Get manual info and file URIs using LINE-MACHINE key
                 const manualKey = `${line}-${machine}`;
-                const manualInfo = manualMappings[manualKey];
+                const manualsArray = manualMappings[manualKey];
                 let manualContext = '';
-                let geminiFileUri = null;
+                let geminiFileUris = [];
                 
-                if (manualInfo && manualInfo.url) {
-                    manualContext = `\n\nEquipment Manual Reference: ${manualInfo.name}\nManual URL: ${manualInfo.url}`;
+                // Handle both old single-object format and new array format for migration
+                const manuals = manualsArray && Array.isArray(manualsArray) ? manualsArray : 
+                               (manualsArray ? [manualsArray] : []);
+                
+                if (manuals.length > 0) {
+                    manualContext = '\n\nEquipment Manual References:\n';
+                    manuals.forEach((manual, index) => {
+                        manualContext += `${index + 1}. ${manual.name}\n   URL: ${manual.url}\n`;
+                    });
                     
-                    // Try to get Gemini file URI (with auto-refresh if needed)
+                    // Try to get Gemini file URIs (with auto-refresh if needed)
                     if (selectedProvider === 'gemini') {
                         try {
                             // Update loading message
@@ -3276,49 +3388,48 @@
                                     <div style="padding: 60px 20px; text-align: center; background: white;">
                                         <div class="loading-spinner"></div>
                                         <p style="margin-top: 25px; color: #666; font-size: 15px;">
-                                            <strong>Fetching equipment manual from Google Drive...</strong><br>
-                                            <span style="font-size: 14px;">This may take a moment if manual needs updating...</span>
+                                            <strong>Fetching ${manuals.length} equipment manual${manuals.length !== 1 ? 's' : ''} from Google Drive...</strong><br>
+                                            <span style="font-size: 14px;">This may take a moment if manuals need updating...</span>
                                         </p>
                                     </div>
                                 </div>
                             `;
                             
-                            geminiFileUri = await getManualFileUri(manualKey, false);
+                            geminiFileUris = await getManualFileUris(manualKey, false);
                             
-                            if (geminiFileUri) {
-                                manualContext += `\n(PDF manual content is included and accessible to AI)`;
+                            if (geminiFileUris.length > 0) {
+                                manualContext += `\n(${geminiFileUris.length} PDF manual${geminiFileUris.length !== 1 ? 's' : ''} included and accessible to AI)`;
                             } else {
-                                // PDF was not available - should not happen if getManualFileUri succeeds
-                                throw new Error('Failed to obtain PDF file reference');
+                                // PDFs were not available - should not happen if getManualFileUris succeeds
+                                throw new Error('Failed to obtain PDF file references');
                             }
                         } catch (error) {
-                            console.error('Error fetching manual:', error);
+                            console.error('Error fetching manuals:', error);
                             
-                            // CRITICAL: If manual is mapped but we can't get the PDF, don't generate
+                            // CRITICAL: If manuals are mapped but we can't get the PDFs, don't generate
+                            const manualsList = manuals.map(m => `• ${m.name}`).join('\n');
                             document.getElementById('generated-instruction').innerHTML = `
                                 <div class="work-instruction">
                                     <div class="wi-header" style="background: linear-gradient(135deg, #dc3545, #c82333);">❌ MANUAL ACCESS FAILED</div>
                                     <div style="padding: 40px 25px; background: white;">
                                         <div style="font-size: 48px; margin-bottom: 20px; text-align: center;">📄</div>
-                                        <h3 style="color: #dc3545; margin-bottom: 15px;">Cannot Access Equipment Manual</h3>
+                                        <h3 style="color: #dc3545; margin-bottom: 15px;">Cannot Access Equipment Manuals</h3>
                                         <p style="color: #666; margin-bottom: 20px;">
-                                            A manual is configured for ${line} - ${machine}, but it could not be downloaded from Google Drive.
+                                            ${manuals.length} manual${manuals.length !== 1 ? 's are' : ' is'} configured for ${line} - ${machine}, but ${manuals.length !== 1 ? 'they' : 'it'} could not be downloaded from Google Drive.
                                         </p>
                                         <div style="background: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; padding: 15px; margin-bottom: 20px;">
                                             <strong style="color: #856404;">Error:</strong><br>
                                             <span style="color: #856404; font-size: 14px;">${error.message}</span>
                                         </div>
+                                        <h4 style="margin-top: 20px; margin-bottom: 10px;">Configured Manuals:</h4>
+                                        <pre style="background: #f8f9fa; padding: 10px; border-radius: 4px; text-align: left;">${manualsList}</pre>
                                         <h4 style="margin-top: 20px; margin-bottom: 10px;">Troubleshooting Steps:</h4>
                                         <ol style="text-align: left; color: #666; line-height: 1.8;">
-                                            <li><strong>Check Google Drive Link:</strong> Verify the file is publicly accessible (Anyone with link can view)</li>
+                                            <li><strong>Check Google Drive Links:</strong> Verify all files are publicly accessible (Anyone with link can view)</li>
                                             <li><strong>Check Google Apps Script:</strong> Ensure you've deployed v13 with PDF download proxy</li>
                                             <li><strong>Check Script URL:</strong> Verify Google Apps Script URL is configured in Setup tab</li>
-                                            <li><strong>Test Manually:</strong> Try clicking the 🔄 Refresh button on the manual in Setup tab</li>
+                                            <li><strong>Test Manually:</strong> Try clicking the 🔄 Refresh button on each manual in Setup tab</li>
                                         </ol>
-                                        <p style="color: #666; margin-top: 20px; font-size: 14px;">
-                                            <strong>Manual Reference:</strong> ${manualInfo.name}<br>
-                                            <strong>URL:</strong> <a href="${manualInfo.url}" target="_blank">${manualInfo.url}</a>
-                                        </p>
                                         <div style="text-align: center; margin-top: 30px;">
                                             <button onclick="switchTab('settings')" class="btn btn-primary">
                                                 Go to Setup
@@ -3327,19 +3438,20 @@
                                     </div>
                                 </div>
                             `;
-                            return; // Stop - don't generate without the manual
+                            return; // Stop - don't generate without the manuals
                         }
                     }
                 }
 
                 // Update loading message for AI generation
+                const manualCount = geminiFileUris.length;
                 document.getElementById('generated-instruction').innerHTML = `
                     <div class="work-instruction">
                         <div class="wi-header">🤖 GENERATING AI WORK INSTRUCTION</div>
                         <div style="padding: 60px 20px; text-align: center; background: white;">
                             <div class="loading-spinner"></div>
                             <p style="margin-top: 25px; color: #666; font-size: 15px;">
-                                <strong>Generating instructions from ${geminiFileUri ? 'equipment manual' : 'available information'}...</strong><br>
+                                <strong>Generating instructions from ${manualCount > 0 ? manualCount + ' equipment manual' + (manualCount !== 1 ? 's' : '') : 'available information'}...</strong><br>
                                 <span style="font-size: 14px;">Consulting ${selectedProvider === 'gemini' ? 'Google Gemini' : 'Azure OpenAI'} AI...</span>
                             </p>
                         </div>
@@ -3348,6 +3460,9 @@
 
                 // Get definitions context
                 const definitionsContext = getDefinitionsContext();
+                
+                const hasManuals = geminiFileUris.length > 0;
+                const manualNames = geminiFileUris.map(m => m.name).join(', ');
 
                 // Create the prompt
                 const prompt = `You are a technical documentation assistant. Your job is to help users find and extract procedures from equipment manuals.
@@ -3362,31 +3477,33 @@ ${manualContext}
 YOUR TWO-STEP PROCESS:
 
 STEP 1 - UNDERSTAND THE REQUEST (Be Smart & Flexible):
-${geminiFileUri ? `
+${hasManuals ? `
 - The user may not use exact manual terminology
 - They might ask: "fix the conveyor" when they mean "adjust clip conveyor height"
 - They might say: "change the blade" when they mean "replace cutting blade assembly"
 - Use your intelligence to interpret what procedure they're most likely asking for
-- Search the manual for the procedure that best matches their intent
+- Search across ALL ${geminiFileUris.length} manual${geminiFileUris.length !== 1 ? 's' : ''} for the procedure that best matches their intent
 - Consider common variations and related procedures
+- If information spans multiple manuals, synthesize it coherently
 ` : `
 - Understand what the user is asking for
 - No manual available - explain that specific procedure cannot be provided
 `}
 
 STEP 2 - EXTRACT THE PROCEDURE (Be Strict & Accurate):
-${geminiFileUri ? `
-Once you've found the right procedure in the manual:
-- Extract ONLY what is explicitly written in the manual
+${hasManuals ? `
+Once you've found the right procedure in the manual(s):
+- Extract ONLY what is explicitly written in the manuals
 - Do NOT add steps that aren't there
 - Do NOT elaborate on brief instructions
 - Do NOT add tool specifications if not listed
 - Do NOT add measurements if not specified
 - Keep it as brief or detailed as the manual states it
-- Cite everything: [Source: ${manualInfo.name}, Page X]
+- Cite everything with manual name: [Source: Manual Name, Page X]
+- When information comes from multiple manuals, cite each source
 
 CRITICAL - VISUAL CONTENT USAGE:
-The manual PDF includes images, diagrams, photos, and illustrations. You MUST actively reference these:
+The manual PDFs include images, diagrams, photos, and illustrations. You MUST actively reference these:
 - When diagrams exist, reference them: "See Figure 3 for belt alignment" or "Refer to diagram on Page 12"
 - Describe visual indicators: "The red safety lever shown in the photo..." or "Note the arrow indicating direction in the diagram"
 - Call out important visual cues: "The wiring diagram on page X shows correct connections"
@@ -3395,11 +3512,12 @@ The manual PDF includes images, diagrams, photos, and illustrations. You MUST ac
 - Mention callouts/labels: "Part #5 in the exploded view diagram"
 - When images clarify steps: "Assembly orientation is shown in the illustration"
 - If images are critical: "IMPORTANT: Study the photo on page X before proceeding"
+- When info spans manuals: "Refer to ${manualNames} for complete visual references"
 
 Even if the text is brief, ALWAYS check for and reference relevant diagrams, photos, or illustrations that support the procedure.
 
-If the procedure is NOT in the manual:
-- State clearly: "This procedure is not documented in the ${manualInfo.name}"
+If the procedure is NOT in any of the manuals:
+- State clearly: "This procedure is not documented in the available manuals"
 - Do NOT make up a procedure from general knowledge
 - Suggest consulting supervisor or manufacturer
 ` : `
@@ -3414,38 +3532,39 @@ WORK INSTRUCTION - ${machine.toUpperCase()}
 
 SAFETY PRECAUTIONS:
 All company policies and LOTO (Lockout/Tagout) procedures must be followed at all times.
-${geminiFileUri ? '[Extract ONLY the safety warnings explicitly stated in the manual for this procedure. Reference any safety diagrams or warning symbols shown in images.]' : '[Consult equipment manual for specific safety procedures]'}
+${hasManuals ? '[Extract ONLY the safety warnings explicitly stated in the manuals for this procedure. Reference any safety diagrams or warning symbols shown in images. Cite which manual each warning comes from.]' : '[Consult equipment manual for specific safety procedures]'}
 
 REQUIRED TOOLS & MATERIALS:
-${geminiFileUri ? '[List ONLY tools explicitly mentioned in the manual - if none listed, state "Tools not specified in manual". If tools are shown in images/photos, reference them.]' : '[Consult manual for required tools]'}
+${hasManuals ? '[List ONLY tools explicitly mentioned in the manuals - if none listed, state "Tools not specified in manuals". If tools are shown in images/photos, reference them. Cite source manual.]' : '[Consult manual for required tools]'}
 
 VISUAL REFERENCES:
-${geminiFileUri ? '[List all relevant diagrams, figures, photos, or illustrations by page number that relate to this procedure. Example: "Figure 5 (Page 23) - Belt tension adjustment points" or "Photo on Page 15 - Correct wrench positioning"]' : '[Not available]'}
+${hasManuals ? '[List all relevant diagrams, figures, photos, or illustrations by page number that relate to this procedure. Example: "Figure 5 (Page 23, Stacker Manual) - Belt tension adjustment points" or "Photo on Page 15 (HMI Manual) - Correct wrench positioning"]' : '[Not available]'}
 
 PROCEDURE STEPS:
-${geminiFileUri ? '[Extract steps EXACTLY as written in the manual. For EACH step where a diagram/image exists, add the reference. Example: "1. Remove cover plate (see Figure 3 on Page 12)" or "2. Align shaft as shown in diagram"]' : '[Procedure not available - consult equipment manual]'}
+${hasManuals ? '[Extract steps EXACTLY as written in the manuals. For EACH step where a diagram/image exists, add the reference. Example: "1. Remove cover plate (see Figure 3 on Page 12 of Stacker Manual)" or "2. Align shaft as shown in diagram". If procedure spans multiple manuals, integrate them logically and cite each source.]' : '[Procedure not available - consult equipment manual]'}
 
 VERIFICATION:
-${geminiFileUri ? '[Include ONLY verification steps explicitly stated in the manual. Reference any inspection photos or measurement diagrams if shown.]' : '[Consult manual for verification procedures]'}
+${hasManuals ? '[Include ONLY verification steps explicitly stated in the manuals. Reference any inspection photos or measurement diagrams if shown. Cite source manual.]' : '[Consult manual for verification procedures]'}
 
 IMPORTANT NOTES:
-${geminiFileUri ? `- All information extracted directly from manual without additions
+${hasManuals ? `- All information extracted directly from ${geminiFileUris.length} manual${geminiFileUris.length !== 1 ? 's' : ''} without additions: ${manualNames}
 - Brief instructions kept brief, detailed instructions kept detailed
-- Missing details noted as "See ${manualInfo.name} for specifications"
+- Missing details noted as "See [Manual Name] for specifications"
 - Diagrams and images actively referenced throughout to aid understanding
-- User must verify against original manual and images before implementing` : '- Consult equipment manual and supervisor for specific procedures'}
-${manualContext && manualInfo && manualInfo.name ? '\n- Equipment Manual: ' + manualInfo.name : ''}
-${manualContext && manualInfo && manualInfo.url ? '\n- Manual URL: ' + manualInfo.url : ''}
+- Information from multiple manuals integrated where relevant
+- User must verify against original manuals and images before implementing` : '- Consult equipment manual and supervisor for specific procedures'}
+${hasManuals ? '\n- Equipment Manuals: ' + manualNames : ''}
 
 CRITICAL REMINDER: 
-Be SMART in finding the right procedure (the user may not use exact terms).
+Be SMART in finding the right procedure (the user may not use exact terms). Search ALL available manuals.
 Be STRICT in extracting it (only what's actually written, nothing more).
-ACTIVELY REFERENCE visual content (diagrams, photos, figures) throughout your response.`;
+ACTIVELY REFERENCE visual content (diagrams, photos, figures) throughout your response.
+CITE which manual each piece of information comes from when you have multiple manuals.`;
 
                 // Call the appropriate AI service
                 let response;
                 if (selectedProvider === 'gemini') {
-                    response = await callGeminiAPI(prompt, geminiFileUri);
+                    response = await callGeminiAPI(prompt, geminiFileUris);
                 } else {
                     response = await callAzureOpenAI(prompt);
                 }
@@ -3540,7 +3659,7 @@ ACTIVELY REFERENCE visual content (diagrams, photos, figures) throughout your re
                         <div class="wi-caution-icon">⚠️</div>
                         <div>
                             <strong>CAUTION: AI-Generated Information</strong><br>
-                            <span style="font-size: 13px; opacity: 0.95;">This information is AI-generated. User is responsible for referencing work instructions and manuals for accuracy. Contact supervisor to review prior to implementing any procedure.</span>
+                            <span style="font-size: 13px; opacity: 0.95;">This information is AI-generated. User is responsible for referencing work instructions and manuals for accuracy. </span>
                         </div>
                     </div>
                     
@@ -3672,16 +3791,23 @@ ACTIVELY REFERENCE visual content (diagrams, photos, figures) throughout your re
             aiAssistanceDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
             try {
-                // Get manual info and file URI using LINE-MACHINE key
+                // Get manual info and file URIs using LINE-MACHINE key
                 const manualKey = `${line}-${machine}`;
-                const manualInfo = manualMappings[manualKey];
+                const manualsArray = manualMappings[manualKey];
                 let manualContext = '';
-                let geminiFileUri = null;
+                let geminiFileUris = [];
                 
-                if (manualInfo && manualInfo.url) {
-                    manualContext = `\n\nEquipment Manual Reference: ${manualInfo.name}\nManual URL: ${manualInfo.url}`;
+                // Handle both old single-object format and new array format for migration
+                const manuals = manualsArray && Array.isArray(manualsArray) ? manualsArray : 
+                               (manualsArray ? [manualsArray] : []);
+                
+                if (manuals.length > 0) {
+                    manualContext = '\n\nEquipment Manual References:\n';
+                    manuals.forEach((manual, index) => {
+                        manualContext += `${index + 1}. ${manual.name}\n   URL: ${manual.url}\n`;
+                    });
                     
-                    // Try to get Gemini file URI (with auto-refresh if needed)
+                    // Try to get Gemini file URIs (with auto-refresh if needed)
                     if (selectedProvider === 'gemini') {
                         try {
                             // Update loading message
@@ -3691,32 +3817,34 @@ ACTIVELY REFERENCE visual content (diagrams, photos, figures) throughout your re
                                     <div style="padding: 60px 20px; text-align: center; background: white;">
                                         <div class="loading-spinner"></div>
                                         <p style="margin-top: 25px; color: #666; font-size: 15px;">
-                                            <strong>Fetching equipment manual from Google Drive...</strong><br>
-                                            <span style="font-size: 14px;">Reading manual to provide accurate guidance...</span>
+                                            <strong>Fetching ${manuals.length} equipment manual${manuals.length !== 1 ? 's' : ''} from Google Drive...</strong><br>
+                                            <span style="font-size: 14px;">Reading manuals to provide accurate guidance...</span>
                                         </p>
                                     </div>
                                 </div>
                             `;
                             
-                            geminiFileUri = await getManualFileUri(manualKey, false);
+                            geminiFileUris = await getManualFileUris(manualKey, false);
                             
-                            if (geminiFileUri) {
-                                manualContext += `\n(PDF manual content is included and accessible to AI)`;
+                            if (geminiFileUris.length > 0) {
+                                manualContext += `\n(${geminiFileUris.length} PDF manual${geminiFileUris.length !== 1 ? 's' : ''} included and accessible to AI)`;
                             } else {
-                                // PDF was not available - should not happen if getManualFileUri succeeds
-                                throw new Error('Failed to obtain PDF file reference');
+                                // PDFs were not available
+                                throw new Error('Failed to obtain PDF file references');
                             }
                         } catch (error) {
-                            console.error('Error fetching manual:', error);
+                            console.error('Error fetching manuals:', error);
                             
                             // Show warning but continue (Ask AI is less critical than Work Instructions)
-                            manualContext += `\n(Note: Could not access PDF manual - ${error.message}. AI will provide general troubleshooting guidance.)`;
-                            geminiFileUri = null; // Continue without PDF
+                            manualContext += `\n(Note: Could not access PDF manuals - ${error.message}. AI will provide general troubleshooting guidance.)`;
+                            geminiFileUris = []; // Continue without PDFs
                         }
                     }
                 }
 
                 // Update loading message for AI analysis
+                const manualCount = geminiFileUris.length;
+                const manualNames = geminiFileUris.map(m => m.name).join(', ');
                 aiAssistanceDiv.innerHTML = `
                     <div class="work-instruction">
                         <div class="wi-header">🤖 AI ANALYZING YOUR ISSUE</div>
@@ -3724,7 +3852,7 @@ ACTIVELY REFERENCE visual content (diagrams, photos, figures) throughout your re
                             <div class="loading-spinner"></div>
                             <p style="margin-top: 25px; color: #666; font-size: 15px;">
                                 <strong>Analyzing issue and actions taken...</strong><br>
-                                <span style="font-size: 14px;">Consulting ${selectedProvider === 'gemini' ? 'Google Gemini' : 'Azure OpenAI'} AI${geminiFileUri ? ' with equipment manual' : ''}...</span>
+                                <span style="font-size: 14px;">Consulting ${selectedProvider === 'gemini' ? 'Google Gemini' : 'Azure OpenAI'} AI${manualCount > 0 ? ' with ' + manualCount + ' equipment manual' + (manualCount !== 1 ? 's' : '') : ''}...</span>
                             </p>
                         </div>
                     </div>
@@ -3732,6 +3860,8 @@ ACTIVELY REFERENCE visual content (diagrams, photos, figures) throughout your re
 
                 // Get definitions context
                 const definitionsContext = getDefinitionsContext();
+                
+                const hasManuals = manualCount > 0;
 
                 // Format the actions taken
                 let actionsText = '\n\nACTIONS ALREADY TAKEN:\n';
@@ -3749,25 +3879,26 @@ CURRENT SITUATION:
 - Issue Description: ${description}
 ${actionsText}${manualContext}
 
-${geminiFileUri ? `
-EQUIPMENT MANUAL AVAILABLE:
-The equipment manual PDF is attached. Use it as a reference for:
+${hasManuals ? `
+EQUIPMENT MANUALS AVAILABLE:
+${manualCount} equipment manual${manualCount !== 1 ? 's are' : ' is'} attached (${manualNames}). Use them as references for:
 - Known troubleshooting procedures
 - Diagnostic steps
 - Technical specifications
 - Safety requirements
 
-VISUAL CONTENT IN MANUAL:
-The manual includes diagrams, photos, illustrations, and technical drawings. You MUST reference these when relevant:
-- Troubleshooting flowcharts: "Refer to the diagnostic flowchart on Page X"
-- Wiring diagrams: "Check connections shown in wiring diagram (Page X)"
-- Component photos: "The sensor location is shown in the photo on Page X"
+VISUAL CONTENT IN MANUALS:
+The manuals include diagrams, photos, illustrations, and technical drawings. You MUST reference these when relevant:
+- Troubleshooting flowcharts: "Refer to the diagnostic flowchart on Page X of [Manual Name]"
+- Wiring diagrams: "Check connections shown in wiring diagram (Page X, [Manual Name])"
+- Component photos: "The sensor location is shown in the photo on Page X of [Manual Name]"
 - Exploded views: "Part #5 in the assembly diagram on Page X"
 - Warning symbols: "Note the safety warning symbol shown in the manual"
 - Measurement points: "Test points are indicated in Figure X"
 
-When referencing the manual, cite as: [Source: ${manualInfo.name}, Page X]
-When referencing visual content, include: [See Figure/Diagram/Photo on Page X]
+When referencing manuals, cite as: [Source: Manual Name, Page X]
+When referencing visual content, include: [See Figure/Diagram/Photo on Page X of Manual Name]
+When information spans multiple manuals, integrate it and cite each source.
 ` : ''}
 
 YOUR ROLE:
@@ -3800,9 +3931,9 @@ Keep your response focused and actionable - help the technician understand the p
                 // Call the appropriate AI service
                 let response;
                 if (selectedProvider === 'gemini') {
-                    response = await callGeminiAPI(prompt, geminiFileUri);
+                    response = await callGeminiAPI(prompt, geminiFileUris);
                 } else {
-                    response = await callAzureOpenAI(prompt);
+                    response = await callGeminiAPI(prompt);
                 }
                 
                 // Display the result
