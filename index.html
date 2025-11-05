@@ -44,6 +44,113 @@
             border-radius: 15px;
             font-size: 12px;
             font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .version:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.05);
+        }
+
+        /* Fun Popup Modal Styles */
+        .fun-modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 9999;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .fun-modal-overlay.active {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .fun-modal {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            padding: 0;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: bounceIn 0.5s ease;
+            overflow: hidden;
+        }
+
+        .fun-modal-header {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 20px;
+            text-align: center;
+            font-size: 48px;
+        }
+
+        .fun-modal-body {
+            padding: 30px;
+            color: white;
+            text-align: center;
+        }
+
+        .fun-modal-body h3 {
+            font-size: 24px;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .fun-modal-body p {
+            font-size: 18px;
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+
+        .fun-modal-footer {
+            padding: 20px;
+            text-align: center;
+        }
+
+        .fun-modal-btn {
+            background: white;
+            color: #667eea;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .fun-modal-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes bounceIn {
+            0% {
+                transform: scale(0.3);
+                opacity: 0;
+            }
+            50% {
+                transform: scale(1.05);
+            }
+            70% {
+                transform: scale(0.9);
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
         }
 
         .sync-status {
@@ -689,7 +796,7 @@
         <div class="header">
             <h1>🏭 Manufacturing Issue Tracker</h1>
             <p>Track equipment issues and generate AI-powered work instructions</p>
-            <div class="version" onclick="showCreatorCredit()" style="cursor: pointer;" title="Click to see creator">v14.2</div>
+            <div class="version" onclick="showCreditsModal()">v14.0</div>
         </div>
 
         <div id="sync-status" class="sync-status"></div>
@@ -713,7 +820,7 @@
 
                 <div class="form-group">
                     <label for="line">Production Line *</label>
-                    <select id="line" class="form-control" required onchange="updateDownLineOptions(); updateMachineOptions(); updateSuggestions();">
+                    <select id="line" class="form-control" required onchange="updateMachineOptions(); updateSuggestions();">
                         <option value="">Select Line</option>
                         <option value="RX500">RX500</option>
                         <option value="RX300">RX300</option>
@@ -721,14 +828,6 @@
                         <option value="JBFlex">JBFlex</option>
                         <option value="L80">L80</option>
                     </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="downLine">Down Line *</label>
-                    <select id="downLine" class="form-control" required onchange="updateMachineOptions(); updateSuggestions();">
-                        <option value="">Select Down Line</option>
-                    </select>
-                    <small style="color: #666; font-size: 12px;">Select production line first</small>
                 </div>
 
                 <div class="form-group">
@@ -762,20 +861,13 @@
             
             <div class="form-group">
                 <label for="search-line">Production Line</label>
-                <select id="search-line" class="form-control" onchange="updateSearchDownLineOptions(); updateSearchMachines()">
+                <select id="search-line" class="form-control" onchange="updateSearchMachines()">
                     <option value="">All Lines</option>
                     <option value="RX500">RX500</option>
                     <option value="RX300">RX300</option>
                     <option value="HH">HH</option>
                     <option value="JBFlex">JBFlex</option>
                     <option value="L80">L80</option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label for="search-downLine">Down Line</label>
-                <select id="search-downLine" class="form-control" onchange="updateSearchMachines()">
-                    <option value="">All Down Lines</option>
                 </select>
             </div>
 
@@ -813,7 +905,7 @@
 
             <div class="form-group">
                 <label for="ai-line">Production Line *</label>
-                <select id="ai-line" class="form-control" required onchange="updateAIDownLineOptions(); updateAIMachines()">
+                <select id="ai-line" class="form-control" required onchange="updateAIMachines()">
                     <option value="">Select Line</option>
                     <option value="RX500">RX500</option>
                     <option value="RX300">RX300</option>
@@ -821,14 +913,6 @@
                     <option value="JBFlex">JBFlex</option>
                     <option value="L80">L80</option>
                 </select>
-            </div>
-
-            <div class="form-group">
-                <label for="ai-downLine">Down Line *</label>
-                <select id="ai-downLine" class="form-control" required onchange="updateAIMachines()">
-                    <option value="">Select Down Line</option>
-                </select>
-                <small style="color: #666; font-size: 12px;">Select production line first</small>
             </div>
 
             <div class="form-group">
@@ -872,18 +956,13 @@
             
             <div style="margin-bottom: 20px;">
                 <label for="filter-line">Filter by Line:</label>
-                <select id="filter-line" class="form-control" onchange="updateHistoryDownLineOptions(); filterHistory(); updateHistoryMachineOptions();" style="display: inline-block; width: 200px; margin: 0 10px;">
+                <select id="filter-line" class="form-control" onchange="filterHistory(); updateHistoryMachineOptions();" style="display: inline-block; width: 200px; margin: 0 10px;">
                     <option value="">All Lines</option>
                     <option value="RX500">RX500</option>
                     <option value="RX300">RX300</option>
                     <option value="HH">HH</option>
                     <option value="JBFlex">JBFlex</option>
                     <option value="L80">L80</option>
-                </select>
-
-                <label for="filter-downLine">Down Line:</label>
-                <select id="filter-downLine" class="form-control" onchange="filterHistory(); updateHistoryMachineOptions();" style="display: inline-block; width: 150px; margin: 0 10px;">
-                    <option value="">All Down Lines</option>
                 </select>
 
                 <label for="filter-machine">Machine:</label>
@@ -1049,17 +1128,9 @@
                 
                 <div class="form-group">
                     <label for="manual-line">Production Line *</label>
-                    <select id="manual-line" class="form-control" onchange="updateManualDownLineOptions(); updateManualMachineOptions()">
+                    <select id="manual-line" class="form-control" onchange="updateManualMachineOptions()">
                         <option value="">Select Production Line</option>
                     </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="manual-downLine">Down Line *</label>
-                    <select id="manual-downLine" class="form-control" onchange="updateManualMachineOptions()">
-                        <option value="">Select Down Line</option>
-                    </select>
-                    <small style="color: #666; font-size: 12px;">Select production line first</small>
                 </div>
 
                 <div class="form-group">
@@ -1171,29 +1242,6 @@
                 </div>
             </div>
         </div>
-
-        <!-- Robot Easter Egg Modal -->
-        <div id="robot-modal" class="modal" onclick="closeRobotModal()" style="display: none;">
-            <div class="modal-content" onclick="event.stopPropagation()" style="max-width: 500px; text-align: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
-                <div style="font-size: 80px; margin-bottom: 20px; animation: robotBounce 0.6s ease-in-out;">
-                    🤖
-                </div>
-                <div id="robot-message" style="font-size: 24px; font-weight: bold; color: white; margin-bottom: 30px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); line-height: 1.4;">
-                </div>
-                <button onclick="closeRobotModal()" class="btn" style="background: white; color: #667eea; font-weight: bold; padding: 12px 30px; font-size: 16px; border: none; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
-                    😄 Awesome!
-                </button>
-            </div>
-        </div>
-
-        <style>
-            @keyframes robotBounce {
-                0%, 100% { transform: translateY(0) rotate(0deg); }
-                25% { transform: translateY(-20px) rotate(-10deg); }
-                50% { transform: translateY(-30px) rotate(10deg); }
-                75% { transform: translateY(-20px) rotate(-5deg); }
-            }
-        </style>
     </div>
 
     <script>
@@ -1217,14 +1265,6 @@
             'HH': ['Unwind', 'Forming Table', 'Pull Station', 'Saw House', 'Stacker', 'Conveyor', 'Wrapper', 'Lidder', 'Case Erector', 'Case Packer', 'Weight Checker', 'Palletizer', 'Printer (Wrapper)', 'Printer (Case)'],
             'JBFlex': ['Unwind', 'Forming Table', 'Pull Station', 'Saw House', 'Stacker', 'Diverter', 'Conveyor', 'Wrapper', 'Lidder', 'Case Erector', 'Case Packer', 'Weight Checker', 'Palletizer', 'Printer (Wrapper)', 'Printer (Case)'],
             'L80': ['Unwind 1', 'Unwind 2', 'Drum 1', 'Drum 2', 'Stacker 1', 'Stacker 2', 'Conveyor', 'Wrapper', 'Lidder']
-        };
-        
-        const downLinesByLine = {
-            'RX500': ['500', '501', '502', '503', '504', '505'],
-            'RX300': ['300', '301', '302', '303'],
-            'HH': ['40', '41'],
-            'JBFlex': ['200', '201', '202'],
-            'L80': ['80']
         };
 
         // ====== INITIALIZATION ======
@@ -1477,23 +1517,6 @@
             }
         }
 
-        // ====== DOWN LINE DROPDOWN UPDATES ======
-        function updateDownLineOptions() {
-            const line = document.getElementById('line').value;
-            const downLineSelect = document.getElementById('downLine');
-            
-            downLineSelect.innerHTML = '<option value="">Select Down Line</option>';
-            
-            if (line && downLinesByLine[line]) {
-                downLinesByLine[line].forEach(downLine => {
-                    const option = document.createElement('option');
-                    option.value = downLine;
-                    option.textContent = downLine;
-                    downLineSelect.appendChild(option);
-                });
-            }
-        }
-
         function updateMachineOptions() {
             const line = document.getElementById('line').value;
             const machineList = document.getElementById('machine-list');
@@ -1554,22 +1577,6 @@
             // Log for debugging
             if (descriptions.size > 0) {
                 console.log(`Loaded ${descriptions.size} previous issue descriptions for ${line} - ${machine}`);
-            }
-        }
-
-        function updateSearchDownLineOptions() {
-            const line = document.getElementById('search-line').value;
-            const downLineSelect = document.getElementById('search-downLine');
-            
-            downLineSelect.innerHTML = '<option value="">All Down Lines</option>';
-            
-            if (line && downLinesByLine[line]) {
-                downLinesByLine[line].forEach(downLine => {
-                    const option = document.createElement('option');
-                    option.value = downLine;
-                    option.textContent = downLine;
-                    downLineSelect.appendChild(option);
-                });
             }
         }
 
@@ -1702,22 +1709,6 @@
             }
         }
 
-        function updateAIDownLineOptions() {
-            const line = document.getElementById('ai-line').value;
-            const downLineSelect = document.getElementById('ai-downLine');
-            
-            downLineSelect.innerHTML = '<option value="">Select Down Line</option>';
-            
-            if (line && downLinesByLine[line]) {
-                downLinesByLine[line].forEach(downLine => {
-                    const option = document.createElement('option');
-                    option.value = downLine;
-                    option.textContent = downLine;
-                    downLineSelect.appendChild(option);
-                });
-            }
-        }
-
         function updateAIMachines() {
             const line = document.getElementById('ai-line').value;
             const machineInput = document.getElementById('ai-machine');
@@ -1757,38 +1748,16 @@
             }
         }
 
-        function updateHistoryDownLineOptions() {
-            const line = document.getElementById('filter-line').value;
-            const downLineSelect = document.getElementById('filter-downLine');
-            
-            downLineSelect.innerHTML = '<option value="">All Down Lines</option>';
-            
-            if (line && downLinesByLine[line]) {
-                downLinesByLine[line].forEach(downLine => {
-                    const option = document.createElement('option');
-                    option.value = downLine;
-                    option.textContent = downLine;
-                    downLineSelect.appendChild(option);
-                });
-            }
-        }
-
         function updateHistoryMachineOptions() {
             const line = document.getElementById('filter-line').value;
-            const downLine = document.getElementById('filter-downLine').value;
             const machineSelect = document.getElementById('filter-machine');
             
             machineSelect.innerHTML = '<option value="">All Machines</option>';
             
             if (line) {
-                let filtered = issues.filter(issue => issue.line === line);
-                
-                // Further filter by downLine if selected
-                if (downLine) {
-                    filtered = filtered.filter(issue => issue.downLine === downLine);
-                }
-                
-                const machines = [...new Set(filtered.map(issue => issue.machine))];
+                const machines = [...new Set(issues
+                    .filter(issue => issue.line === line)
+                    .map(issue => issue.machine))];
                 
                 machines.sort().forEach(machine => {
                     const option = document.createElement('option');
@@ -1964,7 +1933,6 @@
             
             const operator = document.getElementById('operator').value;
             const line = document.getElementById('line').value;
-            const downLine = document.getElementById('downLine').value;
             const machine = document.getElementById('machine').value;
             const description = document.getElementById('description').value;
             
@@ -1976,7 +1944,6 @@
                     timestamp: act.timestamp,
                     operator: operator,
                     line: line,
-                    downLine: downLine,
                     machine: machine,
                     description: description,
                     solutions: act.action,
@@ -2013,7 +1980,6 @@
         // ====== SEARCH FUNCTIONS ======
         function searchIssues() {
             const line = document.getElementById('search-line').value;
-            const downLine = document.getElementById('search-downLine').value;
             const machine = document.getElementById('search-machine').value.toLowerCase().trim();
             const keyword = document.getElementById('search-keyword').value.toLowerCase().trim();
             const searchAllLines = document.getElementById('search-all-lines').checked;
@@ -2029,13 +1995,12 @@
                     matchLine = !line || issue.line === line;
                 }
                 
-                const matchDownLine = !downLine || issue.downLine === downLine;
                 const matchMachine = !machine || issue.machine.toLowerCase().includes(machine);
                 const matchKeyword = !keyword || 
                     issue.description.toLowerCase().includes(keyword) ||
                     (issue.solutions && issue.solutions.toLowerCase().includes(keyword));
                 
-                return matchLine && matchDownLine && matchMachine && matchKeyword;
+                return matchLine && matchMachine && matchKeyword;
             });
             
             displaySearchResults(results, searchAllLines);
@@ -2210,12 +2175,10 @@
                 effectivenessHTML = ` | <strong>Effectiveness:</strong> ${effectivenessMap[issue.effectiveness]}`;
             }
             
-            const downLineDisplay = issue.downLine ? ` - DL${issue.downLine}` : '';
-            
             return `
                 <div class="issue-card">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                        <h4>${issue.line}${downLineDisplay} - ${issue.machine}</h4>
+                        <h4>${issue.line} - ${issue.machine}</h4>
                         <small style="color: #666;">${new Date(issue.timestamp).toLocaleDateString()}</small>
                     </div>
                     <p><strong>Issue:</strong> ${issue.description}</p>
@@ -2242,17 +2205,12 @@
 
         function filterHistory() {
             const line = document.getElementById('filter-line').value;
-            const downLine = document.getElementById('filter-downLine').value;
             const machine = document.getElementById('filter-machine').value;
             
             let filtered = issues;
             
             if (line) {
                 filtered = filtered.filter(issue => issue.line === line);
-            }
-            
-            if (downLine) {
-                filtered = filtered.filter(issue => issue.downLine === downLine);
             }
             
             if (machine) {
@@ -2489,22 +2447,8 @@
             // Group by production line
             const manualsByLine = {};
             for (const [key, manualsArray] of Object.entries(manualMappings)) {
-                // key format is "LINE-DOWNLINE-MACHINE" or old format "LINE-MACHINE"
-                const parts = key.split('-');
-                let line, downLine, machine;
-                
-                if (parts.length >= 3) {
-                    // New format: LINE-DOWNLINE-MACHINE
-                    line = parts[0];
-                    downLine = parts[1];
-                    machine = parts.slice(2).join('-'); // Handle machine names with dashes
-                } else {
-                    // Old format: LINE-MACHINE (for backward compatibility)
-                    line = parts[0];
-                    downLine = null;
-                    machine = parts.slice(1).join('-');
-                }
-                
+                // key format is "LINE-MACHINE"
+                const [line, machine] = key.split('-', 2);
                 if (!manualsByLine[line]) {
                     manualsByLine[line] = [];
                 }
@@ -2512,7 +2456,7 @@
                 // Handle both old single-object format and new array format for migration
                 const manuals = Array.isArray(manualsArray) ? manualsArray : [manualsArray];
                 
-                manualsByLine[line].push({ key, line, downLine, machine, manuals });
+                manualsByLine[line].push({ key, line, machine, manuals });
             }
 
             let html = '';
@@ -2527,12 +2471,11 @@
                         </div>
                 `;
                 
-                equipmentList.forEach(({ key, downLine, machine, manuals }) => {
-                    const displayName = downLine ? `DL${downLine} - ${machine}` : machine;
+                equipmentList.forEach(({ key, machine, manuals }) => {
                     html += `
                         <div class="manual-list-item">
                             <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
-                                <h4 style="margin: 0; color: #2c3e50;">${displayName}</h4>
+                                <h4 style="margin: 0; color: #2c3e50;">${machine}</h4>
                                 <button onclick="addManualMapping('${key}')" class="btn btn-success" style="padding: 6px 12px; font-size: 13px;">
                                     ➕ Add Manual
                                 </button>
@@ -2605,26 +2548,8 @@
             
             // Pre-fill if adding to existing equipment
             if (prefillKey) {
-                const parts = prefillKey.split('-');
-                let line, downLine, machine;
-                
-                if (parts.length >= 3) {
-                    // New format: LINE-DOWNLINE-MACHINE
-                    line = parts[0];
-                    downLine = parts[1];
-                    machine = parts.slice(2).join('-');
-                } else {
-                    // Old format: LINE-MACHINE (for backward compatibility)
-                    line = parts[0];
-                    downLine = '';
-                    machine = parts.slice(1).join('-');
-                }
-                
+                const [line, machine] = prefillKey.split('-', 2);
                 lineSelect.value = line;
-                updateManualDownLineOptions();
-                if (downLine) {
-                    document.getElementById('manual-downLine').value = downLine;
-                }
                 updateManualMachineOptions();
                 document.getElementById('manual-machine').value = machine;
                 document.getElementById('manual-name').value = '';
@@ -2638,22 +2563,6 @@
             
             // Show modal
             document.getElementById('manual-modal').style.display = 'block';
-        }
-
-        function updateManualDownLineOptions() {
-            const line = document.getElementById('manual-line').value;
-            const downLineSelect = document.getElementById('manual-downLine');
-            
-            downLineSelect.innerHTML = '<option value="">Select Down Line</option>';
-            
-            if (line && downLinesByLine[line]) {
-                downLinesByLine[line].forEach(downLine => {
-                    const option = document.createElement('option');
-                    option.value = downLine;
-                    option.textContent = downLine;
-                    downLineSelect.appendChild(option);
-                });
-            }
         }
 
         function updateManualMachineOptions() {
@@ -2933,7 +2842,6 @@
 
         async function saveManualMapping() {
             const line = document.getElementById('manual-line').value.trim();
-            const downLine = document.getElementById('manual-downLine').value.trim();
             const machine = document.getElementById('manual-machine').value.trim();
             const manualName = document.getElementById('manual-name').value.trim();
             const url = document.getElementById('manual-url').value.trim();
@@ -2941,10 +2849,6 @@
             // Validate inputs
             if (!line) {
                 alert('Please select a production line');
-                return;
-            }
-            if (!downLine) {
-                alert('Please select a down line');
                 return;
             }
             if (!machine) {
@@ -2960,8 +2864,8 @@
                 return;
             }
             
-            // Create key in format "LINE-DOWNLINE-MACHINE"
-            const key = `${line}-${downLine}-${machine}`;
+            // Create key in format "LINE-MACHINE"
+            const key = `${line}-${machine}`;
             
             // Initialize array if doesn't exist
             if (!manualMappings[key]) {
@@ -2971,7 +2875,7 @@
             // Check if this exact manual URL already exists
             const existingManual = manualMappings[key].find(m => m.url === url);
             if (existingManual) {
-                alert(`This manual URL is already added for ${line} - DL${downLine} - ${machine}.`);
+                alert(`This manual URL is already added for ${line} - ${machine}.`);
                 return;
             }
             
@@ -2998,7 +2902,7 @@
             try {
                 const success = await syncAIConfigsToCloud();
                 if (success) {
-                    showSyncStatus('success', `✓ Manual mapping for ${line} - DL${downLine} - ${machine} saved and synced to cloud!`);
+                    showSyncStatus('success', `✓ Manual mapping for ${line} - ${machine} saved and synced to cloud!`);
                 } else {
                     showSyncStatus('error', '✗ Cloud sync may have failed - manual saved locally. Check Google Sheet to verify.');
                 }
@@ -3529,11 +3433,10 @@
         // ====== AI WORK INSTRUCTION ======
         async function generateWorkInstruction() {
             const line = document.getElementById('ai-line').value;
-            const downLine = document.getElementById('ai-downLine').value;
             const machine = document.getElementById('ai-machine').value;
             const issue = document.getElementById('ai-issue').value;
             
-            if (!line || !downLine || !machine || !issue) {
+            if (!line || !machine || !issue) {
                 alert('Please fill in all required fields');
                 return;
             }
@@ -3566,8 +3469,8 @@
             `;
 
             try {
-                // Get manual info and file URIs using LINE-DOWNLINE-MACHINE key
-                const manualKey = `${line}-${downLine}-${machine}`;
+                // Get manual info and file URIs using LINE-MACHINE key
+                const manualKey = `${line}-${machine}`;
                 const manualsArray = manualMappings[manualKey];
                 let manualContext = '';
                 let geminiFileUris = [];
@@ -3863,7 +3766,7 @@ CITE which manual each piece of information comes from when you have multiple ma
                         <div class="wi-caution-icon">⚠️</div>
                         <div>
                             <strong>CAUTION: AI-Generated Information</strong><br>
-                            <span style="font-size: 13px; opacity: 0.95;">This information is AI-generated. User is responsible for referencing work instructions and manuals for accuracy.</span>
+                            <span style="font-size: 13px; opacity: 0.95;">This information is AI-generated. User is responsible for referencing work instructions and manuals for accuracy. Contact supervisor to review prior to implementing any procedure.</span>
                         </div>
                     </div>
                     
@@ -3946,11 +3849,10 @@ CITE which manual each piece of information comes from when you have multiple ma
         async function askAIForAssistance() {
             // Gather all the current issue information
             const line = document.getElementById('line').value;
-            const downLine = document.getElementById('downLine').value;
             const machine = document.getElementById('machine').value;
             const description = document.getElementById('description').value;
             
-            if (!line || !downLine || !machine || !description || currentActions.length === 0) {
+            if (!line || !machine || !description || currentActions.length === 0) {
                 alert('Please fill in all issue details and add at least one action before requesting AI assistance.');
                 return;
             }
@@ -3996,8 +3898,8 @@ CITE which manual each piece of information comes from when you have multiple ma
             aiAssistanceDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
             try {
-                // Get manual info and file URIs using LINE-DOWNLINE-MACHINE key
-                const manualKey = `${line}-${downLine}-${machine}`;
+                // Get manual info and file URIs using LINE-MACHINE key
+                const manualKey = `${line}-${machine}`;
                 const manualsArray = manualMappings[manualKey];
                 let manualContext = '';
                 let geminiFileUris = [];
@@ -4225,7 +4127,7 @@ Keep your response focused and actionable - help the technician understand the p
                         <div class="wi-caution-icon">⚠️</div>
                         <div>
                             <strong>CAUTION: AI-Generated Recommendation</strong><br>
-                            <span style="font-size: 13px; opacity: 0.95;">User is responsible for verifying accuracy before implementing these recommendations. Always follow company safety protocols.</span>
+                            <span style="font-size: 13px; opacity: 0.95;">Contact supervisor to review prior to implementing these recommendations. Always follow company safety protocols.</span>
                         </div>
                     </div>
                     
@@ -4295,14 +4197,14 @@ Keep your response focused and actionable - help the technician understand the p
             ];
 
             const columnB = [
-                "That felt like...",
-                "You just zapped...",
-                "My circuits are...",
-                "That really...",
-                "I'm going to...",
-                "That tickled...",
-                "Did you just...",
-                "My processor is..."
+                "That felt like",
+                "You just zapped",
+                "My circuits are",
+                "That really",
+                "I'm going to",
+                "That tickled",
+                "Did you just",
+                "My processor is"
             ];
 
             const columnC = [
@@ -4325,17 +4227,7 @@ Keep your response focused and actionable - help the technician understand the p
             const funnyPhrase = `${randomA} ${randomB} ${randomC}`;
 
             // Display in a fun modal
-            document.getElementById('robot-message').textContent = funnyPhrase;
-            document.getElementById('robot-modal').style.display = 'flex';
-        }
-
-        function closeRobotModal() {
-            document.getElementById('robot-modal').style.display = 'none';
-        }
-
-        // ====== VERSION CREDIT ======
-        function showCreatorCredit() {
-            alert('Created and Developed by:\nJoey D. Burdin\n\nHigh Five! ✋');
+            showFunModal('🤖', 'Robot Says:', funnyPhrase);
         }
 
         // ====== CLOUD SYNC VERIFICATION ======
@@ -4425,6 +4317,39 @@ Keep your response focused and actionable - help the technician understand the p
                 `;
             }
         }
+
+        // ====== FUN MODAL FUNCTIONS ======
+        function showFunModal(icon, title, message) {
+            document.getElementById('funModalIcon').textContent = icon;
+            document.getElementById('funModalTitle').textContent = title;
+            document.getElementById('funModalMessage').textContent = message;
+            document.getElementById('funModal').classList.add('active');
+        }
+
+        function closeFunModal() {
+            document.getElementById('funModal').classList.remove('active');
+        }
+
+        function showCreditsModal() {
+            document.getElementById('funModalIcon').textContent = '🎉';
+            document.getElementById('funModalTitle').textContent = 'Created and Developed by:';
+            document.getElementById('funModalMessage').innerHTML = '<strong>Joey D. Burdin</strong><br><br>High Five! ✋';
+            document.getElementById('funModal').classList.add('active');
+        }
     </script>
+
+    <!-- Fun Modal Popups -->
+    <div id="funModal" class="fun-modal-overlay" onclick="closeFunModal()">
+        <div class="fun-modal" onclick="event.stopPropagation()">
+            <div class="fun-modal-header" id="funModalIcon">🎉</div>
+            <div class="fun-modal-body" id="funModalBody">
+                <h3 id="funModalTitle">Title</h3>
+                <p id="funModalMessage">Message</p>
+            </div>
+            <div class="fun-modal-footer">
+                <button class="fun-modal-btn" onclick="closeFunModal()">Awesome!</button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
