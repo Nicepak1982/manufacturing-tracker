@@ -689,7 +689,7 @@
         <div class="header">
             <h1>🏭 Manufacturing Issue Tracker</h1>
             <p>Track equipment issues and generate AI-powered work instructions</p>
-            <div class="version">v13.8</div>
+            <div class="version">v13.9</div>
         </div>
 
         <div id="sync-status" class="sync-status"></div>
@@ -3385,6 +3385,19 @@ Once you've found the right procedure in the manual:
 - Keep it as brief or detailed as the manual states it
 - Cite everything: [Source: ${manualInfo.name}, Page X]
 
+CRITICAL - VISUAL CONTENT USAGE:
+The manual PDF includes images, diagrams, photos, and illustrations. You MUST actively reference these:
+- When diagrams exist, reference them: "See Figure 3 for belt alignment" or "Refer to diagram on Page 12"
+- Describe visual indicators: "The red safety lever shown in the photo..." or "Note the arrow indicating direction in the diagram"
+- Call out important visual cues: "The wiring diagram on page X shows correct connections"
+- Reference part locations from images: "Component is located as shown in Figure 2"
+- Note color-coded parts: "Connect to the blue terminal (shown in diagram)"
+- Mention callouts/labels: "Part #5 in the exploded view diagram"
+- When images clarify steps: "Assembly orientation is shown in the illustration"
+- If images are critical: "IMPORTANT: Study the photo on page X before proceeding"
+
+Even if the text is brief, ALWAYS check for and reference relevant diagrams, photos, or illustrations that support the procedure.
+
 If the procedure is NOT in the manual:
 - State clearly: "This procedure is not documented in the ${manualInfo.name}"
 - Do NOT make up a procedure from general knowledge
@@ -3401,28 +3414,33 @@ WORK INSTRUCTION - ${machine.toUpperCase()}
 
 SAFETY PRECAUTIONS:
 All company policies and LOTO (Lockout/Tagout) procedures must be followed at all times.
-${geminiFileUri ? '[Extract ONLY the safety warnings explicitly stated in the manual for this procedure]' : '[Consult equipment manual for specific safety procedures]'}
+${geminiFileUri ? '[Extract ONLY the safety warnings explicitly stated in the manual for this procedure. Reference any safety diagrams or warning symbols shown in images.]' : '[Consult equipment manual for specific safety procedures]'}
 
 REQUIRED TOOLS & MATERIALS:
-${geminiFileUri ? '[List ONLY tools explicitly mentioned in the manual - if none listed, state "Tools not specified in manual"]' : '[Consult manual for required tools]'}
+${geminiFileUri ? '[List ONLY tools explicitly mentioned in the manual - if none listed, state "Tools not specified in manual". If tools are shown in images/photos, reference them.]' : '[Consult manual for required tools]'}
+
+VISUAL REFERENCES:
+${geminiFileUri ? '[List all relevant diagrams, figures, photos, or illustrations by page number that relate to this procedure. Example: "Figure 5 (Page 23) - Belt tension adjustment points" or "Photo on Page 15 - Correct wrench positioning"]' : '[Not available]'}
 
 PROCEDURE STEPS:
-${geminiFileUri ? '[Extract steps EXACTLY as written in the manual - word-for-word when possible. Number them as they appear. Do not add, expand, or interpret.]' : '[Procedure not available - consult equipment manual]'}
+${geminiFileUri ? '[Extract steps EXACTLY as written in the manual. For EACH step where a diagram/image exists, add the reference. Example: "1. Remove cover plate (see Figure 3 on Page 12)" or "2. Align shaft as shown in diagram"]' : '[Procedure not available - consult equipment manual]'}
 
 VERIFICATION:
-${geminiFileUri ? '[Include ONLY verification steps explicitly stated in the manual - if none, state "No verification steps provided in manual"]' : '[Consult manual for verification procedures]'}
+${geminiFileUri ? '[Include ONLY verification steps explicitly stated in the manual. Reference any inspection photos or measurement diagrams if shown.]' : '[Consult manual for verification procedures]'}
 
 IMPORTANT NOTES:
 ${geminiFileUri ? `- All information extracted directly from manual without additions
 - Brief instructions kept brief, detailed instructions kept detailed
 - Missing details noted as "See ${manualInfo.name} for specifications"
-- User must verify against original manual before implementing` : '- Consult equipment manual and supervisor for specific procedures'}
+- Diagrams and images actively referenced throughout to aid understanding
+- User must verify against original manual and images before implementing` : '- Consult equipment manual and supervisor for specific procedures'}
 ${manualContext && manualInfo && manualInfo.name ? '\n- Equipment Manual: ' + manualInfo.name : ''}
 ${manualContext && manualInfo && manualInfo.url ? '\n- Manual URL: ' + manualInfo.url : ''}
 
 CRITICAL REMINDER: 
 Be SMART in finding the right procedure (the user may not use exact terms).
-Be STRICT in extracting it (only what's actually written, nothing more).`;
+Be STRICT in extracting it (only what's actually written, nothing more).
+ACTIVELY REFERENCE visual content (diagrams, photos, figures) throughout your response.`;
 
                 // Call the appropriate AI service
                 let response;
@@ -3739,32 +3757,43 @@ The equipment manual PDF is attached. Use it as a reference for:
 - Technical specifications
 - Safety requirements
 
+VISUAL CONTENT IN MANUAL:
+The manual includes diagrams, photos, illustrations, and technical drawings. You MUST reference these when relevant:
+- Troubleshooting flowcharts: "Refer to the diagnostic flowchart on Page X"
+- Wiring diagrams: "Check connections shown in wiring diagram (Page X)"
+- Component photos: "The sensor location is shown in the photo on Page X"
+- Exploded views: "Part #5 in the assembly diagram on Page X"
+- Warning symbols: "Note the safety warning symbol shown in the manual"
+- Measurement points: "Test points are indicated in Figure X"
+
 When referencing the manual, cite as: [Source: ${manualInfo.name}, Page X]
+When referencing visual content, include: [See Figure/Diagram/Photo on Page X]
 ` : ''}
 
 YOUR ROLE:
 You are a skilled troubleshooting expert. Use:
-1. **The manual** - for documented procedures and specifications
+1. **The manual** - for documented procedures, specifications, AND diagrams/illustrations
 2. **The definitions** - for facility-specific context
 3. **Your expertise** - apply logic and reasoning to the problem
 4. **Pattern recognition** - analyze what the actions taken tell us
 
-IMPORTANT: You should think beyond just what's in the manual. If the manual doesn't cover this exact scenario, use your troubleshooting logic and experience to provide the best course of action. Combine manual knowledge with practical reasoning.
+IMPORTANT: You should think beyond just what's in the manual. If the manual doesn't cover this exact scenario, use your troubleshooting logic and experience to provide the best course of action. Combine manual knowledge (including visual aids) with practical reasoning.
 
 TASK: Based on the actions already taken and their results, recommend the BEST NEXT COURSE OF ACTION to resolve this issue.
 
 PROVIDE:
 1. **Analysis:** What do the actions taken tell us about the problem? Use logic to interpret the patterns.
-2. **Root Cause:** What is most likely causing this issue? Consider both manual troubleshooting sections and your technical reasoning.
+2. **Root Cause:** What is most likely causing this issue? Consider both manual troubleshooting sections (including diagrams) and your technical reasoning.
 3. **Recommended Next Steps:** 2-4 specific actions to take next. These should be:
-   - Based on manual procedures when available
+   - Based on manual procedures when available (reference diagrams if helpful)
    - Based on sound troubleshooting logic when manual doesn't cover it
    - Practical and actionable
    - In logical diagnostic order
-4. **Safety Considerations:** Any safety warnings from manual or general safety practices for these actions
-5. **References:** Cite relevant manual sections if applicable, or note if this is based on general troubleshooting principles
+4. **Visual Aids:** If relevant diagrams, photos, or illustrations exist in the manual that would help the technician, list them with page numbers
+5. **Safety Considerations:** Any safety warnings from manual (including warning symbols/images) or general safety practices for these actions
+6. **References:** Cite relevant manual sections if applicable, or note if this is based on general troubleshooting principles
 
-Be practical, logical, and helpful. Think like an experienced technician who knows how to diagnose problems systematically, not just someone reading from a manual.
+Be practical, logical, and helpful. Think like an experienced technician who knows how to diagnose problems systematically, not just someone reading from a manual. Use visual references to guide the technician to the right pages/diagrams.
 
 Keep your response focused and actionable - help the technician understand the problem and know exactly what to try next.`;
 
@@ -4052,4 +4081,4 @@ Keep your response focused and actionable - help the technician understand the p
         }
     </script>
 </body>
-</html>v1
+</html>
