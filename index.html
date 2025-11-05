@@ -689,7 +689,7 @@
         <div class="header">
             <h1>🏭 Manufacturing Issue Tracker</h1>
             <p>Track equipment issues and generate AI-powered work instructions</p>
-            <div class="version">v14.1</div>
+            <div class="version" onclick="showCreatorCredit()" style="cursor: pointer;" title="Click to see creator">v14.2</div>
         </div>
 
         <div id="sync-status" class="sync-status"></div>
@@ -1171,6 +1171,29 @@
                 </div>
             </div>
         </div>
+
+        <!-- Robot Easter Egg Modal -->
+        <div id="robot-modal" class="modal" onclick="closeRobotModal()" style="display: none;">
+            <div class="modal-content" onclick="event.stopPropagation()" style="max-width: 500px; text-align: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
+                <div style="font-size: 80px; margin-bottom: 20px; animation: robotBounce 0.6s ease-in-out;">
+                    🤖
+                </div>
+                <div id="robot-message" style="font-size: 24px; font-weight: bold; color: white; margin-bottom: 30px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); line-height: 1.4;">
+                </div>
+                <button onclick="closeRobotModal()" class="btn" style="background: white; color: #667eea; font-weight: bold; padding: 12px 30px; font-size: 16px; border: none; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+                    😄 Awesome!
+                </button>
+            </div>
+        </div>
+
+        <style>
+            @keyframes robotBounce {
+                0%, 100% { transform: translateY(0) rotate(0deg); }
+                25% { transform: translateY(-20px) rotate(-10deg); }
+                50% { transform: translateY(-30px) rotate(10deg); }
+                75% { transform: translateY(-20px) rotate(-5deg); }
+            }
+        </style>
     </div>
 
     <script>
@@ -3840,7 +3863,7 @@ CITE which manual each piece of information comes from when you have multiple ma
                         <div class="wi-caution-icon">⚠️</div>
                         <div>
                             <strong>CAUTION: AI-Generated Information</strong><br>
-                            <span style="font-size: 13px; opacity: 0.95;">This information is AI-generated. User is responsible for referencing work instructions and manuals for accuracy. Contact supervisor to review prior to implementing any procedure.</span>
+                            <span style="font-size: 13px; opacity: 0.95;">This information is AI-generated. User is responsible for referencing work instructions and manuals for accuracy.</span>
                         </div>
                     </div>
                     
@@ -4202,7 +4225,7 @@ Keep your response focused and actionable - help the technician understand the p
                         <div class="wi-caution-icon">⚠️</div>
                         <div>
                             <strong>CAUTION: AI-Generated Recommendation</strong><br>
-                            <span style="font-size: 13px; opacity: 0.95;">Contact supervisor to review prior to implementing these recommendations. Always follow company safety protocols.</span>
+                            <span style="font-size: 13px; opacity: 0.95;">User is responsible for verifying accuracy before implementing these recommendations. Always follow company safety protocols.</span>
                         </div>
                     </div>
                     
@@ -4301,8 +4324,18 @@ Keep your response focused and actionable - help the technician understand the p
             // Combine them into a funny phrase
             const funnyPhrase = `${randomA} ${randomB} ${randomC}`;
 
-            // Display in a fun alert
-            alert('🤖 ' + funnyPhrase);
+            // Display in a fun modal
+            document.getElementById('robot-message').textContent = funnyPhrase;
+            document.getElementById('robot-modal').style.display = 'flex';
+        }
+
+        function closeRobotModal() {
+            document.getElementById('robot-modal').style.display = 'none';
+        }
+
+        // ====== VERSION CREDIT ======
+        function showCreatorCredit() {
+            alert('Created and Developed by:\nJoey D. Burdin\n\nHigh Five! ✋');
         }
 
         // ====== CLOUD SYNC VERIFICATION ======
