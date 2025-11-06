@@ -796,7 +796,7 @@
         <div class="header">
             <h1>🏭 Manufacturing Issue Tracker</h1>
             <p>Track equipment issues and generate AI-powered work instructions</p>
-            <div class="version" onclick="showCreditsModal()">v14.0</div>
+            <div class="version" onclick="showCreditsModal()">v14.1</div>
         </div>
 
         <div id="sync-status" class="sync-status"></div>
@@ -1258,6 +1258,7 @@
         let definitions = JSON.parse(localStorage.getItem('definitions')) || [];
         let selectedProvider = localStorage.getItem('selectedProvider') || 'gemini'; // Default to free option
         let currentEditingDefinitionId = null; // Track which definition is being edited
+        let isInitializing = true; // Flag to prevent syncing during page load
         
         const machinesByLine = {
             'RX500': ['Unwind', 'Festoon', 'Forming Table', 'Pull Station', 'Saw House', 'Diverter', 'Conveyor', 'Lidder', 'Wrapper', 'Case Erector', 'Case Packer', 'Weight Checker', 'Palletizer', 'Printer (Wrapper)', 'Printer (Case)'],
@@ -1268,9 +1269,9 @@
         };
 
         // ====== INITIALIZATION ======
-        window.addEventListener('load', () => {
+        window.addEventListener('load', async () => {
             loadLocalData();
-            loadFromCloud();
+            await loadFromCloud(); // Wait for cloud data to load before proceeding
             updateHistoryMachineOptions();
             displayHistory(issues);
             loadAzureConfig();
@@ -1411,6 +1412,9 @@
                 setTimeout(() => {
                     showSyncStatus('', '');
                 }, 5000);
+            } finally {
+                // Mark initialization as complete (allows syncing to happen normally)
+                isInitializing = false;
             }
         }
 
@@ -2236,8 +2240,10 @@
             if (geminiConfig) geminiConfig.style.display = provider === 'gemini' ? 'block' : 'none';
             if (azureConfig) azureConfig.style.display = provider === 'azure' ? 'block' : 'none';
             
-            // Sync to cloud
-            syncAIConfigsToCloud();
+            // Only sync to cloud if not initializing (prevents overwriting cloud data on page load)
+            if (!isInitializing) {
+                syncAIConfigsToCloud();
+            }
         }
 
         // ====== GOOGLE GEMINI API ======
@@ -3048,7 +3054,7 @@
         // ⚙️ CONFIGURATION: Change PIN here and deploy via GitHub
         // Default PIN: 1111
         // To change: Edit this value, commit to GitHub, deploy to all devices
-        const SECURITY_PIN = "1950";
+        const SECURITY_PIN = "1111";
         const SECURITY_ENABLED = true; // Set to false to disable tab protection
         
         // Session authentication - cleared when browser closes
@@ -4197,14 +4203,14 @@ Keep your response focused and actionable - help the technician understand the p
             ];
 
             const columnB = [
-                "That felt like...",
-                "You just zapped...",
-                "My circuits are...",
-                "That really...",
-                "I'm going to...",
-                "That tickled...",
-                "Did you just...",
-                "My processor is..."
+                "That felt like",
+                "You just zapped",
+                "My circuits are",
+                "That really",
+                "I'm going to",
+                "That tickled",
+                "Did you just",
+                "My processor is"
             ];
 
             const columnC = [
@@ -4351,8 +4357,6 @@ Keep your response focused and actionable - help the technician understand the p
             </div>
         </div>
     </div>
- </body>
-       <!-- ====Congratulations you made it to the end, HOORAY!!! However,..... why are you here exactly? I seriously doubt you are supposed to be.=====-->
-   </html>
-
-
+</body>
+    <!-- ====Congratulations you made it to the end, HOORAY!!! However,..... why are you here exactly? I seriously doubt you are supposed to be.=====-->
+</html>
