@@ -689,7 +689,7 @@
         <div class="header">
             <h1>🏭 Manufacturing Issue Tracker</h1>
             <p>Track equipment issues and generate AI-powered work instructions</p>
-            <div class="version">v15.4</div>
+            <div class="version">v16.0</div>
         </div>
 
         <div id="sync-status" class="sync-status"></div>
@@ -1171,9 +1171,13 @@
         };
 
         // ====== INITIALIZATION ======
-        window.addEventListener('load', () => {
+        window.addEventListener('load', async () => {
             loadLocalData();
-            loadFromCloud();
+            
+            // CRITICAL: Wait for cloud data to load before doing anything else
+            // This prevents empty local data from overwriting cloud data
+            await loadFromCloud();
+            
             updateHistoryMachineOptions();
             displayHistory(issues);
             loadAzureConfig();
@@ -1326,6 +1330,29 @@
         }
 
         async function syncAIConfigsToCloud() {
+            // CRITICAL: Don't overwrite cloud data with empty local data
+            // This prevents data loss when opening a new HTML file with empty localStorage
+            const localMappingCount = Object.keys(manualMappings).length;
+            
+            if (localMappingCount === 0) {
+                console.warn('Sync blocked: Local manualMappings is empty. Not overwriting cloud data.');
+                // Check if cloud has data before we erase it
+                try {
+                    const response = await fetch(GOOGLE_SCRIPT_URL + '?action=load');
+                    const data = await response.json();
+                    if (data.success && data.aiConfigs && data.aiConfigs.manualMappings) {
+                        const cloudMappingCount = Object.keys(data.aiConfigs.manualMappings).length;
+                        if (cloudMappingCount > 0) {
+                            console.warn(`Cloud has ${cloudMappingCount} manual mappings. Refusing to overwrite with empty local data.`);
+                            showSyncStatus('error', '⚠️ Sync blocked: Won\'t erase cloud data with empty local data');
+                            return false;
+                        }
+                    }
+                } catch (error) {
+                    console.error('Could not check cloud data before sync:', error);
+                }
+            }
+            
             return new Promise((resolve) => {
                 showSyncStatus('syncing', '☁️ Syncing AI configs to Google Sheets...');
                 
@@ -3346,6 +3373,23 @@
         }
 
         async function syncDefinitionsToCloud() {
+            // CRITICAL: Don't overwrite cloud data with empty local data
+            if (definitions.length === 0) {
+                console.warn('Sync blocked: Local definitions is empty. Not overwriting cloud data.');
+                // Check if cloud has data before we erase it
+                try {
+                    const response = await fetch(GOOGLE_SCRIPT_URL + '?action=load');
+                    const data = await response.json();
+                    if (data.success && data.definitions && data.definitions.length > 0) {
+                        console.warn(`Cloud has ${data.definitions.length} definitions. Refusing to overwrite with empty local data.`);
+                        showSyncStatus('error', '⚠️ Sync blocked: Won\'t erase cloud definitions');
+                        return false;
+                    }
+                } catch (error) {
+                    console.error('Could not check cloud data before sync:', error);
+                }
+            }
+            
             return new Promise((resolve) => {
                 try {
                     let iframe = document.getElementById('sync-iframe');
