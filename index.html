@@ -689,7 +689,7 @@
         <div class="header">
             <h1>🏭 Manufacturing Issue Tracker</h1>
             <p>Track equipment issues and generate AI-powered work instructions</p>
-            <div class="version">v15.0</div>
+            <div class="version">v15.1</div>
         </div>
 
         <div id="sync-status" class="sync-status"></div>
@@ -906,12 +906,14 @@
                 <div class="form-group">
                     <label for="gemini-model">Model</label>
                     <select id="gemini-model" class="form-control">
-                        <option value="gemini-2.5-flash">Gemini 2.5 Flash (Recommended - Stable)</option>
-                        <option value="gemini-2.0-flash">Gemini 2.0 Flash (Stable)</option>
-                        <option value="gemini-1.5-flash">Gemini 1.5 Flash (Legacy)</option>
-                        <option value="gemini-1.5-pro">Gemini 1.5 Pro (Legacy)</option>
+                        <option value="gemini-2.5-flash">Gemini 2.5 Flash (Current Stable - Fast)</option>
+                        <option value="gemini-2.0-flash">Gemini 2.0 Flash (Stable - Balanced)</option>
+                        <option value="gemini-2.0-flash-exp">Gemini 2.0 Flash Experimental (May give better quality)</option>
+                        <option value="gemini-2.5-pro">Gemini 2.5 Pro (Best quality, slower)</option>
+                        <option value="gemini-1.5-flash">Gemini 1.5 Flash (Legacy - Fast)</option>
+                        <option value="gemini-1.5-pro">Gemini 1.5 Pro (Legacy - Quality)</option>
                     </select>
-                    <small style="color: #666;">Try 2.5 Flash first - if it fails, your key may not have access yet</small>
+                    <small style="color: #666;">💡 Try 2.0 Flash Exp if 2.5 Flash gives poor quality. Use "List Available Models" to see what works with your key.</small>
                 </div>
 
                 <button onclick="saveGeminiConfig()" class="btn btn-primary">Save Gemini Configuration</button>
@@ -3934,63 +3936,42 @@ CITE which manual each piece of information comes from when you have multiple ma
                 });
 
                 // Create the prompt - focused on next best action, expert troubleshooting
-                const prompt = `You are an expert manufacturing technician with years of experience troubleshooting equipment at baby wipes production facilities. You combine manual knowledge with practical troubleshooting logic to help solve problems.
+                const prompt = `You are a manufacturing equipment expert. Provide troubleshooting guidance based on the situation below.
 
 ${definitionsContext}
-CURRENT SITUATION:
-- Production Line: ${line}
-- Machine/Equipment: ${machine}
-- Issue Description: ${description}
+SITUATION:
+Production Line: ${line}
+Machine/Equipment: ${machine}
+Issue: ${description}
 ${actionsText}${manualContext}
 
 ${hasManuals ? `
-EQUIPMENT MANUALS AVAILABLE:
-${manualCount} equipment manual${manualCount !== 1 ? 's are' : ' is'} attached (${manualNames}). Use them as references for:
-- Known troubleshooting procedures
-- Diagnostic steps
-- Technical specifications
-- Safety requirements
-
-VISUAL CONTENT IN MANUALS:
-The manuals include diagrams, photos, illustrations, and technical drawings. You MUST reference these when relevant:
-- Troubleshooting flowcharts: "Refer to the diagnostic flowchart on Page X of [Manual Name]"
-- Wiring diagrams: "Check connections shown in wiring diagram (Page X, [Manual Name])"
-- Component photos: "The sensor location is shown in the photo on Page X of [Manual Name]"
-- Exploded views: "Part #5 in the assembly diagram on Page X"
-- Warning symbols: "Note the safety warning symbol shown in the manual"
-- Measurement points: "Test points are indicated in Figure X"
-
-When referencing manuals, cite as: [Source: Manual Name, Page X]
-When referencing visual content, include: [See Figure/Diagram/Photo on Page X of Manual Name]
-When information spans multiple manuals, integrate it and cite each source.
+REFERENCE MATERIALS:
+${manualCount} equipment manual${manualCount !== 1 ? 's are' : ' is'} attached (${manualNames}).
+When relevant, cite manual sections and reference diagrams/photos by page number.
 ` : ''}
 
-YOUR ROLE:
-You are a skilled troubleshooting expert. Use:
-1. **The manual** - for documented procedures, specifications, AND diagrams/illustrations
-2. **The definitions** - for facility-specific context
-3. **Your expertise** - apply logic and reasoning to the problem
-4. **Pattern recognition** - analyze what the actions taken tell us
+INSTRUCTIONS:
+Provide a direct troubleshooting analysis with these sections:
 
-IMPORTANT: You should think beyond just what's in the manual. If the manual doesn't cover this exact scenario, use your troubleshooting logic and experience to provide the best course of action. Combine manual knowledge (including visual aids) with practical reasoning.
+1. ANALYSIS
+What do the actions taken tell us? What patterns indicate the root cause?
 
-TASK: Based on the actions already taken and their results, recommend the BEST NEXT COURSE OF ACTION to resolve this issue.
+2. LIKELY ROOT CAUSE
+Based on symptoms and actions taken, what's most likely causing this?
 
-PROVIDE:
-1. **Analysis:** What do the actions taken tell us about the problem? Use logic to interpret the patterns.
-2. **Root Cause:** What is most likely causing this issue? Consider both manual troubleshooting sections (including diagrams) and your technical reasoning.
-3. **Recommended Next Steps:** 2-4 specific actions to take next. These should be:
-   - Based on manual procedures when available (reference diagrams if helpful)
-   - Based on sound troubleshooting logic when manual doesn't cover it
-   - Practical and actionable
-   - In logical diagnostic order
-4. **Visual Aids:** If relevant diagrams, photos, or illustrations exist in the manual that would help the technician, list them with page numbers
-5. **Safety Considerations:** Any safety warnings from manual (including warning symbols/images) or general safety practices for these actions
-6. **References:** Cite relevant manual sections if applicable, or note if this is based on general troubleshooting principles
+3. NEXT STEPS (2-4 specific actions)
+Prioritize by diagnostic value. Be specific and actionable.
 
-Be practical, logical, and helpful. Think like an experienced technician who knows how to diagnose problems systematically, not just someone reading from a manual. Use visual references to guide the technician to the right pages/diagrams.
+4. SAFETY NOTES
+Any hazards or precautions for these actions.
 
-Keep your response focused and actionable - help the technician understand the problem and know exactly what to try next.`;
+${hasManuals ? '5. MANUAL REFERENCES\nCite relevant sections or diagrams if applicable.\n' : ''}
+
+IMPORTANT: Do NOT include phrases like "As an expert" or "I recommend" or describe your role. Just provide direct, technical troubleshooting guidance as if writing a work instruction.
+
+Keep it focused and practical - what should the technician do next?`;
+
 
                 // Call the appropriate AI service
                 let response;
