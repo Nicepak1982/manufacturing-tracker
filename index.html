@@ -689,7 +689,7 @@
         <div class="header">
             <h1>🏭 Manufacturing Issue Tracker</h1>
             <p>Track equipment issues and generate AI-powered work instructions</p>
-            <div class="version">v16.5</div>
+            <div class="version">v16.6</div>
         </div>
 
         <div id="sync-status" class="sync-status"></div>
@@ -2374,11 +2374,20 @@
             } catch (error) {
                 document.getElementById('generated-instruction').innerHTML = `
                     <div class="work-instruction">
-                        <div class="wi-header" style="background: linear-gradient(135deg, #dc3545, #c82333);">❌ SYNC FAILED</div>
-                        <div style="padding: 40px 25px; text-align: center; background: white;">
-                            <h3 style="color: #dc3545;">Failed to sync API key</h3>
-                            <p style="color: #666; margin: 20px 0;">${error.message}</p>
-                            <button onclick="switchTab('settings')" class="btn btn-primary">Go to Setup</button>
+                        <div class="wi-header" style="background: linear-gradient(135deg, #17a2b8, #138496);">💡 Sync Unavailable</div>
+                        <div style="padding: 40px 30px; text-align: center; background: white;">
+                            <div style="font-size: 48px; margin-bottom: 15px;">☁️</div>
+                            <h3 style="color: #17a2b8; margin-bottom: 15px;">Unable to Sync Configuration</h3>
+                            <p style="color: #666; margin: 15px auto; max-width: 550px; font-size: 15px; line-height: 1.6;">
+                                Could not retrieve configuration from Google Sheets. Please try again later.
+                            </p>
+                            <div style="margin-top: 25px;">
+                                <button onclick="switchTab('settings')" class="btn btn-primary" style="padding: 12px 30px;">Go to Setup</button>
+                            </div>
+                            <details style="margin-top: 20px;">
+                                <summary style="color: #999; cursor: pointer; font-size: 13px;">Technical Details</summary>
+                                <p style="color: #999; margin-top: 10px; font-size: 12px;">${error.message}</p>
+                            </details>
                         </div>
                     </div>
                 `;
@@ -2420,11 +2429,20 @@
             } catch (error) {
                 aiAssistanceDiv.innerHTML = `
                     <div class="work-instruction">
-                        <div class="wi-header" style="background: linear-gradient(135deg, #dc3545, #c82333);">❌ SYNC FAILED</div>
-                        <div style="padding: 40px 25px; text-align: center; background: white;">
-                            <h3 style="color: #dc3545;">Failed to sync API key</h3>
-                            <p style="color: #666; margin: 20px 0;">${error.message}</p>
-                            <button onclick="switchTab('settings')" class="btn btn-primary">Go to Setup</button>
+                        <div class="wi-header" style="background: linear-gradient(135deg, #17a2b8, #138496);">💡 Sync Unavailable</div>
+                        <div style="padding: 40px 30px; text-align: center; background: white;">
+                            <div style="font-size: 48px; margin-bottom: 15px;">☁️</div>
+                            <h3 style="color: #17a2b8; margin-bottom: 15px;">Unable to Sync Configuration</h3>
+                            <p style="color: #666; margin: 15px auto; max-width: 550px; font-size: 15px; line-height: 1.6;">
+                                Could not retrieve configuration from Google Sheets. Please try again later.
+                            </p>
+                            <div style="margin-top: 25px;">
+                                <button onclick="switchTab('settings')" class="btn btn-primary" style="padding: 12px 30px;">Go to Setup</button>
+                            </div>
+                            <details style="margin-top: 20px;">
+                                <summary style="color: #999; cursor: pointer; font-size: 13px;">Technical Details</summary>
+                                <p style="color: #999; margin-top: 10px; font-size: 12px;">${error.message}</p>
+                            </details>
                         </div>
                     </div>
                 `;
@@ -3709,35 +3727,46 @@
                         } catch (error) {
                             console.error('Error fetching manuals:', error);
                             
-                            // CRITICAL: If manuals are mapped but we can't get the PDFs, don't generate
+                            // CRITICAL: If manuals are mapped but we can't get the PDFs, show user-friendly message
                             const manualsList = manuals.map(m => `• ${m.name}`).join('\n');
                             document.getElementById('generated-instruction').innerHTML = `
                                 <div class="work-instruction">
-                                    <div class="wi-header" style="background: linear-gradient(135deg, #dc3545, #c82333);">❌ MANUAL ACCESS FAILED</div>
-                                    <div style="padding: 40px 25px; background: white;">
-                                        <div style="font-size: 48px; margin-bottom: 20px; text-align: center;">📄</div>
-                                        <h3 style="color: #dc3545; margin-bottom: 15px;">Cannot Access Equipment Manuals</h3>
-                                        <p style="color: #666; margin-bottom: 20px;">
-                                            ${manuals.length} manual${manuals.length !== 1 ? 's are' : ' is'} configured for ${line} - ${machine}, but ${manuals.length !== 1 ? 'they' : 'it'} could not be downloaded from Google Drive.
-                                        </p>
-                                        <div style="background: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; padding: 15px; margin-bottom: 20px;">
-                                            <strong style="color: #856404;">Error:</strong><br>
-                                            <span style="color: #856404; font-size: 14px;">${error.message}</span>
+                                    <div class="wi-header" style="background: linear-gradient(135deg, #17a2b8, #138496);">💡 Service Temporarily Unavailable</div>
+                                    <div style="padding: 40px 30px; background: white;">
+                                        <div style="text-align: center; margin-bottom: 25px;">
+                                            <div style="font-size: 48px; margin-bottom: 15px;">📚</div>
+                                            <h3 style="color: #17a2b8; margin-bottom: 15px;">Equipment Manuals Temporarily Unavailable</h3>
+                                            <p style="color: #666; margin: 15px auto; max-width: 550px; font-size: 15px; line-height: 1.6;">
+                                                We're unable to access the equipment manuals right now. Please try again in a few moments.
+                                            </p>
                                         </div>
-                                        <h4 style="margin-top: 20px; margin-bottom: 10px;">Configured Manuals:</h4>
-                                        <pre style="background: #f8f9fa; padding: 10px; border-radius: 4px; text-align: left;">${manualsList}</pre>
-                                        <h4 style="margin-top: 20px; margin-bottom: 10px;">Troubleshooting Steps:</h4>
-                                        <ol style="text-align: left; color: #666; line-height: 1.8;">
-                                            <li><strong>Check Google Drive Links:</strong> Verify all files are publicly accessible (Anyone with link can view)</li>
-                                            <li><strong>Check Google Apps Script:</strong> Ensure you've deployed v13 with PDF download proxy</li>
-                                            <li><strong>Check Script URL:</strong> Verify Google Apps Script URL is configured in Setup tab</li>
-                                            <li><strong>Test Manually:</strong> Try clicking the 🔄 Refresh button on each manual in Setup tab</li>
-                                        </ol>
-                                        <div style="text-align: center; margin-top: 30px;">
-                                            <button onclick="switchTab('settings')" class="btn btn-primary">
-                                                Go to Setup
+                                        
+                                        <div style="background: #e8f4f8; border-left: 4px solid #17a2b8; padding: 20px; border-radius: 8px; margin: 25px 0;">
+                                            <h4 style="color: #0c5460; margin-bottom: 12px;">💡 Alternative Options:</h4>
+                                            <ul style="color: #0c5460; line-height: 1.8; margin: 0; padding-left: 20px;">
+                                                <li><strong>Search Historical Issues</strong> - Find similar problems and their solutions</li>
+                                                <li><strong>View Issue History</strong> - Browse past troubleshooting for ${line} - ${machine}</li>
+                                                <li><strong>Try AI Again Later</strong> - Manual access may be restored shortly</li>
+                                            </ul>
+                                        </div>
+                                        
+                                        <div style="text-align: center; margin-top: 25px;">
+                                            <button onclick="switchTab('search')" class="btn btn-info" style="padding: 12px 30px; margin: 5px;">
+                                                🔍 Search Historical Issues
+                                            </button>
+                                            <button onclick="switchTab('history')" class="btn btn-primary" style="padding: 12px 30px; margin: 5px;">
+                                                📋 View Issue History
                                             </button>
                                         </div>
+                                        
+                                        <details style="margin-top: 20px; text-align: center;">
+                                            <summary style="color: #999; cursor: pointer; font-size: 13px;">Technical Details</summary>
+                                            <div style="text-align: left; margin-top: 15px; color: #666; font-size: 12px;">
+                                                <p><strong>Configured Manuals for ${line} - ${machine}:</strong></p>
+                                                <pre style="background: #f8f9fa; padding: 10px; border-radius: 4px; font-size: 11px;">${manualsList}</pre>
+                                                <p style="margin-top: 10px;"><strong>Error:</strong> ${error.message}</p>
+                                            </div>
+                                        </details>
                                     </div>
                                 </div>
                             `;
@@ -3879,17 +3908,38 @@ CITE which manual each piece of information comes from when you have multiple ma
                 console.error('Error generating work instruction:', error);
                 document.getElementById('generated-instruction').innerHTML = `
                     <div class="work-instruction">
-                        <div class="wi-header" style="background: linear-gradient(135deg, #dc3545, #c82333);">❌ ERROR</div>
-                        <div style="padding: 40px 25px; text-align: center; background: white;">
-                            <div style="font-size: 48px; margin-bottom: 20px;">⚠️</div>
-                            <h3 style="color: #dc3545; margin-bottom: 15px;">Failed to Generate Work Instruction</h3>
-                            <p style="color: #666; margin-bottom: 20px; font-size: 15px;">${error.message}</p>
-                            <p style="color: #666; font-size: 14px;">
-                                Please check your ${selectedProvider === 'gemini' ? 'Google Gemini' : 'Azure OpenAI'} configuration in the Setup tab.
-                            </p>
-                            <button onclick="switchTab('settings')" class="btn btn-primary" style="margin-top: 20px;">
-                                Go to Setup
-                            </button>
+                        <div class="wi-header" style="background: linear-gradient(135deg, #17a2b8, #138496);">💡 AI Service Unavailable</div>
+                        <div style="padding: 40px 30px; background: white;">
+                            <div style="text-align: center; margin-bottom: 25px;">
+                                <div style="font-size: 48px; margin-bottom: 15px;">🤖</div>
+                                <h3 style="color: #17a2b8; margin-bottom: 15px;">AI Work Instructions Temporarily Unavailable</h3>
+                                <p style="color: #666; margin: 15px auto; max-width: 550px; font-size: 15px; line-height: 1.6;">
+                                    The AI service is currently unavailable. Please try again in a few moments.
+                                </p>
+                            </div>
+                            
+                            <div style="background: #e8f4f8; border-left: 4px solid #17a2b8; padding: 20px; border-radius: 8px; margin: 25px 0;">
+                                <h4 style="color: #0c5460; margin-bottom: 12px;">💡 Alternative Options:</h4>
+                                <ul style="color: #0c5460; line-height: 1.8; margin: 0; padding-left: 20px;">
+                                    <li><strong>Search Historical Issues</strong> - Find similar problems and their solutions</li>
+                                    <li><strong>View Issue History</strong> - Browse past troubleshooting records</li>
+                                    <li><strong>Try AI Again Later</strong> - Service may be restored shortly</li>
+                                </ul>
+                            </div>
+                            
+                            <div style="text-align: center; margin-top: 25px;">
+                                <button onclick="switchTab('search')" class="btn btn-info" style="padding: 12px 30px; margin: 5px;">
+                                    🔍 Search Historical Issues
+                                </button>
+                                <button onclick="syncAPIKeyAndRetryWorkInstruction()" class="btn btn-success" style="padding: 12px 30px; margin: 5px;">
+                                    ☁️ Sync & Retry
+                                </button>
+                            </div>
+                            
+                            <details style="margin-top: 20px; text-align: center;">
+                                <summary style="color: #999; cursor: pointer; font-size: 13px;">Technical Details</summary>
+                                <p style="color: #999; margin-top: 10px; font-size: 12px;">${error.message}</p>
+                            </details>
                         </div>
                     </div>
                 `;
@@ -3899,20 +3949,36 @@ CITE which manual each piece of information comes from when you have multiple ma
         function showConfigurationRequired(providerName, message) {
             const html = `
                 <div class="work-instruction">
-                    <div class="wi-header" style="background: linear-gradient(135deg, #ffc107, #ff9800);">⚙️ CONFIGURATION REQUIRED</div>
-                    <div style="padding: 60px 25px; text-align: center; background: white;">
-                        <div style="font-size: 64px; margin-bottom: 20px;">🔧</div>
-                        <h3 style="color: #ff9800; margin-bottom: 15px;">${providerName} Not Configured</h3>
-                        <p style="color: #666; margin: 20px auto; max-width: 500px; font-size: 15px;">
-                            ${message}
-                        </p>
-                        <div style="margin-top: 30px; display: flex; gap: 15px; justify-content: center;">
-                            <button onclick="syncAPIKeyAndRetryWorkInstruction()" class="btn btn-success" style="padding: 15px 30px; font-size: 16px;">
-                                ☁️ Sync API Key & Retry
+                    <div class="wi-header" style="background: linear-gradient(135deg, #17a2b8, #138496);">💡 AI Service Unavailable</div>
+                    <div style="padding: 50px 30px; background: white;">
+                        <div style="text-align: center; margin-bottom: 30px;">
+                            <div style="font-size: 48px; margin-bottom: 15px;">🤖</div>
+                            <h3 style="color: #17a2b8; margin-bottom: 15px;">AI Work Instructions Temporarily Unavailable</h3>
+                            <p style="color: #666; margin: 15px auto; max-width: 550px; font-size: 15px; line-height: 1.6;">
+                                The AI service is currently not configured or unavailable. Please try again later.
+                            </p>
+                        </div>
+                        
+                        <div style="background: #e8f4f8; border-left: 4px solid #17a2b8; padding: 20px; border-radius: 8px; margin: 30px 0;">
+                            <h4 style="color: #0c5460; margin-bottom: 12px;">💡 You Can Still:</h4>
+                            <ul style="color: #0c5460; line-height: 1.8; margin: 0; padding-left: 20px;">
+                                <li><strong>Search Historical Issues</strong> - Find similar problems and their solutions</li>
+                                <li><strong>Report Your Issue</strong> - Document it for future reference</li>
+                                <li><strong>View Issue History</strong> - Browse past troubleshooting records</li>
+                            </ul>
+                        </div>
+                        
+                        <div style="text-align: center; margin-top: 30px;">
+                            <button onclick="switchTab('search')" class="btn btn-info" style="padding: 12px 30px; margin: 5px;">
+                                🔍 Search Historical Issues
                             </button>
-                            <button onclick="switchTab('settings')" class="btn btn-primary" style="padding: 15px 30px; font-size: 16px;">
-                                Go to Setup Tab
+                            <button onclick="syncAPIKeyAndRetryWorkInstruction()" class="btn btn-success" style="padding: 12px 30px; margin: 5px;">
+                                ☁️ Sync & Retry
                             </button>
+                        </div>
+                        
+                        <div style="text-align: center; margin-top: 15px;">
+                            <small style="color: #999;">Technical details: ${message}</small>
                         </div>
                     </div>
                 </div>
@@ -4230,22 +4296,38 @@ Keep it focused and practical - what should the technician do next?`;
                 console.error('Error getting AI assistance:', error);
                 aiAssistanceDiv.innerHTML = `
                     <div class="work-instruction">
-                        <div class="wi-header" style="background: linear-gradient(135deg, #dc3545, #c82333);">❌ ERROR</div>
-                        <div style="padding: 40px 25px; text-align: center; background: white;">
-                            <div style="font-size: 48px; margin-bottom: 20px;">⚠️</div>
-                            <h3 style="color: #dc3545; margin-bottom: 15px;">Failed to Get AI Assistance</h3>
-                            <p style="color: #666; margin-bottom: 20px; font-size: 15px;">${error.message}</p>
-                            <p style="color: #666; font-size: 14px;">
-                                Please check your ${selectedProvider === 'gemini' ? 'Google Gemini' : 'Azure OpenAI'} configuration in the Setup tab.
-                            </p>
-                            <div style="margin-top: 30px; display: flex; gap: 15px; justify-content: center;">
-                                <button onclick="syncAPIKeyAndRetryAskAI()" class="btn btn-success" style="padding: 12px 24px;">
-                                    ☁️ Sync API Key & Retry
+                        <div class="wi-header" style="background: linear-gradient(135deg, #17a2b8, #138496);">💡 AI Service Unavailable</div>
+                        <div style="padding: 40px 30px; background: white;">
+                            <div style="text-align: center; margin-bottom: 25px;">
+                                <div style="font-size: 48px; margin-bottom: 15px;">🤖</div>
+                                <h3 style="color: #17a2b8; margin-bottom: 15px;">AI Assistance Temporarily Unavailable</h3>
+                                <p style="color: #666; margin: 15px auto; max-width: 550px; font-size: 15px; line-height: 1.6;">
+                                    The AI service is currently unavailable. Please try again in a few moments.
+                                </p>
+                            </div>
+                            
+                            <div style="background: #e8f4f8; border-left: 4px solid #17a2b8; padding: 20px; border-radius: 8px; margin: 25px 0;">
+                                <h4 style="color: #0c5460; margin-bottom: 12px;">💡 Alternative Options:</h4>
+                                <ul style="color: #0c5460; line-height: 1.8; margin: 0; padding-left: 20px;">
+                                    <li><strong>Search Historical Issues</strong> - Find similar problems and their solutions</li>
+                                    <li><strong>Submit Your Report</strong> - Document this issue for future reference</li>
+                                    <li><strong>Try AI Again Later</strong> - Service may be restored shortly</li>
+                                </ul>
+                            </div>
+                            
+                            <div style="text-align: center; margin-top: 25px;">
+                                <button onclick="switchTab('search')" class="btn btn-info" style="padding: 12px 30px; margin: 5px;">
+                                    🔍 Search Historical Issues
                                 </button>
-                                <button onclick="switchTab('settings')" class="btn btn-primary" style="padding: 12px 24px;">
-                                    Go to Setup
+                                <button onclick="syncAPIKeyAndRetryAskAI()" class="btn btn-success" style="padding: 12px 30px; margin: 5px;">
+                                    ☁️ Sync & Retry
                                 </button>
                             </div>
+                            
+                            <details style="margin-top: 20px; text-align: center;">
+                                <summary style="color: #999; cursor: pointer; font-size: 13px;">Technical Details</summary>
+                                <p style="color: #999; margin-top: 10px; font-size: 12px;">${error.message}</p>
+                            </details>
                         </div>
                     </div>
                 `;
