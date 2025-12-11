@@ -689,7 +689,7 @@
         <div class="header">
             <h1>🏭 Manufacturing Issue Tracker</h1>
             <p>Track equipment issues and generate AI-powered work instructions</p>
-            <div class="version">v16.1</div>
+            <div class="version">v16.5</div>
         </div>
 
         <div id="sync-status" class="sync-status"></div>
@@ -920,6 +920,7 @@
                 <button onclick="saveGeminiConfig()" class="btn btn-primary">Save Gemini Configuration</button>
                 <button onclick="testGeminiConnection()" class="btn btn-info">Test Connection</button>
                 <button onclick="listAvailableModels()" class="btn btn-warning">List My Available Models</button>
+                <button onclick="syncGeminiAPIKeyFromCloud()" class="btn btn-success">☁️ Sync API Key from Cloud</button>
                 
                 <div id="available-models-list" style="margin-top: 15px; padding: 10px; border-radius: 5px; display: none; background: #f8f9fa; border: 1px solid #dee2e6;">
                     <!-- Available models will appear here -->
@@ -1428,7 +1429,8 @@
         function switchTab(tabName) {
             // Check if this is a protected tab and if security is enabled
             const protectedTabs = ['settings', 'definitions'];
-            if (protectedTabs.includes(tabName) && SECURITY_ENABLED && !isAuthenticated) {
+            // ALWAYS require PIN for protected tabs - no persistent authentication
+            if (protectedTabs.includes(tabName) && SECURITY_ENABLED) {
                 // Store which tab was requested
                 sessionStorage.setItem('requestedSecureTab', tabName + '-tab');
                 
@@ -2300,6 +2302,135 @@
             }
         }
 
+        async function syncGeminiAPIKeyFromCloud() {
+            const btn = event.target;
+            btn.disabled = true;
+            btn.textContent = '☁️ Syncing...';
+            
+            try {
+                const response = await fetch(GOOGLE_SCRIPT_URL + '?action=load');
+                const data = await response.json();
+                
+                if (data.success && data.aiConfigs && data.aiConfigs.geminiConfig) {
+                    // Load the config from cloud
+                    geminiConfig = {
+                        apiKey: data.aiConfigs.geminiConfig.apiKey || '',
+                        model: data.aiConfigs.geminiConfig.model || 'gemini-2.5-flash'
+                    };
+                    
+                    // Save to localStorage
+                    localStorage.setItem('geminiConfig', JSON.stringify(geminiConfig));
+                    
+                    // Update UI
+                    loadGeminiConfig();
+                    
+                    btn.textContent = '✓ Synced!';
+                    alert('✓ API Key synced from Google Sheets successfully!');
+                    
+                    setTimeout(() => {
+                        btn.disabled = false;
+                        btn.textContent = '☁️ Sync API Key from Cloud';
+                    }, 2000);
+                } else {
+                    throw new Error('No Gemini configuration found in Google Sheets');
+                }
+            } catch (error) {
+                alert('❌ Sync failed:\n\n' + error.message);
+                btn.disabled = false;
+                btn.textContent = '☁️ Sync API Key from Cloud';
+            }
+        }
+
+        async function syncAPIKeyAndRetryWorkInstruction() {
+            // Show loading
+            document.getElementById('generated-instruction').innerHTML = `
+                <div class="work-instruction">
+                    <div class="wi-header">☁️ SYNCING API KEY</div>
+                    <div style="padding: 60px 20px; text-align: center; background: white;">
+                        <div class="loading-spinner"></div>
+                        <p style="margin-top: 25px; color: #666; font-size: 15px;">
+                            <strong>Syncing API key from Google Sheets...</strong>
+                        </p>
+                    </div>
+                </div>
+            `;
+            
+            try {
+                const response = await fetch(GOOGLE_SCRIPT_URL + '?action=load');
+                const data = await response.json();
+                
+                if (data.success && data.aiConfigs && data.aiConfigs.geminiConfig) {
+                    geminiConfig = {
+                        apiKey: data.aiConfigs.geminiConfig.apiKey || '',
+                        model: data.aiConfigs.geminiConfig.model || 'gemini-2.5-flash'
+                    };
+                    localStorage.setItem('geminiConfig', JSON.stringify(geminiConfig));
+                    
+                    // Retry generating work instruction
+                    await generateWorkInstruction();
+                } else {
+                    throw new Error('No API key found in Google Sheets');
+                }
+            } catch (error) {
+                document.getElementById('generated-instruction').innerHTML = `
+                    <div class="work-instruction">
+                        <div class="wi-header" style="background: linear-gradient(135deg, #dc3545, #c82333);">❌ SYNC FAILED</div>
+                        <div style="padding: 40px 25px; text-align: center; background: white;">
+                            <h3 style="color: #dc3545;">Failed to sync API key</h3>
+                            <p style="color: #666; margin: 20px 0;">${error.message}</p>
+                            <button onclick="switchTab('settings')" class="btn btn-primary">Go to Setup</button>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        async function syncAPIKeyAndRetryAskAI() {
+            const aiAssistanceDiv = document.getElementById('ai-assistance-display');
+            
+            // Show loading
+            aiAssistanceDiv.innerHTML = `
+                <div class="work-instruction">
+                    <div class="wi-header">☁️ SYNCING API KEY</div>
+                    <div style="padding: 60px 20px; text-align: center; background: white;">
+                        <div class="loading-spinner"></div>
+                        <p style="margin-top: 25px; color: #666; font-size: 15px;">
+                            <strong>Syncing API key from Google Sheets...</strong>
+                        </p>
+                    </div>
+                </div>
+            `;
+            
+            try {
+                const response = await fetch(GOOGLE_SCRIPT_URL + '?action=load');
+                const data = await response.json();
+                
+                if (data.success && data.aiConfigs && data.aiConfigs.geminiConfig) {
+                    geminiConfig = {
+                        apiKey: data.aiConfigs.geminiConfig.apiKey || '',
+                        model: data.aiConfigs.geminiConfig.model || 'gemini-2.5-flash'
+                    };
+                    localStorage.setItem('geminiConfig', JSON.stringify(geminiConfig));
+                    
+                    // Retry asking AI
+                    await askAIForAssistance();
+                } else {
+                    throw new Error('No API key found in Google Sheets');
+                }
+            } catch (error) {
+                aiAssistanceDiv.innerHTML = `
+                    <div class="work-instruction">
+                        <div class="wi-header" style="background: linear-gradient(135deg, #dc3545, #c82333);">❌ SYNC FAILED</div>
+                        <div style="padding: 40px 25px; text-align: center; background: white;">
+                            <h3 style="color: #dc3545;">Failed to sync API key</h3>
+                            <p style="color: #666; margin: 20px 0;">${error.message}</p>
+                            <button onclick="switchTab('settings')" class="btn btn-primary">Go to Setup</button>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
         async function listAvailableModels() {
             if (!geminiConfig.apiKey) {
                 alert('Please save your Gemini API key first');
@@ -3058,8 +3189,7 @@
         const SECURITY_PIN = "1111";
         const SECURITY_ENABLED = true; // Set to false to disable tab protection
         
-        // Session authentication - cleared when browser closes
-        let isAuthenticated = sessionStorage.getItem('tabSecurityAuth') === 'true';
+        // ONE-TIME authentication - PIN required for EVERY access to protected tabs
 
         // Security modal handling
         function handleSecurityModalClick(event) {
@@ -3082,9 +3212,7 @@
             const errorDiv = document.getElementById('security-error');
             
             if (enteredPIN === SECURITY_PIN) {
-                // Correct PIN
-                sessionStorage.setItem('tabSecurityAuth', 'true');
-                isAuthenticated = true;
+                // Correct PIN - grant ONE-TIME access only
                 document.getElementById('security-modal').style.display = 'none';
                 
                 // Now actually switch to the requested tab
@@ -3101,6 +3229,18 @@
                     
                     document.getElementById(requestedTab).classList.add('active');
                     document.querySelector(`[onclick="switchTab('${requestedTab.replace('-tab', '')}')"]`).classList.add('active');
+                    
+                    // Special handling for definitions tab - clear search
+                    if (requestedTab === 'definitions-tab') {
+                        setTimeout(() => {
+                            const searchBox = document.getElementById('definitions-search');
+                            if (searchBox) {
+                                searchBox.value = '';
+                                searchBox.removeAttribute('value');
+                            }
+                            renderDefinitions();
+                        }, 100);
+                    }
                 }
             } else {
                 // Incorrect PIN
@@ -3766,9 +3906,14 @@ CITE which manual each piece of information comes from when you have multiple ma
                         <p style="color: #666; margin: 20px auto; max-width: 500px; font-size: 15px;">
                             ${message}
                         </p>
-                        <button onclick="switchTab('settings')" class="btn btn-primary" style="margin-top: 20px; padding: 15px 30px; font-size: 16px;">
-                            Go to Setup Tab
-                        </button>
+                        <div style="margin-top: 30px; display: flex; gap: 15px; justify-content: center;">
+                            <button onclick="syncAPIKeyAndRetryWorkInstruction()" class="btn btn-success" style="padding: 15px 30px; font-size: 16px;">
+                                ☁️ Sync API Key & Retry
+                            </button>
+                            <button onclick="switchTab('settings')" class="btn btn-primary" style="padding: 15px 30px; font-size: 16px;">
+                                Go to Setup Tab
+                            </button>
+                        </div>
                     </div>
                 </div>
             `;
@@ -4093,9 +4238,14 @@ Keep it focused and practical - what should the technician do next?`;
                             <p style="color: #666; font-size: 14px;">
                                 Please check your ${selectedProvider === 'gemini' ? 'Google Gemini' : 'Azure OpenAI'} configuration in the Setup tab.
                             </p>
-                            <button onclick="switchTab('settings')" class="btn btn-primary" style="margin-top: 20px;">
-                                Go to Setup
-                            </button>
+                            <div style="margin-top: 30px; display: flex; gap: 15px; justify-content: center;">
+                                <button onclick="syncAPIKeyAndRetryAskAI()" class="btn btn-success" style="padding: 12px 24px;">
+                                    ☁️ Sync API Key & Retry
+                                </button>
+                                <button onclick="switchTab('settings')" class="btn btn-primary" style="padding: 12px 24px;">
+                                    Go to Setup
+                                </button>
+                            </div>
                         </div>
                     </div>
                 `;
