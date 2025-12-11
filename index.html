@@ -689,7 +689,7 @@
         <div class="header">
             <h1>🏭 Manufacturing Issue Tracker</h1>
             <p>Track equipment issues and generate AI-powered work instructions</p>
-            <div class="version">v14.4</div>
+            <div class="version">v15.0</div>
         </div>
 
         <div id="sync-status" class="sync-status"></div>
@@ -904,25 +904,22 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="gemini-model">Model Preference (Optional)</label>
+                    <label for="gemini-model">Model</label>
                     <select id="gemini-model" class="form-control">
-                        <option value="">Auto-detect (Recommended)</option>
-                        <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
-                        <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
-                        <option value="gemini-2.0-flash-exp">Gemini 2.0 Flash Experimental</option>
+                        <option value="gemini-2.5-flash">Gemini 2.5 Flash (Recommended - Stable)</option>
+                        <option value="gemini-2.0-flash">Gemini 2.0 Flash (Stable)</option>
+                        <option value="gemini-1.5-flash">Gemini 1.5 Flash (Legacy)</option>
+                        <option value="gemini-1.5-pro">Gemini 1.5 Pro (Legacy)</option>
                     </select>
-                    <small style="color: #666;">💡 Leave as "Auto-detect" - the app will find the best working model automatically</small>
-                </div>
-
-                <div style="background: #e3f2fd; border-left: 4px solid #2196f3; padding: 12px; margin: 15px 0; border-radius: 4px;">
-                    <strong>🔍 Smart Auto-Detection:</strong> This app automatically tests different API endpoints and models to find what works with your key. No manual configuration needed!
+                    <small style="color: #666;">Try 2.5 Flash first - if it fails, your key may not have access yet</small>
                 </div>
 
                 <button onclick="saveGeminiConfig()" class="btn btn-primary">Save Gemini Configuration</button>
                 <button onclick="testGeminiConnection()" class="btn btn-info">Test Connection</button>
+                <button onclick="listAvailableModels()" class="btn btn-warning">List My Available Models</button>
                 
-                <div id="gemini-status" style="margin-top: 15px; padding: 10px; border-radius: 5px; display: none;">
-                    <!-- Status will appear here -->
+                <div id="available-models-list" style="margin-top: 15px; padding: 10px; border-radius: 5px; display: none; background: #f8f9fa; border: 1px solid #dee2e6;">
+                    <!-- Available models will appear here -->
                 </div>
             </div>
 
@@ -2145,99 +2142,19 @@
 
         // ====== GOOGLE GEMINI API ======
         // SIMPLIFIED: Reverted to a single, direct API call
-        // Cache for working API configuration
-        let workingGeminiConfig = {
-            endpoint: null,
-            model: null,
-            lastValidated: null
-        };
-
-        async function findWorkingGeminiConfig(apiKey, preferredModel = null) {
-            // Try to use cached config if recent (within 1 hour) and matches preference
-            if (workingGeminiConfig.endpoint && workingGeminiConfig.model && 
-                workingGeminiConfig.lastValidated && 
-                (Date.now() - workingGeminiConfig.lastValidated) < 3600000 &&
-                (!preferredModel || workingGeminiConfig.model === preferredModel)) {
-                return workingGeminiConfig;
-            }
-
-            // Build test configurations
-            let testConfigs = [];
-            
-            // If user specified a preferred model, try it first with both endpoints
-            if (preferredModel) {
-                testConfigs.push(
-                    { endpoint: 'v1beta', model: preferredModel },
-                    { endpoint: 'v1', model: preferredModel }
-                );
-            }
-            
-            // Then try common working configurations
-            testConfigs = testConfigs.concat([
-                { endpoint: 'v1beta', model: 'gemini-1.5-flash' },
-                { endpoint: 'v1beta', model: 'gemini-1.5-pro' },
-                { endpoint: 'v1', model: 'gemini-1.5-flash' },
-                { endpoint: 'v1', model: 'gemini-pro' },
-                { endpoint: 'v1beta', model: 'gemini-2.0-flash-exp' }
-            ]);
-
-            // Test each configuration
-            for (const config of testConfigs) {
-                try {
-                    const url = `https://generativelanguage.googleapis.com/${config.endpoint}/models/${config.model}:generateContent?key=${apiKey}`;
-                    
-                    const response = await fetch(url, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            contents: [{ parts: [{ text: 'test' }] }],
-                            generationConfig: { maxOutputTokens: 10 }
-                        })
-                    });
-
-                    if (response.ok) {
-                        // Success! Cache this config
-                        workingGeminiConfig = {
-                            endpoint: config.endpoint,
-                            model: config.model,
-                            lastValidated: Date.now()
-                        };
-                        console.log(`✓ Found working config: ${config.endpoint}/${config.model}`);
-                        return workingGeminiConfig;
-                    }
-                } catch (error) {
-                    // Try next configuration
-                    continue;
-                }
-            }
-
-            // Nothing worked
-            throw new Error('Unable to find working Gemini API configuration. Your API key may be invalid or all models are restricted.');
-        }
-
         async function callGeminiAPI(prompt, fileUris = null) {
             const apiKey = geminiConfig.apiKey;
+            const model = geminiConfig.model || 'gemini-2.5-flash';
             
-            // Auto-detect working endpoint and model (with user preference if set)
-            let config;
-            try {
-                config = await findWorkingGeminiConfig(apiKey, geminiConfig.model);
-            } catch (error) {
-                throw new Error('Failed to connect to Gemini API: ' + error.message + 
-                    '\n\nTry generating a fresh API key at: https://aistudio.google.com/app/apikey');
-            }
-            
-            const url = `https://generativelanguage.googleapis.com/${config.endpoint}/models/${config.model}:generateContent?key=${apiKey}`;
-
+            // Always use v1beta - it works with all models
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
             
             // Build parts array - include files if provided
             const parts = [];
             
             // Add files first if provided (so AI reads them before the prompt)
-            // Handle both old single URI format and new array format
             if (fileUris) {
                 if (Array.isArray(fileUris)) {
-                    // New format: array of {uri, name} objects
                     fileUris.forEach(fileData => {
                         parts.push({
                             fileData: {
@@ -2247,7 +2164,6 @@
                         });
                     });
                 } else {
-                    // Old format: single URI string (for backward compatibility)
                     parts.push({
                         fileData: {
                             mimeType: 'application/pdf',
@@ -2282,16 +2198,10 @@
                 const errorData = await response.json();
                 let errorMsg = errorData.error?.message || `API request failed with status ${response.status}`;
                 
-                // Provide helpful guidance for common errors
                 if (errorMsg.includes('quota') || errorMsg.includes('Quota')) {
-                    errorMsg += '\n\n⚠️ QUOTA EXCEEDED - Your API key is blocked.\n\n' +
-                               '✓ SOLUTION: Generate a FRESH API key:\n' +
-                               '1. Visit: https://aistudio.google.com/app/apikey\n' +
-                               '2. Click "Create API Key"\n' +
-                               '3. Copy the NEW key and paste it in Setup tab\n\n' +
-                               'OR switch to Azure OpenAI provider (dropdown above)';
+                    errorMsg += '\n\n⚠️ QUOTA EXCEEDED\n\nGenerate a fresh API key at: https://aistudio.google.com/app/apikey';
                 } else if (errorMsg.includes('API key not valid')) {
-                    errorMsg += '\n\n⚠️ INVALID KEY\n\nGenerate a new one at:\nhttps://aistudio.google.com/app/apikey';
+                    errorMsg += '\n\n⚠️ INVALID KEY\n\nGenerate a new key at: https://aistudio.google.com/app/apikey';
                 }
                 
                 throw new Error(errorMsg);
@@ -2315,74 +2225,84 @@
         function saveGeminiConfig() {
             const keyInput = document.getElementById('gemini-key');
             const modelSelect = document.getElementById('gemini-model');
-            const modelValue = modelSelect ? modelSelect.value : '';
             
             geminiConfig = {
                 apiKey: keyInput ? keyInput.value : '',
-                // Empty string means auto-detect
-                model: modelValue || null
+                model: modelSelect ? modelSelect.value : 'gemini-2.5-flash'
             };
             
             localStorage.setItem('geminiConfig', JSON.stringify(geminiConfig));
             syncAIConfigsToCloud();
-            
-            // Clear cached config to force fresh detection on next use
-            workingGeminiConfig = { endpoint: null, model: null, lastValidated: null };
-            
-            alert('✓ Google Gemini configuration saved and synced to cloud!\n\n' + 
-                  (geminiConfig.model ? `Using model: ${geminiConfig.model}` : 'Auto-detect mode enabled (recommended)'));
+            alert('✓ Google Gemini configuration saved and synced to cloud!');
         }
 
-        // SIMPLIFIED: Reverted test connection to a single attempt
         async function testGeminiConnection() {
             if (!geminiConfig.apiKey) {
                 alert('Please save your Gemini API key first');
                 return;
             }
 
-            const testBtn = event.target;
-            const statusDiv = document.getElementById('gemini-status');
-            
-            testBtn.disabled = true;
-            testBtn.textContent = '🔍 Auto-detecting best configuration...';
-            
-            statusDiv.style.display = 'block';
-            statusDiv.style.background = '#fff3cd';
-            statusDiv.style.border = '1px solid #ffc107';
-            statusDiv.innerHTML = '🔍 Testing API endpoints and models...';
+            try {
+                const response = await callGeminiAPI('Hello! Please respond with "Connection successful!"');
+                alert('✓ Connection successful!\n\n' + response);
+            } catch (error) {
+                alert('❌ Connection failed:\n\n' + error.message);
+            }
+        }
+
+        async function listAvailableModels() {
+            if (!geminiConfig.apiKey) {
+                alert('Please save your Gemini API key first');
+                return;
+            }
+
+            const listDiv = document.getElementById('available-models-list');
+            listDiv.style.display = 'block';
+            listDiv.innerHTML = '🔍 Querying Google API for available models...';
 
             try {
-                // Reset cache to force fresh detection
-                workingGeminiConfig = { endpoint: null, model: null, lastValidated: null };
+                const url = `https://generativelanguage.googleapis.com/v1beta/models?key=${geminiConfig.apiKey}`;
+                const response = await fetch(url);
                 
-                // Find working config
-                const config = await findWorkingGeminiConfig(geminiConfig.apiKey);
+                if (!response.ok) {
+                    throw new Error(`API returned ${response.status}`);
+                }
+
+                const data = await response.json();
                 
-                statusDiv.innerHTML = '✓ Configuration found! Testing actual request...';
+                if (!data.models || data.models.length === 0) {
+                    listDiv.innerHTML = '<strong>No models found</strong><br>Your API key may not have access to any models.';
+                    return;
+                }
+
+                // Filter to only show models that support generateContent
+                const contentModels = data.models.filter(m => 
+                    m.supportedGenerationMethods && 
+                    m.supportedGenerationMethods.includes('generateContent')
+                );
+
+                let html = '<strong>✓ Models Available with Your API Key:</strong><br><br>';
+                html += '<div style="max-height: 300px; overflow-y: auto;">';
                 
-                // Test with actual request
-                const response = await callGeminiAPI('Hello! Please respond with "Connection successful!"');
+                contentModels.forEach(model => {
+                    const modelName = model.name.replace('models/', '');
+                    const displayName = model.displayName || modelName;
+                    const description = model.description || 'No description';
+                    
+                    html += `<div style="margin-bottom: 10px; padding: 8px; background: white; border-radius: 4px; border-left: 3px solid #007bff;">`;
+                    html += `<strong>${displayName}</strong><br>`;
+                    html += `<code style="font-size: 11px; background: #f0f0f0; padding: 2px 6px; border-radius: 3px;">${modelName}</code><br>`;
+                    html += `<small style="color: #666;">${description.substring(0, 100)}${description.length > 100 ? '...' : ''}</small>`;
+                    html += `</div>`;
+                });
                 
-                statusDiv.style.background = '#d4edda';
-                statusDiv.style.border = '1px solid #28a745';
-                statusDiv.innerHTML = `
-                    <strong>✓ Connection Successful!</strong><br><br>
-                    <strong>Auto-detected Configuration:</strong><br>
-                    • Endpoint: <code>${config.endpoint}</code><br>
-                    • Model: <code>${config.model}</code><br><br>
-                    <em>This configuration will be used automatically for all requests.</em>
-                `;
+                html += '</div>';
+                html += `<br><small><strong>Total:</strong> ${contentModels.length} model${contentModels.length !== 1 ? 's' : ''} support text generation</small>`;
                 
-                alert('✓ Connection successful! See details below.');
+                listDiv.innerHTML = html;
 
             } catch (error) {
-                statusDiv.style.background = '#f8d7da';
-                statusDiv.style.border = '1px solid #dc3545';
-                statusDiv.innerHTML = `<strong>❌ Connection Failed</strong><br><br>${error.message}`;
-                alert('❌ Connection failed:\n\n' + error.message);
-            } finally {
-                testBtn.disabled = false;
-                testBtn.textContent = 'Test Connection';
+                listDiv.innerHTML = `<strong>❌ Failed to list models</strong><br><br>${error.message}<br><br>Make sure your API key is valid.`;
             }
         }
 
