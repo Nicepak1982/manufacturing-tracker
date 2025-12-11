@@ -689,7 +689,7 @@
         <div class="header">
             <h1>🏭 Manufacturing Issue Tracker</h1>
             <p>Track equipment issues and generate AI-powered work instructions</p>
-            <div class="version">v15.2</div>
+            <div class="version">v15.4</div>
         </div>
 
         <div id="sync-status" class="sync-status"></div>
@@ -837,7 +837,7 @@
 
             <div style="display: flex; gap: 10px; margin-bottom: 20px; align-items: center;">
                 <input type="text" id="definitions-search" class="form-control" placeholder="🔍 Search definitions..." 
-                       onkeyup="filterDefinitions()" style="flex: 1;">
+                       onkeyup="filterDefinitions()" autocomplete="off" style="flex: 1;">
                 <button onclick="reloadDefinitionsFromCloud()" class="btn btn-info">🔄 Reload from Cloud</button>
                 <button onclick="openDefinitionModal()" class="btn btn-success">➕ Add Definition</button>
             </div>
@@ -1181,6 +1181,11 @@
             selectProvider(selectedProvider);
             renderManualMappings();
             initializeDefaultDefinitions();
+            
+            // Clear search box to prevent autocomplete issues
+            const searchBox = document.getElementById('definitions-search');
+            if (searchBox) searchBox.value = '';
+            
             renderDefinitions();
         });
 
@@ -3154,7 +3159,11 @@
             }
             
             if (filtered.length === 0) {
-                container.innerHTML = '<div class="no-definitions">No definitions found. Click "Add Definition" to create one.</div>';
+                if (searchTerm) {
+                    container.innerHTML = `<div class="no-definitions">No definitions found matching "${searchTerm}". <button class="btn btn-info" onclick="document.getElementById('definitions-search').value=''; filterDefinitions();">Clear Search</button></div>`;
+                } else {
+                    container.innerHTML = '<div class="no-definitions">No definitions found. Click "Add Definition" to create one.</div>';
+                }
                 return;
             }
             
@@ -3174,8 +3183,12 @@
             
             let html = '';
             
+            console.log('Categories:', categories);
+            
             for (const [catName, catData] of Object.entries(categories)) {
                 if (catData.items.length === 0) continue;
+                
+                console.log(`Building HTML for category: ${catName}, items: ${catData.items.length}`);
                 
                 html += `
                     <div class="definition-category">
@@ -3205,7 +3218,10 @@
                 html += '</div>';
             }
             
+            console.log('HTML length:', html.length);
+            console.log('HTML preview:', html.substring(0, 200));
             container.innerHTML = html;
+            console.log('Container innerHTML set. Container element:', container);
         }
 
         function filterDefinitions() {
