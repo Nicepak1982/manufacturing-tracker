@@ -689,7 +689,7 @@
         <div class="header">
             <h1>🏭 Manufacturing Issue Tracker</h1>
             <p>Track equipment issues and generate AI-powered work instructions</p>
-            <div class="version">v16.0</div>
+            <div class="version">v16.1</div>
         </div>
 
         <div id="sync-status" class="sync-status"></div>
@@ -836,7 +836,7 @@
             </div>
 
             <div style="display: flex; gap: 10px; margin-bottom: 20px; align-items: center;">
-                <input type="text" id="definitions-search" class="form-control" placeholder="🔍 Search definitions..." 
+                <input type="text" id="definitions-search" name="definitions-search-unique-v16" class="form-control" placeholder="🔍 Search definitions..." 
                        onkeyup="filterDefinitions()" autocomplete="off" style="flex: 1;">
                 <button onclick="reloadDefinitionsFromCloud()" class="btn btn-info">🔄 Reload from Cloud</button>
                 <button onclick="openDefinitionModal()" class="btn btn-success">➕ Add Definition</button>
@@ -1452,6 +1452,18 @@
             
             if (tabName === 'history') {
                 displayHistory(issues);
+            }
+            
+            // CRITICAL: Force clear search box when opening definitions tab
+            if (tabName === 'definitions') {
+                setTimeout(() => {
+                    const searchBox = document.getElementById('definitions-search');
+                    if (searchBox) {
+                        searchBox.value = '';
+                        searchBox.removeAttribute('value');
+                    }
+                    renderDefinitions();
+                }, 100);
             }
         }
 
