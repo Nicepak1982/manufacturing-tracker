@@ -689,7 +689,7 @@
         <div class="header">
             <h1>🏭 Manufacturing Issue Tracker</h1>
             <p>Track equipment issues and generate AI-powered work instructions</p>
-            <div class="version">v15.1</div>
+            <div class="version">v15.2</div>
         </div>
 
         <div id="sync-status" class="sync-status"></div>
@@ -838,6 +838,7 @@
             <div style="display: flex; gap: 10px; margin-bottom: 20px; align-items: center;">
                 <input type="text" id="definitions-search" class="form-control" placeholder="🔍 Search definitions..." 
                        onkeyup="filterDefinitions()" style="flex: 1;">
+                <button onclick="reloadDefinitionsFromCloud()" class="btn btn-info">🔄 Reload from Cloud</button>
                 <button onclick="openDefinitionModal()" class="btn btn-success">➕ Add Definition</button>
             </div>
 
@@ -1289,9 +1290,12 @@
                     
                     // Load definitions if available
                     if (data.definitions && Array.isArray(data.definitions)) {
+                        console.log('Loading definitions from cloud. Count:', data.definitions.length);
                         definitions = data.definitions;
                         localStorage.setItem('definitions', JSON.stringify(definitions));
                         renderDefinitions();
+                    } else {
+                        console.log('No definitions found in cloud data');
                     }
                     
                     showSyncStatus('success', '✓ Loaded from Google Sheets successfully');
@@ -3070,6 +3074,25 @@
         }
 
         // ====== DEFINITIONS MANAGEMENT ======
+        async function reloadDefinitionsFromCloud() {
+            const btn = event.target;
+            btn.disabled = true;
+            btn.textContent = '🔄 Loading...';
+            
+            try {
+                await loadFromCloud();
+                btn.textContent = '✓ Reloaded!';
+                setTimeout(() => {
+                    btn.disabled = false;
+                    btn.textContent = '🔄 Reload from Cloud';
+                }, 2000);
+            } catch (error) {
+                alert('Failed to reload from cloud: ' + error.message);
+                btn.disabled = false;
+                btn.textContent = '🔄 Reload from Cloud';
+            }
+        }
+
         function initializeDefaultDefinitions() {
             // Only initialize if no definitions exist
             if (definitions.length > 0) return;
@@ -3115,6 +3138,8 @@
         function renderDefinitions() {
             const container = document.getElementById('definitions-list');
             if (!container) return;
+            
+            console.log('Rendering definitions. Count:', definitions.length);
             
             const searchTerm = (document.getElementById('definitions-search')?.value || '').toLowerCase();
             
