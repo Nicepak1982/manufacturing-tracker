@@ -687,16 +687,18 @@
 <body>
     <div class="container">
         <div class="header">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <div>
-                    <h1>🏭 Manufacturing Issue Tracker</h1>
-                    <p>Track equipment issues and generate AI-powered work instructions</p>
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
+                <div style="flex: 1;">
+                    <h1 style="margin: 0 0 5px 0;">🏭 Manufacturing Issue Tracker</h1>
+                    <p style="margin: 0;">Track equipment issues and generate AI-powered work instructions</p>
                 </div>
-                <button onclick="openSupportModal()" class="btn btn-info" style="padding: 10px 20px; margin-left: 20px;">
-                    📧 App Support
-                </button>
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <div class="version" style="position: static; margin: 0;">v17.1</div>
+                    <button onclick="openSupportModal()" class="btn btn-info" style="padding: 10px 20px; white-space: nowrap;">
+                        📧 App Support
+                    </button>
+                </div>
             </div>
-            <div class="version">v17.0</div>
         </div>
 
         <div id="sync-status" class="sync-status"></div>
@@ -1196,7 +1198,6 @@
         // Support email addresses - UPDATE THESE TO YOUR TEAM'S EMAILS
         const SUPPORT_EMAILS = [
             'joey.burdin@nicepak.com'
-            
         ];
         
         // ====== DATA STORAGE ======
