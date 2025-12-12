@@ -696,7 +696,7 @@
                     📧 App Support
                 </button>
             </div>
-            <div class="version">v16.9</div>
+            <div class="version">v17.0</div>
         </div>
 
         <div id="sync-status" class="sync-status"></div>
@@ -1196,7 +1196,7 @@
         // Support email addresses - UPDATE THESE TO YOUR TEAM'S EMAILS
         const SUPPORT_EMAILS = [
             'joey.burdin@nicepak.com'
-
+            
         ];
         
         // ====== DATA STORAGE ======
@@ -3359,6 +3359,7 @@
             
             // Disable button and show loading
             const btn = event.target;
+            const originalText = btn.textContent;
             btn.disabled = true;
             btn.textContent = '📤 Sending...';
             
@@ -3387,8 +3388,8 @@ ${message}
 Sent from Manufacturing Issue Tracker v16.0`
                 };
                 
-                // Send via Google Apps Script
-                const response = await fetch(GOOGLE_SCRIPT_URL, {
+                // Send via Google Apps Script (using no-cors because it's required for cross-origin)
+                fetch(GOOGLE_SCRIPT_URL, {
                     method: 'POST',
                     mode: 'no-cors',
                     headers: {
@@ -3397,21 +3398,38 @@ Sent from Manufacturing Issue Tracker v16.0`
                     body: new URLSearchParams(emailData)
                 });
                 
-                // Show success (note: no-cors means we can't read response, but request was sent)
+                // Wait 2 seconds for the request to complete
+                // (no-cors means we can't verify success, but request is sent)
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                
+                // Show success message
                 statusDiv.style.background = '#d4edda';
                 statusDiv.style.border = '1px solid #28a745';
                 statusDiv.style.color = '#155724';
-                statusDiv.innerHTML = '✅ Your message has been sent! We\'ll get back to you soon.';
+                statusDiv.innerHTML = '✅ Message sent! Check your email to confirm delivery.<br><small>If you don\'t receive a copy, verify the Google Apps Script is deployed.</small>';
                 
-                // Clear form
+                // Reset button
+                btn.disabled = false;
+                btn.textContent = originalText;
+                
+                // Clear form after 3 seconds
                 setTimeout(() => {
+                    document.getElementById('support-name').value = '';
+                    document.getElementById('support-subject').value = '';
+                    document.getElementById('support-message').value = '';
                     closeSupportModal();
-                }, 2000);
+                }, 3000);
                 
             } catch (error) {
                 console.error('Error sending support email:', error);
                 statusDiv.style.background = '#f8d7da';
                 statusDiv.style.border = '1px solid #dc3545';
+                statusDiv.style.color = '#721c24';
+                statusDiv.innerHTML = '❌ Failed to send. Please verify:<br>1. Google Apps Script is deployed<br>2. Support emails are configured<br>3. Script has email permissions';
+                btn.disabled = false;
+                btn.textContent = originalText;
+            }
+        }
                 statusDiv.style.color = '#721c24';
                 statusDiv.innerHTML = '❌ Failed to send message. Please try again or contact IT directly.';
                 btn.disabled = false;
