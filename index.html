@@ -693,7 +693,7 @@
                     <p style="margin: 0;">Track equipment issues and generate AI-powered work instructions</p>
                 </div>
                 <div style="display: flex; align-items: center; gap: 15px;">
-                    <div class="version" style="position: static; margin: 0;">v17.1</div>
+                    <div class="version" style="position: static; margin: 0;">v17.2</div>
                     <button onclick="openSupportModal()" class="btn btn-info" style="padding: 10px 20px; white-space: nowrap;">
                         📧 App Support
                     </button>
@@ -3429,12 +3429,6 @@ Sent from Manufacturing Issue Tracker v16.0`
                 statusDiv.innerHTML = '❌ Failed to send. Please verify:<br>1. Google Apps Script is deployed<br>2. Support emails are configured<br>3. Script has email permissions';
                 btn.disabled = false;
                 btn.textContent = originalText;
-            }
-        }
-                statusDiv.style.color = '#721c24';
-                statusDiv.innerHTML = '❌ Failed to send message. Please try again or contact IT directly.';
-                btn.disabled = false;
-                btn.textContent = '📤 Send Message';
             }
         }
 
