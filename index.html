@@ -13,7 +13,7 @@
 
         body {
             font-family: Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #002D72 0%, #00A3E0 100%);
             min-height: 100vh;
             padding: 20px;
         }
@@ -28,7 +28,7 @@
         }
 
         .header {
-            background: linear-gradient(135deg, #2c3e50, #3498db);
+            background: linear-gradient(135deg, #001F54, #002D72);
             color: white;
             padding: 20px;
             text-align: center;
@@ -62,8 +62,8 @@
 
         .sync-status.success {
             display: block;
-            background: #d4edda;
-            color: #155724;
+            background: #E3F2FD;
+            color: #01579B;
         }
 
         .sync-status.error {
@@ -90,8 +90,8 @@
 
         .nav-tab.active {
             background: white;
-            border-bottom: 3px solid #007bff;
-            color: #007bff;
+            border-bottom: 3px solid #002D72;
+            color: #002D72;
             font-weight: bold;
         }
 
@@ -131,7 +131,7 @@
 
         .form-control:focus {
             outline: none;
-            border-color: #007bff;
+            border-color: #002D72;
             box-shadow: 0 0 0 3px rgba(0,123,255,0.25);
         }
 
@@ -146,22 +146,22 @@
         }
 
         .btn-primary {
-            background: #007bff;
+            background: #002D72;
             color: white;
         }
 
         .btn-primary:hover {
-            background: #0056b3;
+            background: #001F54;
             transform: translateY(-2px);
         }
 
         .btn-success {
-            background: #28a745;
+            background: #002D72;
             color: white;
         }
 
         .btn-success:hover {
-            background: #1e7e34;
+            background: #001F54;
         }
 
         .btn-warning {
@@ -170,7 +170,7 @@
         }
 
         .btn-info {
-            background: #17a2b8;
+            background: #00A3E0;
             color: white;
         }
 
@@ -203,7 +203,7 @@
         }
 
         .wi-header {
-            background: linear-gradient(135deg, #28a745, #20c997);
+            background: linear-gradient(135deg, #002D72, #00A3E0);
             color: white;
             padding: 20px 25px;
             border-radius: 12px 12px 0 0;
@@ -277,12 +277,12 @@
             align-items: center;
             gap: 10px;
             padding-bottom: 10px;
-            border-bottom: 2px solid #28a745;
+            border-bottom: 2px solid #002D72;
         }
 
         .wi-section h4::before {
             content: '▶';
-            color: #28a745;
+            color: #002D72;
             font-size: 14px;
         }
 
@@ -304,7 +304,7 @@
             content: '●';
             position: absolute;
             left: 0;
-            color: #28a745;
+            color: #002D72;
             font-weight: bold;
         }
 
@@ -328,7 +328,7 @@
             justify-content: center;
             width: 28px;
             height: 28px;
-            background: linear-gradient(135deg, #28a745, #20c997);
+            background: linear-gradient(135deg, #002D72, #00A3E0);
             color: white;
             border-radius: 50%;
             font-weight: bold;
@@ -400,7 +400,7 @@
             justify-content: center;
             width: 28px;
             height: 28px;
-            background: linear-gradient(135deg, #007bff, #0056b3);
+            background: linear-gradient(135deg, #002D72, #001F54);
             color: white;
             border-radius: 50%;
             font-weight: bold;
@@ -432,7 +432,7 @@
 
         .loading-spinner {
             border: 4px solid #f3f3f3;
-            border-top: 4px solid #28a745;
+            border-top: 4px solid #002D72;
             border-radius: 50%;
             width: 40px;
             height: 40px;
@@ -532,13 +532,13 @@
         }
 
         .provider-card:hover {
-            border-color: #007bff;
+            border-color: #002D72;
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(0,0,0,0.1);
         }
 
         .provider-card.selected {
-            border-color: #28a745;
+            border-color: #002D72;
             background: #e8f5e8;
         }
 
@@ -554,9 +554,9 @@
         }
 
         .alert-success-box {
-            background: #d4edda;
-            border: 1px solid #c3e6cb;
-            color: #155724;
+            background: #E3F2FD;
+            border: 1px solid #BBDEFB;
+            color: #01579B;
         }
 
         .alert-info-box {
@@ -598,7 +598,7 @@
         }
 
         .line-group-header {
-            background: linear-gradient(135deg, #667eea, #764ba2);
+            background: linear-gradient(135deg, #002D72, #001F54);
             color: white;
             padding: 10px 15px;
             border-radius: 8px;
@@ -612,7 +612,7 @@
         }
 
         .definition-category-header {
-            background: linear-gradient(135deg, #667eea, #764ba2);
+            background: linear-gradient(135deg, #002D72, #001F54);
             color: white;
             padding: 12px 20px;
             border-radius: 8px;
@@ -626,7 +626,7 @@
 
         .definition-item {
             background: #f8f9fa;
-            border-left: 4px solid #667eea;
+            border-left: 4px solid #002D72;
             border-radius: 8px;
             padding: 15px 20px;
             margin-bottom: 12px;
@@ -687,19 +687,21 @@
 <body>
     <div class="container">
         <div class="header">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
-                <div style="flex: 1;">
-                    <h1 style="margin: 0 0 5px 0;">🏭 Manufacturing Issue Tracker</h1>
-                    <p style="margin: 0;">Track equipment issues and generate AI-powered work instructions</p>
-                </div>
-                <div style="display: flex; align-items: center; gap: 15px;">
-                    <div class="version" onclick="showCreator()" style="position: static; margin: 0; cursor: pointer; transition: transform 0.2s;" 
-                         onmouseover="this.style.transform='scale(1.1)'" 
-                         onmouseout="this.style.transform='scale(1)'">v17.5</div>
-                    <button onclick="openSupportModal()" class="btn btn-info" style="padding: 10px 20px; white-space: nowrap;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <!-- Left side: App Support + Title -->
+                <div style="display: flex; align-items: flex-start; gap: 15px; flex: 1;">
+                    <button onclick="openSupportModal()" class="btn btn-info" style="padding: 10px 20px; white-space: nowrap; align-self: flex-start;">
                         📧 App Support
                     </button>
+                    <div>
+                        <h1 style="margin: 0 0 5px 0;">🏭 Manufacturing Issue Tracker</h1>
+                        <p style="margin: 0;">Track equipment issues and generate AI-powered work instructions</p>
+                    </div>
                 </div>
+                <!-- Right side: Version badge -->
+                <div class="version" onclick="showCreator()" style="position: static; margin: 0; cursor: pointer; transition: transform 0.2s; flex-shrink: 0;" 
+                     onmouseover="this.style.transform='scale(1.1)'" 
+                     onmouseout="this.style.transform='scale(1)'">v18.0</div>
             </div>
         </div>
 
@@ -839,7 +841,7 @@
         <div id="definitions-tab" class="tab-content">
             <h2>📖 Definitions & Terminology</h2>
             
-            <div style="background: #e8f4f8; border: 2px solid #17a2b8; border-radius: 10px; padding: 20px; margin-bottom: 20px;">
+            <div style="background: #e8f4f8; border: 2px solid #00A3E0; border-radius: 10px; padding: 20px; margin-bottom: 20px;">
                 <p style="color: #0c5460; line-height: 1.6;">
                     <strong>Manufacturing Knowledge Base:</strong> Manage definitions and terminology specific to your baby wipes production facility. 
                     These definitions are automatically included when generating AI work instructions to ensure accurate and relevant guidance.
@@ -890,13 +892,13 @@
                     <div class="provider-card" id="gemini-card" onclick="selectProvider('gemini')">
                         <h4>🆓 Google Gemini</h4>
                         <p style="color: #666; font-size: 14px; margin: 10px 0;">FREE - No credit card needed</p>
-                        <p style="color: #28a745; font-weight: bold;">✓ Recommended for most users</p>
+                        <p style="color: #002D72; font-weight: bold;">✓ Recommended for most users</p>
                     </div>
                     
                     <div class="provider-card" id="azure-card" onclick="selectProvider('azure')">
                         <h4>💼 Azure OpenAI</h4>
                         <p style="color: #666; font-size: 14px; margin: 10px 0;">Requires Azure account</p>
-                        <p style="color: #007bff; font-weight: bold;">Best for enterprises</p>
+                        <p style="color: #002D72; font-weight: bold;">Best for enterprises</p>
                     </div>
                 </div>
             </div>
@@ -1570,7 +1572,7 @@
             
             // Update helper text with counts
             if (descriptions.size > 0) {
-                descriptionHelp.innerHTML = `<strong style="color: #28a745;">✓ ${descriptions.size} previous issue${descriptions.size !== 1 ? 's' : ''} available</strong> - Start typing or click ▼ to select`;
+                descriptionHelp.innerHTML = `<strong style="color: #002D72;">✓ ${descriptions.size} previous issue${descriptions.size !== 1 ? 's' : ''} available</strong> - Start typing or click ▼ to select`;
             } else {
                 descriptionHelp.textContent = 'No previous issues found for this machine - enter a new description';
             }
@@ -1599,8 +1601,8 @@
                     option.value = machine;
                     machineList.appendChild(option);
                 });
-                machineHelp.innerHTML = `<strong style="color: #007bff;">ℹ️ Showing machines from all production lines</strong>`;
-                allLinesCheckbox.parentElement.querySelector('strong').style.color = '#007bff';
+                machineHelp.innerHTML = `<strong style="color: #002D72;">ℹ️ Showing machines from all production lines</strong>`;
+                allLinesCheckbox.parentElement.querySelector('strong').style.color = '#002D72';
             }
             // If a line is selected, show machines from that line
             else if (line) {
@@ -1627,7 +1629,7 @@
                     }
                 });
                 
-                machineHelp.innerHTML = `<strong style="color: #28a745;">✓ Machine suggestions loaded for ${line}</strong>`;
+                machineHelp.innerHTML = `<strong style="color: #002D72;">✓ Machine suggestions loaded for ${line}</strong>`;
                 allLinesCheckbox.parentElement.querySelector('strong').style.color = '#333';
             }
             // No line selected and checkbox not checked
@@ -1699,11 +1701,11 @@
             if (descriptions.size > 0) {
                 if (allLinesCheckbox.checked) {
                     const linesWithIssues = [...new Set(relevantIssues.map(issue => issue.line))];
-                    keywordHelp.innerHTML = `<strong style="color: #007bff;">ℹ️ ${descriptions.size} previous issue${descriptions.size !== 1 ? 's' : ''} found across ${linesWithIssues.length} production line${linesWithIssues.length !== 1 ? 's' : ''}</strong> - Click ▼ to select`;
+                    keywordHelp.innerHTML = `<strong style="color: #002D72;">ℹ️ ${descriptions.size} previous issue${descriptions.size !== 1 ? 's' : ''} found across ${linesWithIssues.length} production line${linesWithIssues.length !== 1 ? 's' : ''}</strong> - Click ▼ to select`;
                 } else if (line) {
-                    keywordHelp.innerHTML = `<strong style="color: #28a745;">✓ ${descriptions.size} previous issue${descriptions.size !== 1 ? 's' : ''} found for ${machine} on ${line}</strong> - Click ▼ to select`;
+                    keywordHelp.innerHTML = `<strong style="color: #002D72;">✓ ${descriptions.size} previous issue${descriptions.size !== 1 ? 's' : ''} found for ${machine} on ${line}</strong> - Click ▼ to select`;
                 } else {
-                    keywordHelp.innerHTML = `<strong style="color: #28a745;">✓ ${descriptions.size} previous issue${descriptions.size !== 1 ? 's' : ''} found for ${machine}</strong> - Click ▼ to select`;
+                    keywordHelp.innerHTML = `<strong style="color: #002D72;">✓ ${descriptions.size} previous issue${descriptions.size !== 1 ? 's' : ''} found for ${machine}</strong> - Click ▼ to select`;
                 }
             } else {
                 keywordHelp.innerHTML = `<span style="color: #dc3545;">No previous issues found for this machine</span>`;
@@ -1743,7 +1745,7 @@
                     }
                 });
                 
-                machineHelp.innerHTML = `<strong style="color: #28a745;">✓ Machine suggestions loaded for ${line}</strong> - Click ▼ to select`;
+                machineHelp.innerHTML = `<strong style="color: #002D72;">✓ Machine suggestions loaded for ${line}</strong> - Click ▼ to select`;
             } else {
                 machineHelp.textContent = 'Select a production line above to see available machines';
             }
@@ -1815,7 +1817,7 @@
             // Update helper text
             const actionHelp = document.getElementById('action-help');
             if (actions.size > 0) {
-                actionHelp.innerHTML = `<strong style="color: #28a745;">✓ ${actions.size} previous action${actions.size !== 1 ? 's' : ''} available</strong> - Start typing or click ▼ to select`;
+                actionHelp.innerHTML = `<strong style="color: #002D72;">✓ ${actions.size} previous action${actions.size !== 1 ? 's' : ''} available</strong> - Start typing or click ▼ to select`;
             } else {
                 actionHelp.textContent = 'No previous actions found - enter a new action';
             }
@@ -1887,7 +1889,7 @@
                 currentActions.forEach((act, index) => {
                     const statusEmoji = act.status === 'Corrected' ? '✅' : 
                                        act.status === 'Not Corrected' ? '❌' : '❓';
-                    const statusColor = act.status === 'Corrected' ? '#28a745' : 
+                    const statusColor = act.status === 'Corrected' ? '#002D72' : 
                                        act.status === 'Not Corrected' ? '#dc3545' : '#ffc107';
                     
                     html += `
@@ -2090,15 +2092,15 @@
             const solutionAnalysis = analyzeSolutions(results);
             
             let html = `
-                <div style="background: linear-gradient(135deg, #e8f4f8, #f0f8ff); border: 2px solid #007bff; border-radius: 10px; padding: 20px; margin: 20px 0;">
-                    <h3 style="color: #007bff; margin-bottom: 15px;">📊 Solution Effectiveness Analysis</h3>
+                <div style="background: linear-gradient(135deg, #e8f4f8, #f0f8ff); border: 2px solid #002D72; border-radius: 10px; padding: 20px; margin: 20px 0;">
+                    <h3 style="color: #002D72; margin-bottom: 15px;">📊 Solution Effectiveness Analysis</h3>
                     <p style="color: #666; margin-bottom: 15px;">Found <strong>${results.length}</strong> matching issue${results.length !== 1 ? 's' : ''}. Here are the most effective solutions:</p>
             `;
             
             if (solutionAnalysis.length > 0) {
                 html += '<div style="margin-top: 15px;">';
                 solutionAnalysis.slice(0, 5).forEach((stat, index) => {
-                    const successColor = stat.successRate >= 70 ? '#28a745' : 
+                    const successColor = stat.successRate >= 70 ? '#002D72' : 
                                        stat.successRate >= 40 ? '#ffc107' : 
                                        stat.successRate >= 0 ? '#dc3545' : '#6c757d';
                     
@@ -2118,7 +2120,7 @@
                             </div>
                             <div style="font-size: 13px; color: #666;">
                                 Tried <strong>${stat.total}</strong> time${stat.total !== 1 ? 's' : ''}: 
-                                <span style="color: #28a745;">✅ ${stat.corrected}</span> | 
+                                <span style="color: #002D72;">✅ ${stat.corrected}</span> | 
                                 <span style="color: #dc3545;">❌ ${stat.notCorrected}</span>
                                 ${stat.unsure > 0 ? ` | <span style="color: #ffc107;">❓ ${stat.unsure}</span>` : ''}
                             </div>
@@ -2147,7 +2149,7 @@
                 
                 Object.keys(issuesByLine).sort().forEach(line => {
                     html += `
-                        <h4 style="margin-top: 20px; color: #667eea; background: #f8f9fa; padding: 10px; border-radius: 5px;">
+                        <h4 style="margin-top: 20px; color: #002D72; background: #f8f9fa; padding: 10px; border-radius: 5px;">
                             ${line} (${issuesByLine[line].length} issue${issuesByLine[line].length !== 1 ? 's' : ''})
                         </h4>
                     `;
@@ -2169,7 +2171,7 @@
             let effectivenessHTML = '';
             if (issue.effectiveness) {
                 const effectivenessMap = {
-                    'corrected': '<span style="color: #28a745; font-weight: bold;">✅ Corrected</span>',
+                    'corrected': '<span style="color: #002D72; font-weight: bold;">✅ Corrected</span>',
                     'not-corrected': '<span style="color: #dc3545; font-weight: bold;">❌ Not Corrected</span>',
                     'unsure': '<span style="color: #ffc107; font-weight: bold;">❓ Unsure</span>'
                 };
@@ -2423,10 +2425,10 @@
             } catch (error) {
                 document.getElementById('generated-instruction').innerHTML = `
                     <div class="work-instruction">
-                        <div class="wi-header" style="background: linear-gradient(135deg, #17a2b8, #138496);">💡 Sync Unavailable</div>
+                        <div class="wi-header" style="background: linear-gradient(135deg, #00A3E0, #138496);">💡 Sync Unavailable</div>
                         <div style="padding: 40px 30px; text-align: center; background: white;">
                             <div style="font-size: 48px; margin-bottom: 15px;">☁️</div>
-                            <h3 style="color: #17a2b8; margin-bottom: 15px;">Unable to Sync Configuration</h3>
+                            <h3 style="color: #00A3E0; margin-bottom: 15px;">Unable to Sync Configuration</h3>
                             <p style="color: #666; margin: 15px auto; max-width: 550px; font-size: 15px; line-height: 1.6;">
                                 Could not retrieve configuration from Google Sheets. Please try again later.
                             </p>
@@ -2478,10 +2480,10 @@
             } catch (error) {
                 aiAssistanceDiv.innerHTML = `
                     <div class="work-instruction">
-                        <div class="wi-header" style="background: linear-gradient(135deg, #17a2b8, #138496);">💡 Sync Unavailable</div>
+                        <div class="wi-header" style="background: linear-gradient(135deg, #00A3E0, #138496);">💡 Sync Unavailable</div>
                         <div style="padding: 40px 30px; text-align: center; background: white;">
                             <div style="font-size: 48px; margin-bottom: 15px;">☁️</div>
-                            <h3 style="color: #17a2b8; margin-bottom: 15px;">Unable to Sync Configuration</h3>
+                            <h3 style="color: #00A3E0; margin-bottom: 15px;">Unable to Sync Configuration</h3>
                             <p style="color: #666; margin: 15px auto; max-width: 550px; font-size: 15px; line-height: 1.6;">
                                 Could not retrieve configuration from Google Sheets. Please try again later.
                             </p>
@@ -2537,7 +2539,7 @@
                     const displayName = model.displayName || modelName;
                     const description = model.description || 'No description';
                     
-                    html += `<div style="margin-bottom: 10px; padding: 8px; background: white; border-radius: 4px; border-left: 3px solid #007bff;">`;
+                    html += `<div style="margin-bottom: 10px; padding: 8px; background: white; border-radius: 4px; border-left: 3px solid #002D72;">`;
                     html += `<strong>${displayName}</strong><br>`;
                     html += `<code style="font-size: 11px; background: #f0f0f0; padding: 2px 6px; border-radius: 3px;">${modelName}</code><br>`;
                     html += `<small style="color: #666;">${description.substring(0, 100)}${description.length > 100 ? '...' : ''}</small>`;
@@ -2698,7 +2700,7 @@
                         
                         let statusBadge = '';
                         if (hasPDF && !needsRefresh) {
-                            statusBadge = '<span style="background: #28a745; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px;">✅ PDF Cached</span>';
+                            statusBadge = '<span style="background: #002D72; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px;">✅ PDF Cached</span>';
                         } else if (hasPDF && needsRefresh) {
                             statusBadge = '<span style="background: #ffc107; color: #212529; padding: 4px 8px; border-radius: 4px; font-size: 12px;">⚠️ Needs Refresh</span>';
                         } else {
@@ -2710,7 +2712,7 @@
                                 <div style="display: flex; justify-content: space-between; align-items: start;">
                                     <div style="flex: 1;">
                                         <p style="margin: 0 0 8px 0;"><strong>📘 ${manual.name}</strong> ${statusBadge}</p>
-                                        <p style="margin: 0 0 5px 0; font-size: 13px;"><strong>URL:</strong> <a href="${manual.url}" target="_blank" style="color: #007bff; word-break: break-all;">${manual.url}</a></p>
+                                        <p style="margin: 0 0 5px 0; font-size: 13px;"><strong>URL:</strong> <a href="${manual.url}" target="_blank" style="color: #002D72; word-break: break-all;">${manual.url}</a></p>
                                         <p style="margin: 0; font-size: 12px; color: #666;"><strong>Last Updated:</strong> ${lastUpdatedText}</p>
                                     </div>
                                     <div style="display: flex; gap: 5px; margin-left: 10px;">
@@ -3221,7 +3223,7 @@
                 const blob = await downloadPDFFromGoogleDrive(url);
                 
                 resultDiv.innerHTML = `
-                    <div style="background: #d4edda; border: 1px solid #c3e6cb; border-radius: 4px; padding: 15px; color: #155724;">
+                    <div style="background: #E3F2FD; border: 1px solid #BBDEFB; border-radius: 4px; padding: 15px; color: #01579B;">
                         <strong>✓ Success!</strong><br>
                         <span style="font-size: 14px;">
                             PDF downloaded successfully from Google Drive via Google Apps Script proxy.<br>
@@ -3357,7 +3359,7 @@
             
             modal.innerHTML = `
                 <div style="
-                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    background: linear-gradient(135deg, #002D72 0%, #001F54 100%);
                     padding: 50px;
                     border-radius: 20px;
                     text-align: center;
@@ -3380,7 +3382,7 @@
                     <button onclick="this.closest('div[style*=fixed]').remove()" 
                             style="
                                 background: white;
-                                color: #667eea;
+                                color: #002D72;
                                 border: none;
                                 padding: 12px 30px;
                                 border-radius: 25px;
@@ -3491,9 +3493,9 @@ Sent from Manufacturing Issue Tracker v16.0`
                 await new Promise(resolve => setTimeout(resolve, 2000));
                 
                 // Show success message
-                statusDiv.style.background = '#d4edda';
-                statusDiv.style.border = '1px solid #28a745';
-                statusDiv.style.color = '#155724';
+                statusDiv.style.background = '#E3F2FD';
+                statusDiv.style.border = '1px solid #002D72';
+                statusDiv.style.color = '#01579B';
                 statusDiv.innerHTML = '✅ Message sent! Check your email to confirm delivery.<br><small>If you don\'t receive a copy, verify the Google Apps Script is deployed.</small>';
                 
                 // Reset button
@@ -3975,17 +3977,17 @@ Sent from Manufacturing Issue Tracker v16.0`
                             const manualsList = manuals.map(m => `• ${m.name}`).join('\n');
                             document.getElementById('generated-instruction').innerHTML = `
                                 <div class="work-instruction">
-                                    <div class="wi-header" style="background: linear-gradient(135deg, #17a2b8, #138496);">💡 Service Temporarily Unavailable</div>
+                                    <div class="wi-header" style="background: linear-gradient(135deg, #00A3E0, #138496);">💡 Service Temporarily Unavailable</div>
                                     <div style="padding: 40px 30px; background: white;">
                                         <div style="text-align: center; margin-bottom: 25px;">
                                             <div style="font-size: 48px; margin-bottom: 15px;">📚</div>
-                                            <h3 style="color: #17a2b8; margin-bottom: 15px;">Equipment Manuals Temporarily Unavailable</h3>
+                                            <h3 style="color: #00A3E0; margin-bottom: 15px;">Equipment Manuals Temporarily Unavailable</h3>
                                             <p style="color: #666; margin: 15px auto; max-width: 550px; font-size: 15px; line-height: 1.6;">
                                                 We're unable to access the equipment manuals right now. Please try again in a few moments.
                                             </p>
                                         </div>
                                         
-                                        <div style="background: #e8f4f8; border-left: 4px solid #17a2b8; padding: 20px; border-radius: 8px; margin: 25px 0;">
+                                        <div style="background: #e8f4f8; border-left: 4px solid #00A3E0; padding: 20px; border-radius: 8px; margin: 25px 0;">
                                             <h4 style="color: #0c5460; margin-bottom: 12px;">💡 Alternative Options:</h4>
                                             <ul style="color: #0c5460; line-height: 1.8; margin: 0; padding-left: 20px;">
                                                 <li><strong>Search Historical Issues</strong> - Find similar problems and their solutions</li>
@@ -4152,17 +4154,17 @@ CITE which manual each piece of information comes from when you have multiple ma
                 console.error('Error generating work instruction:', error);
                 document.getElementById('generated-instruction').innerHTML = `
                     <div class="work-instruction">
-                        <div class="wi-header" style="background: linear-gradient(135deg, #17a2b8, #138496);">💡 AI Service Unavailable</div>
+                        <div class="wi-header" style="background: linear-gradient(135deg, #00A3E0, #138496);">💡 AI Service Unavailable</div>
                         <div style="padding: 40px 30px; background: white;">
                             <div style="text-align: center; margin-bottom: 25px;">
                                 <div style="font-size: 48px; margin-bottom: 15px;">🤖</div>
-                                <h3 style="color: #17a2b8; margin-bottom: 15px;">AI Work Instructions Temporarily Unavailable</h3>
+                                <h3 style="color: #00A3E0; margin-bottom: 15px;">AI Work Instructions Temporarily Unavailable</h3>
                                 <p style="color: #666; margin: 15px auto; max-width: 550px; font-size: 15px; line-height: 1.6;">
                                     The AI service is currently unavailable. Please try again in a few moments.
                                 </p>
                             </div>
                             
-                            <div style="background: #e8f4f8; border-left: 4px solid #17a2b8; padding: 20px; border-radius: 8px; margin: 25px 0;">
+                            <div style="background: #e8f4f8; border-left: 4px solid #00A3E0; padding: 20px; border-radius: 8px; margin: 25px 0;">
                                 <h4 style="color: #0c5460; margin-bottom: 12px;">💡 Alternative Options:</h4>
                                 <ul style="color: #0c5460; line-height: 1.8; margin: 0; padding-left: 20px;">
                                     <li><strong>Search Historical Issues</strong> - Find similar problems and their solutions</li>
@@ -4193,17 +4195,17 @@ CITE which manual each piece of information comes from when you have multiple ma
         function showConfigurationRequired(providerName, message) {
             const html = `
                 <div class="work-instruction">
-                    <div class="wi-header" style="background: linear-gradient(135deg, #17a2b8, #138496);">💡 AI Service Unavailable</div>
+                    <div class="wi-header" style="background: linear-gradient(135deg, #00A3E0, #138496);">💡 AI Service Unavailable</div>
                     <div style="padding: 50px 30px; background: white;">
                         <div style="text-align: center; margin-bottom: 30px;">
                             <div style="font-size: 48px; margin-bottom: 15px;">🤖</div>
-                            <h3 style="color: #17a2b8; margin-bottom: 15px;">AI Work Instructions Temporarily Unavailable</h3>
+                            <h3 style="color: #00A3E0; margin-bottom: 15px;">AI Work Instructions Temporarily Unavailable</h3>
                             <p style="color: #666; margin: 15px auto; max-width: 550px; font-size: 15px; line-height: 1.6;">
                                 The AI service is currently not configured or unavailable. Please try again later.
                             </p>
                         </div>
                         
-                        <div style="background: #e8f4f8; border-left: 4px solid #17a2b8; padding: 20px; border-radius: 8px; margin: 30px 0;">
+                        <div style="background: #e8f4f8; border-left: 4px solid #00A3E0; padding: 20px; border-radius: 8px; margin: 30px 0;">
                             <h4 style="color: #0c5460; margin-bottom: 12px;">💡 You Can Still:</h4>
                             <ul style="color: #0c5460; line-height: 1.8; margin: 0; padding-left: 20px;">
                                 <li><strong>Search Historical Issues</strong> - Find similar problems and their solutions</li>
@@ -4540,17 +4542,17 @@ Keep it focused and practical - what should the technician do next?`;
                 console.error('Error getting AI assistance:', error);
                 aiAssistanceDiv.innerHTML = `
                     <div class="work-instruction">
-                        <div class="wi-header" style="background: linear-gradient(135deg, #17a2b8, #138496);">💡 AI Service Unavailable</div>
+                        <div class="wi-header" style="background: linear-gradient(135deg, #00A3E0, #138496);">💡 AI Service Unavailable</div>
                         <div style="padding: 40px 30px; background: white;">
                             <div style="text-align: center; margin-bottom: 25px;">
                                 <div style="font-size: 48px; margin-bottom: 15px;">🤖</div>
-                                <h3 style="color: #17a2b8; margin-bottom: 15px;">AI Assistance Temporarily Unavailable</h3>
+                                <h3 style="color: #00A3E0; margin-bottom: 15px;">AI Assistance Temporarily Unavailable</h3>
                                 <p style="color: #666; margin: 15px auto; max-width: 550px; font-size: 15px; line-height: 1.6;">
                                     The AI service is currently unavailable. Please try again in a few moments.
                                 </p>
                             </div>
                             
-                            <div style="background: #e8f4f8; border-left: 4px solid #17a2b8; padding: 20px; border-radius: 8px; margin: 25px 0;">
+                            <div style="background: #e8f4f8; border-left: 4px solid #00A3E0; padding: 20px; border-radius: 8px; margin: 25px 0;">
                                 <h4 style="color: #0c5460; margin-bottom: 12px;">💡 Alternative Options:</h4>
                                 <ul style="color: #0c5460; line-height: 1.8; margin: 0; padding-left: 20px;">
                                     <li><strong>Search Historical Issues</strong> - Find similar problems and their solutions</li>
@@ -4755,7 +4757,7 @@ Keep it focused and practical - what should the technician do next?`;
             
             modal.innerHTML = `
                 <div style="
-                    background: linear-gradient(135deg, #3498db 0%, #2ecc71 100%);
+                    background: linear-gradient(135deg, #00A3E0 0%, #002D72 100%);
                     padding: 50px 40px;
                     border-radius: 20px;
                     text-align: center;
@@ -4786,8 +4788,8 @@ Keep it focused and practical - what should the technician do next?`;
                     <button onclick="this.closest('div[style*=fixed]').remove()" 
                             style="
                                 background: white;
-                                color: #3498db;
-                                border: 3px solid #3498db;
+                                color: #00A3E0;
+                                border: 3px solid #00A3E0;
                                 padding: 15px 40px;
                                 border-radius: 30px;
                                 font-size: 18px;
@@ -4797,8 +4799,8 @@ Keep it focused and practical - what should the technician do next?`;
                                 box-shadow: 0 4px 15px rgba(0,0,0,0.2);
                                 transition: all 0.2s;
                             "
-                            onmouseover="this.style.transform='scale(1.1)'; this.style.background='#3498db'; this.style.color='white';"
-                            onmouseout="this.style.transform='scale(1)'; this.style.background='white'; this.style.color='#3498db';">
+                            onmouseover="this.style.transform='scale(1.1)'; this.style.background='#00A3E0'; this.style.color='white';"
+                            onmouseout="this.style.transform='scale(1)'; this.style.background='white'; this.style.color='#00A3E0';">
                         😄 Haha!
                     </button>
                 </div>
@@ -4841,7 +4843,7 @@ Keep it focused and practical - what should the technician do next?`;
                 const data = await response.json();
                 
                 if (data.success) {
-                    let html = '<div style="background: #e8f5e9; border: 1px solid #4caf50; border-radius: 8px; padding: 15px; margin-top: 10px;">';
+                    let html = '<div style="background: #E3F2FD; border: 1px solid #002D72; border-radius: 8px; padding: 15px; margin-top: 10px;">';
                     html += '<h4 style="color: #2e7d32; margin-bottom: 10px;">✓ Cloud Connection Successful</h4>';
                     
                     // Show what's stored
@@ -4865,7 +4867,7 @@ Keep it focused and practical - what should the technician do next?`;
                         if (localCount !== mappingCount) {
                             html += `<p style="color: #ff9800; margin-top: 10px;"><strong>⚠️ Warning:</strong> Local storage has ${localCount} mapping${localCount !== 1 ? 's' : ''}, but cloud has ${mappingCount}. They may be out of sync!</p>`;
                         } else {
-                            html += '<p style="color: #4caf50; margin-top: 10px;">✓ Local and cloud are in sync!</p>';
+                            html += '<p style="color: #002D72; margin-top: 10px;">✓ Local and cloud are in sync!</p>';
                         }
                     } else {
                         html += '<p style="color: #ff9800;">⚠️ No manual mappings found in Google Sheets</p>';
