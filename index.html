@@ -687,22 +687,21 @@
 <body>
     <div class="container">
         <div class="header">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                <!-- Left side: App Support + Title -->
-                <div style="display: flex; align-items: flex-start; gap: 15px; flex: 1;">
-                    <button onclick="openSupportModal()" class="btn btn-info" style="padding: 10px 20px; white-space: nowrap; align-self: flex-start;">
-                        📧 App Support
-                    </button>
-                    <div>
-                        <h1 style="margin: 0 0 5px 0;">🏭 Manufacturing Issue Tracker</h1>
-                        <p style="margin: 0;">Track equipment issues and generate AI-powered work instructions</p>
-                    </div>
-                </div>
-                <!-- Right side: Version badge -->
-                <div class="version" onclick="showCreator()" style="position: static; margin: 0; cursor: pointer; transition: transform 0.2s; flex-shrink: 0;" 
-                     onmouseover="this.style.transform='scale(1.1)'" 
-                     onmouseout="this.style.transform='scale(1)'">v18.1</div>
+            <!-- App Support button - Absolute positioned on left -->
+            <button onclick="openSupportModal()" class="btn btn-info" style="position: absolute; left: 20px; top: 20px; padding: 10px 20px; white-space: nowrap;">
+                📧 App Support
+            </button>
+            
+            <!-- Centered Title -->
+            <div style="text-align: center; padding: 0 150px;">
+                <h1 style="margin: 0 0 5px 0;">🏭 Manufacturing Issue Tracker</h1>
+                <p style="margin: 0;">Track equipment issues and generate AI-powered work instructions</p>
             </div>
+            
+            <!-- Version badge - Absolute positioned on right -->
+            <div class="version" onclick="showCreator()" style="position: absolute; right: 20px; top: 20px; margin: 0; cursor: pointer; transition: transform 0.2s;" 
+                 onmouseover="this.style.transform='scale(1.1)'" 
+                 onmouseout="this.style.transform='scale(1)'">v18.2</div>
         </div>
 
         <div id="sync-status" class="sync-status"></div>
