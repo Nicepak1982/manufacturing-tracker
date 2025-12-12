@@ -687,9 +687,16 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>🏭 Manufacturing Issue Tracker</h1>
-            <p>Track equipment issues and generate AI-powered work instructions</p>
-            <div class="version">v16.6</div>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h1>🏭 Manufacturing Issue Tracker</h1>
+                    <p>Track equipment issues and generate AI-powered work instructions</p>
+                </div>
+                <button onclick="openSupportModal()" class="btn btn-info" style="padding: 10px 20px; margin-left: 20px;">
+                    📧 App Support
+                </button>
+            </div>
+            <div class="version">v16.7</div>
         </div>
 
         <div id="sync-status" class="sync-status"></div>
@@ -1109,6 +1116,39 @@
             </div>
         </div>
 
+        <div id="support-modal" class="modal" onclick="handleSupportModalClick(event)">
+            <div class="modal-content" onclick="event.stopPropagation()" style="max-width: 600px;">
+                <h3 style="margin-bottom: 20px; color: #2c3e50;">📧 Contact App Support</h3>
+                
+                <p style="color: #666; margin-bottom: 20px;">
+                    Having issues or found a bug? Let us know and we'll help you out!
+                </p>
+                
+                <div class="form-group">
+                    <label for="support-name">Your Name *</label>
+                    <input type="text" id="support-name" class="form-control" placeholder="Enter your name" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="support-subject">Subject *</label>
+                    <input type="text" id="support-subject" class="form-control" placeholder="Brief description of the issue" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="support-message">Message / Details *</label>
+                    <textarea id="support-message" class="form-control" rows="6" 
+                              placeholder="Please provide details about the bug or issue you're experiencing..." required></textarea>
+                </div>
+
+                <div id="support-status" style="margin-top: 15px; padding: 10px; border-radius: 5px; display: none;"></div>
+                
+                <div style="margin-top: 20px; text-align: right;">
+                    <button type="button" class="btn" onclick="closeSupportModal()" style="background: #6c757d; color: white; margin-right: 10px;">Cancel</button>
+                    <button type="button" class="btn btn-success" onclick="sendSupportEmail()">📤 Send Message</button>
+                </div>
+            </div>
+        </div>
+
         <div id="definition-modal" class="modal" onclick="handleDefinitionModalClick(event)">
             <div class="modal-content" onclick="event.stopPropagation()">
                 <h3 style="margin-bottom: 20px; color: #2c3e50;" id="definition-modal-title">Add Definition</h3>
@@ -1152,6 +1192,13 @@
         // ====== CONFIGURATION ======
         // UPDATE THIS URL WHEN YOU DEPLOY A NEW VERSION OF THE GOOGLE APPS SCRIPT
         const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwkP07t0Yif8o1dChDFUiuijpcFyhzoEzqI21qLb0xG75Ifte0vR0Fu517zbsOo7D_a/exec';
+        
+        // Support email addresses - UPDATE THESE TO YOUR TEAM'S EMAILS
+        const SUPPORT_EMAILS = [
+            'support1@yourcompany.com',
+            'support2@yourcompany.com',
+            'it-team@yourcompany.com'
+        ];
         
         // ====== DATA STORAGE ======
         let issues = [];
@@ -2241,7 +2288,7 @@
                     }],
                     generationConfig: {
                         temperature: 0.7,
-                        maxOutputTokens: 2048
+                        maxOutputTokens: 8192  // Increased from 2048 to prevent text cutoff in work instructions
                     }
                 })
             });
@@ -3272,6 +3319,104 @@
                 setTimeout(() => {
                     modal.style.animation = '';
                 }, 500);
+            }
+        }
+
+        // ====== SUPPORT MODAL FUNCTIONS ======
+        function openSupportModal() {
+            document.getElementById('support-modal').style.display = 'flex';
+            document.getElementById('support-name').value = '';
+            document.getElementById('support-subject').value = '';
+            document.getElementById('support-message').value = '';
+            document.getElementById('support-status').style.display = 'none';
+            document.getElementById('support-name').focus();
+        }
+
+        function closeSupportModal() {
+            document.getElementById('support-modal').style.display = 'none';
+        }
+
+        function handleSupportModalClick(event) {
+            if (event.target.id === 'support-modal') {
+                closeSupportModal();
+            }
+        }
+
+        async function sendSupportEmail() {
+            const name = document.getElementById('support-name').value.trim();
+            const subject = document.getElementById('support-subject').value.trim();
+            const message = document.getElementById('support-message').value.trim();
+            const statusDiv = document.getElementById('support-status');
+            
+            // Validate fields
+            if (!name || !subject || !message) {
+                statusDiv.style.display = 'block';
+                statusDiv.style.background = '#fff3cd';
+                statusDiv.style.border = '1px solid #ffc107';
+                statusDiv.style.color = '#856404';
+                statusDiv.innerHTML = '⚠️ Please fill in all fields';
+                return;
+            }
+            
+            // Disable button and show loading
+            const btn = event.target;
+            btn.disabled = true;
+            btn.textContent = '📤 Sending...';
+            
+            statusDiv.style.display = 'block';
+            statusDiv.style.background = '#e7f3ff';
+            statusDiv.style.border = '1px solid #2196F3';
+            statusDiv.style.color = '#0c5460';
+            statusDiv.innerHTML = '⏳ Sending your message...';
+            
+            try {
+                // Prepare email data
+                const emailData = {
+                    action: 'sendSupportEmail',
+                    supportEmails: SUPPORT_EMAILS.join(','),
+                    name: name,
+                    subject: `[App Support] ${subject}`,
+                    message: `Support Request from Manufacturing Issue Tracker
+
+From: ${name}
+Subject: ${subject}
+
+Message:
+${message}
+
+---
+Sent from Manufacturing Issue Tracker v16.0`
+                };
+                
+                // Send via Google Apps Script
+                const response = await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: new URLSearchParams(emailData)
+                });
+                
+                // Show success (note: no-cors means we can't read response, but request was sent)
+                statusDiv.style.background = '#d4edda';
+                statusDiv.style.border = '1px solid #28a745';
+                statusDiv.style.color = '#155724';
+                statusDiv.innerHTML = '✅ Your message has been sent! We\'ll get back to you soon.';
+                
+                // Clear form
+                setTimeout(() => {
+                    closeSupportModal();
+                }, 2000);
+                
+            } catch (error) {
+                console.error('Error sending support email:', error);
+                statusDiv.style.background = '#f8d7da';
+                statusDiv.style.border = '1px solid #dc3545';
+                statusDiv.style.color = '#721c24';
+                statusDiv.innerHTML = '❌ Failed to send message. Please try again or contact IT directly.';
+                btn.disabled = false;
+                btn.textContent = '📤 Send Message';
             }
         }
 
