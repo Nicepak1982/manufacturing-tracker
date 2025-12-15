@@ -352,6 +352,27 @@
             white-space: nowrap;
         }
 
+        /* Clickable citation links */
+        .citation-link {
+            color: #002D72;
+            text-decoration: none;
+            border-bottom: 1px dotted #002D72;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .citation-link:hover {
+            color: #00A3E0;
+            border-bottom-color: #00A3E0;
+            background: #e3f2fd;
+        }
+
+        .citation-link::after {
+            content: ' 🔗';
+            font-size: 11px;
+            opacity: 0.6;
+        }
+
         /* Clean up bold text in steps */
         .wi-step strong {
             color: #2c3e50;
@@ -701,7 +722,7 @@
             <!-- Version badge - Absolute positioned on right -->
             <div class="version" onclick="showCreator()" style="position: absolute; right: 20px; top: 20px; margin: 0; cursor: pointer; transition: transform 0.2s;" 
                  onmouseover="this.style.transform='scale(1.1)'" 
-                 onmouseout="this.style.transform='scale(1)'">v18.2</div>
+                 onmouseout="this.style.transform='scale(1)'">v16.0</div>
         </div>
 
         <div id="sync-status" class="sync-status"></div>
@@ -1200,7 +1221,9 @@
         
         // Support email addresses - UPDATE THESE TO YOUR TEAM'S EMAILS
         const SUPPORT_EMAILS = [
-            'joey.burdin@nicepak.com'
+            'support1@yourcompany.com',
+            'support2@yourcompany.com',
+            'it-team@yourcompany.com'
         ];
         
         // ====== DATA STORAGE ======
@@ -3254,7 +3277,7 @@
         // ⚙️ CONFIGURATION: Change PIN here and deploy via GitHub
         // Default PIN: 1111
         // To change: Edit this value, commit to GitHub, deploy to all devices
-        const SECURITY_PIN = "1950";
+        const SECURITY_PIN = "1111";
         const SECURITY_ENABLED = true; // Set to false to disable tab protection
         
         // ONE-TIME authentication - PIN required for EVERY access to protected tabs
@@ -4232,6 +4255,65 @@ CITE which manual each piece of information comes from when you have multiple ma
         }
 
         function displayWorkInstruction(content, line, machine, issue) {
+            // Helper function to find manual URL by name
+            function findManualUrl(manualName) {
+                // Search through all manual mappings to find the URL
+                for (const key in manualMappings) {
+                    if (manualMappings.hasOwnProperty(key)) {
+                        const manuals = Array.isArray(manualMappings[key]) ? manualMappings[key] : [manualMappings[key]];
+                        
+                        for (const manual of manuals) {
+                            // Case-insensitive match, allow partial matches
+                            if (manual.name && manual.name.toLowerCase().includes(manualName.toLowerCase())) {
+                                return manual.url;
+                            }
+                        }
+                    }
+                }
+                return null;
+            }
+            
+            // Helper function to create Google Drive URL with page anchor
+            function createManualLink(url, pageNumber) {
+                if (!url) return null;
+                
+                // Try to add page anchor for Google Drive URLs
+                // Format: https://drive.google.com/file/d/FILE_ID/view#page=12
+                if (url.includes('drive.google.com')) {
+                    // Remove existing page anchor if present
+                    const baseUrl = url.split('#')[0];
+                    
+                    // Add page anchor if page number is provided
+                    if (pageNumber) {
+                        return `${baseUrl}#page=${pageNumber}`;
+                    }
+                    return baseUrl;
+                }
+                
+                // For non-Google Drive URLs, return as-is
+                return url;
+            }
+            
+            // Helper function to convert citation text to clickable link
+            function makeCitationClickable(citationText) {
+                // Parse citation format: [Source: Manual Name, Page X] or [Manual Name, Page X]
+                const match = citationText.match(/\[(Source:\s*)?([^,]+),?\s*Page\s*(\d+)\]/i);
+                
+                if (match) {
+                    const manualName = match[2].trim();
+                    const pageNumber = match[3];
+                    const manualUrl = findManualUrl(manualName);
+                    
+                    if (manualUrl) {
+                        const fullUrl = createManualLink(manualUrl, pageNumber);
+                        return `<span class="citation"><a href="${fullUrl}" target="_blank" class="citation-link" title="Open ${manualName} at page ${pageNumber}">[${manualName}, Page ${pageNumber}]</a></span>`;
+                    }
+                }
+                
+                // If no URL found or parsing failed, return original styling without link
+                return `<span class="citation">${citationText}</span>`;
+            }
+            
             // Helper function to clean up markdown formatting
             function cleanMarkdown(text) {
                 // Remove leading asterisks and bullet points
@@ -4239,10 +4321,13 @@ CITE which manual each piece of information comes from when you have multiple ma
                 text = text.replace(/^\*\s+/gm, ''); // Remove bullet points
                 text = text.replace(/^[\*•]\s*/gm, ''); // Remove asterisk or bullet bullets
                 
-                // Clean up inline formatting but keep citations
+                // Clean up inline formatting
                 text = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>'); // Bold
-                text = text.replace(/\[Source:/g, '<span class="citation">[Source:'); // Start citation
-                text = text.replace(/\]/g, ']</span>'); // End citation (will catch citations)
+                
+                // Convert citations to clickable links
+                text = text.replace(/\[(?:Source:\s*)?[^\]]+,?\s*Page\s*\d+\]/gi, (match) => {
+                    return makeCitationClickable(match);
+                });
                 
                 return text.trim();
             }
@@ -4582,6 +4667,60 @@ Keep it focused and practical - what should the technician do next?`;
         function displayAIAssistance(aiResponse, line, machine, issue) {
             const aiAssistanceDiv = document.getElementById('ai-assistance-display');
             
+            // Helper function to find manual URL by name
+            function findManualUrl(manualName) {
+                // Search through all manual mappings to find the URL
+                for (const key in manualMappings) {
+                    if (manualMappings.hasOwnProperty(key)) {
+                        const manuals = Array.isArray(manualMappings[key]) ? manualMappings[key] : [manualMappings[key]];
+                        
+                        for (const manual of manuals) {
+                            // Case-insensitive match, allow partial matches
+                            if (manual.name && manual.name.toLowerCase().includes(manualName.toLowerCase())) {
+                                return manual.url;
+                            }
+                        }
+                    }
+                }
+                return null;
+            }
+            
+            // Helper function to create Google Drive URL with page anchor
+            function createManualLink(url, pageNumber) {
+                if (!url) return null;
+                
+                // Try to add page anchor for Google Drive URLs
+                if (url.includes('drive.google.com')) {
+                    const baseUrl = url.split('#')[0];
+                    if (pageNumber) {
+                        return `${baseUrl}#page=${pageNumber}`;
+                    }
+                    return baseUrl;
+                }
+                
+                return url;
+            }
+            
+            // Helper function to convert citation text to clickable link
+            function makeCitationClickable(citationText) {
+                // Parse citation format: [Source: Manual Name, Page X] or [Manual Name, Page X]
+                const match = citationText.match(/\[(Source:\s*)?([^,]+),?\s*Page\s*(\d+)\]/i);
+                
+                if (match) {
+                    const manualName = match[2].trim();
+                    const pageNumber = match[3];
+                    const manualUrl = findManualUrl(manualName);
+                    
+                    if (manualUrl) {
+                        const fullUrl = createManualLink(manualUrl, pageNumber);
+                        return `<span class="citation"><a href="${fullUrl}" target="_blank" class="citation-link" title="Open ${manualName} at page ${pageNumber}">[${manualName}, Page ${pageNumber}]</a></span>`;
+                    }
+                }
+                
+                // If no URL found or parsing failed, return original styling without link
+                return `<span class="citation">${citationText}</span>`;
+            }
+            
             // Helper function to clean up markdown formatting
             function cleanMarkdown(text) {
                 // Remove leading asterisks and bullet points
@@ -4589,10 +4728,13 @@ Keep it focused and practical - what should the technician do next?`;
                 text = text.replace(/^\*\s+/gm, ''); // Remove bullet points
                 text = text.replace(/^[\*•-]\s*/gm, ''); // Remove asterisk, bullet, or dash bullets
                 
-                // Clean up inline formatting but keep citations
+                // Clean up inline formatting
                 text = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>'); // Bold
-                text = text.replace(/\[Source:/g, '<span class="citation">[Source:'); // Start citation
-                text = text.replace(/\]/g, ']</span>'); // End citation
+                
+                // Convert citations to clickable links
+                text = text.replace(/\[(?:Source:\s*)?[^\]]+,?\s*Page\s*\d+\]/gi, (match) => {
+                    return makeCitationClickable(match);
+                });
                 
                 return text.trim();
             }
@@ -4709,14 +4851,14 @@ Keep it focused and practical - what should the technician do next?`;
             ];
 
             const columnB = [
-                "That felt like...",
-                "You just zapped...",
-                "My circuits are...",
-                "That really...",
-                "I'm going to...",
-                "That tickled...",
-                "Did you just...",
-                "My processor is..."
+                "That felt like",
+                "You just zapped",
+                "My circuits are",
+                "That really",
+                "I'm going to",
+                "That tickled",
+                "Did you just",
+                "My processor is"
             ];
 
             const columnC = [
