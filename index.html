@@ -628,6 +628,93 @@
             font-size: 16px;
         }
 
+        /* Manual Library Styles */
+        .library-line-group {
+            margin-bottom: 25px;
+            background: #ffffff;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .library-line-header {
+            background: linear-gradient(135deg, #002D72, #00A3E0);
+            color: white;
+            padding: 15px 20px;
+            font-weight: bold;
+            font-size: 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .library-machine-section {
+            padding: 20px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .library-machine-section:last-child {
+            border-bottom: none;
+        }
+
+        .library-machine-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #dee2e6;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .library-manual-card {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-left: 4px solid #002D72;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s ease;
+        }
+
+        .library-manual-card:hover {
+            background: #e9ecef;
+            transform: translateX(5px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .library-manual-info {
+            flex: 1;
+        }
+
+        .library-manual-name {
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 15px;
+            margin-bottom: 5px;
+        }
+
+        .library-manual-meta {
+            font-size: 12px;
+            color: #6c757d;
+        }
+
+        .library-empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .library-empty-state h4 {
+            color: #6c757d;
+            margin-bottom: 10px;
+        }
+
         .definition-category {
             margin-bottom: 30px;
         }
@@ -730,6 +817,7 @@
         <div class="nav-tabs">
             <button class="nav-tab active" onclick="switchTab('report')">📝 Report Issue</button>
             <button class="nav-tab" onclick="switchTab('search')">🔍 Search Issues</button>
+            <button class="nav-tab" onclick="switchTab('manuals')">📚 Manuals</button>
             <button class="nav-tab" onclick="switchTab('ai')">🤖 AI Work Instructions</button>
             <button class="nav-tab" onclick="switchTab('history')">📊 History</button>
             <button class="nav-tab" onclick="switchTab('definitions')">📖 Definitions</button>
@@ -821,6 +909,22 @@
             <button onclick="searchIssues()" class="btn btn-primary">🔍 Search Issues</button>
 
             <div id="search-results" class="search-results"></div>
+        </div>
+
+        <div id="manuals-tab" class="tab-content">
+            <h2>📚 Equipment Manuals Library</h2>
+            <p style="color: #666; margin-bottom: 20px;">
+                Quick access to all equipment manuals organized by production line and machine.
+                <strong>Click any manual to open it in a new tab.</strong>
+            </p>
+
+            <div id="manual-library-display" style="margin: 20px 0;">
+                <!-- Manual library will be rendered here -->
+            </div>
+
+            <div style="margin-top: 20px;">
+                <button onclick="renderManualLibrary()" class="btn btn-info">🔄 Refresh Library</button>
+            </div>
         </div>
 
         <div id="ai-tab" class="tab-content">
@@ -1258,6 +1362,7 @@
             loadGeminiConfig();
             selectProvider(selectedProvider);
             renderManualMappings();
+            renderManualLibrary(); // Initialize manual library display
             initializeDefaultDefinitions();
             
             // Clear search box to prevent autocomplete issues
@@ -2759,6 +2864,96 @@
             container.innerHTML = html;
         }
 
+        // ====== MANUAL LIBRARY - QUICK ACCESS VIEW ======
+        function renderManualLibrary() {
+            const container = document.getElementById('manual-library-display');
+            if (!container) return;
+            
+            if (Object.keys(manualMappings).length === 0) {
+                container.innerHTML = `
+                    <div class="library-empty-state">
+                        <div style="font-size: 64px; margin-bottom: 15px;">📚</div>
+                        <h4>No Manuals Available</h4>
+                        <p>Add equipment manuals in the "Equipment Manual Configuration" section above.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Group by production line
+            const manualsByLine = {};
+            for (const [key, manualsArray] of Object.entries(manualMappings)) {
+                // key format is "LINE-MACHINE"
+                const [line, machine] = key.split('-', 2);
+                if (!manualsByLine[line]) {
+                    manualsByLine[line] = [];
+                }
+                
+                // Handle both old single-object format and new array format
+                const manuals = Array.isArray(manualsArray) ? manualsArray : [manualsArray];
+                
+                manualsByLine[line].push({ line, machine, manuals });
+            }
+
+            let html = '';
+            
+            // Render each line group
+            const sortedLines = Object.entries(manualsByLine).sort((a, b) => a[0].localeCompare(b[0]));
+            
+            for (const [line, equipmentList] of sortedLines) {
+                const totalManuals = equipmentList.reduce((sum, eq) => sum + eq.manuals.length, 0);
+                
+                html += `
+                    <div class="library-line-group">
+                        <div class="library-line-header">
+                            <span>📍 ${line}</span>
+                            <span style="font-size: 14px; font-weight: normal; opacity: 0.9;">
+                                ${equipmentList.length} machine${equipmentList.length !== 1 ? 's' : ''} • 
+                                ${totalManuals} manual${totalManuals !== 1 ? 's' : ''}
+                            </span>
+                        </div>
+                `;
+                
+                // Sort equipment by machine name
+                equipmentList.sort((a, b) => a.machine.localeCompare(b.machine));
+                
+                equipmentList.forEach(({ machine, manuals }) => {
+                    html += `
+                        <div class="library-machine-section">
+                            <div class="library-machine-name">
+                                <span>🔧 ${machine}</span>
+                                <span style="font-size: 13px; color: #6c757d; font-weight: normal;">
+                                    (${manuals.length} manual${manuals.length !== 1 ? 's' : ''})
+                                </span>
+                            </div>
+                    `;
+                    
+                    // Display each manual
+                    manuals.forEach((manual) => {
+                        html += `
+                            <div class="library-manual-card">
+                                <div class="library-manual-info">
+                                    <div class="library-manual-name">📖 ${manual.name}</div>
+                                    <div class="library-manual-meta">
+                                        Click "Open Manual" to view in a new tab
+                                    </div>
+                                </div>
+                                <a href="${manual.url}" target="_blank" class="btn btn-primary" style="text-decoration: none; white-space: nowrap;">
+                                    📖 Open Manual
+                                </a>
+                            </div>
+                        `;
+                    });
+                    
+                    html += '</div>';
+                });
+                
+                html += '</div>';
+            }
+            
+            container.innerHTML = html;
+        }
+
         function addManualMapping(prefillKey = null) {
             // Populate line dropdown
             const lineSelect = document.getElementById('manual-line');
@@ -3122,8 +3317,9 @@
             // Close modal
             closeManualModal();
             
-            // Update display
+            // Update displays
             renderManualMappings();
+            renderManualLibrary(); // Update manual library view
             
             // Sync to cloud with better feedback
             showSyncStatus('syncing', '☁️ Syncing manual mapping to Google Sheets...');
@@ -3169,6 +3365,7 @@
                 
                 localStorage.setItem('manualMappings', JSON.stringify(manualMappings));
                 renderManualMappings();
+                renderManualLibrary(); // Update manual library view
                 syncAIConfigsToCloud();
                 alert(`✓ Manual "${manual.name}" removed and synced to cloud!`);
             }
@@ -4132,7 +4329,7 @@ WORK INSTRUCTION - ${machine.toUpperCase()}
 
 SAFETY PRECAUTIONS:
 All company policies and LOTO (Lockout/Tagout) procedures must be followed at all times.
-${hasManuals ? '[Extract ONLY the safety warnings explicitly stated in the manuals for this procedure. Reference any safety diagrams or warning symbols shown in images. Cite which manual each warning comes from.]' : '[Consult equipment manual for specific safety procedures]'}
+${hasManuals ? '' : '[Consult equipment manual for specific safety procedures]'}
 
 REQUIRED TOOLS & MATERIALS:
 ${hasManuals ? '[List ONLY tools explicitly mentioned in the manuals - if none listed, state "Tools not specified in manuals". If tools are shown in images/photos, reference them. Cite source manual.]' : '[Consult manual for required tools]'}
@@ -4619,8 +4816,8 @@ Keep it focused and practical - what should the technician do next?`;
                     response = await callGeminiAPI(prompt);
                 }
                 
-                // Display the result
-                displayAIAssistance(response, line, machine, description);
+                // Display the result - pass manuals array for source display
+                displayAIAssistance(response, line, machine, description, manuals);
 
             } catch (error) {
                 console.error('Error getting AI assistance:', error);
@@ -4664,7 +4861,7 @@ Keep it focused and practical - what should the technician do next?`;
             }
         }
 
-        function displayAIAssistance(aiResponse, line, machine, issue) {
+        function displayAIAssistance(aiResponse, line, machine, issue, manuals = []) {
             const aiAssistanceDiv = document.getElementById('ai-assistance-display');
             
             // Helper function to find manual URL by name
@@ -4813,6 +5010,24 @@ Keep it focused and practical - what should the technician do next?`;
                             ${formattedContent}
                         </div>
                     </div>
+                    
+                    ${manuals && manuals.length > 0 ? `
+                    <div class="wi-section" style="background: #f8f9fa; border-top: 2px solid #dee2e6;">
+                        <h4 style="color: #002D72; margin-bottom: 15px; font-size: 16px;">📚 Equipment Manuals Referenced</h4>
+                        <div style="display: flex; flex-direction: column; gap: 10px;">
+                            ${manuals.map(manual => `
+                                <div style="background: white; padding: 12px; border-radius: 6px; border-left: 4px solid #002D72;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <span style="font-weight: 600; color: #2c3e50;">${manual.name}</span>
+                                        <a href="${manual.url}" target="_blank" class="btn btn-info" style="padding: 6px 15px; font-size: 13px; text-decoration: none;">
+                                            📖 Open Manual
+                                        </a>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                    ` : ''}
                     
                     <div class="wi-actions">
                         <button onclick="window.print()" class="btn btn-primary">🖨️ Print Recommendation</button>
