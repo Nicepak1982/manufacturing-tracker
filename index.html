@@ -809,7 +809,7 @@
             <!-- Version badge - Absolute positioned on right -->
             <div class="version" onclick="showCreator()" style="position: absolute; right: 20px; top: 20px; margin: 0; cursor: pointer; transition: transform 0.2s;" 
                  onmouseover="this.style.transform='scale(1.1)'" 
-                 onmouseout="this.style.transform='scale(1)'">v19.0</div>
+                 onmouseout="this.style.transform='scale(1)'">v20.0</div>
         </div>
 
         <div id="sync-status" class="sync-status"></div>
@@ -1024,6 +1024,12 @@
                         <p style="color: #666; font-size: 14px; margin: 10px 0;">Requires Azure account</p>
                         <p style="color: #002D72; font-weight: bold;">Best for enterprises</p>
                     </div>
+                    
+                    <div class="provider-card" id="claude-card" onclick="selectProvider('claude')">
+                        <h4>🟣 Anthropic Claude</h4>
+                        <p style="color: #666; font-size: 14px; margin: 10px 0;">Requires Anthropic API key</p>
+                        <p style="color: #002D72; font-weight: bold;">Advanced reasoning</p>
+                    </div>
                 </div>
             </div>
 
@@ -1100,6 +1106,41 @@
                     • New accounts: $200 free credit<br>
                     • GPT-4: ~$0.10-$0.30 per instruction<br>
                     • GPT-3.5: ~$0.01-$0.05 per instruction
+                </div>
+            </div>
+
+            <div class="config-section" id="claude-config" style="display: none;">
+                <h3>🔑 Anthropic Claude Configuration</h3>
+                <div class="alert-box alert-info-box">
+                    <strong>ℹ️ Anthropic API Key Required</strong><br>
+                    Get your API key at: <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a>
+                </div>
+
+                <div class="form-group">
+                    <label for="claude-key">API Key *</label>
+                    <input type="password" id="claude-key" class="form-control" 
+                           placeholder="Your Anthropic API key (starts with sk-ant-...)">
+                    <small style="color: #666;">Found in Anthropic Console → API Keys</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="claude-model">Model</label>
+                    <select id="claude-model" class="form-control">
+                        <option value="claude-sonnet-4-20250514">Claude Sonnet 4 (Recommended - Fast & Capable)</option>
+                        <option value="claude-opus-4-20250514">Claude Opus 4 (Best quality, slower & more expensive)</option>
+                    </select>
+                    <small style="color: #666;">💡 Sonnet 4 is recommended for most use cases. Opus 4 provides the highest quality output.</small>
+                </div>
+
+                <button onclick="saveClaudeConfig()" class="btn btn-primary">Save Claude Configuration</button>
+                <button onclick="testClaudeConnection()" class="btn btn-info">Test Connection</button>
+                <button onclick="syncClaudeAPIKeyFromCloud()" class="btn btn-success">☁️ Sync API Key from Cloud</button>
+                
+                <div class="alert-box alert-warning-box">
+                    <strong>💰 Claude Pricing:</strong><br>
+                    • Sonnet 4: ~$0.01-$0.05 per instruction<br>
+                    • Opus 4: ~$0.10-$0.50 per instruction<br>
+                    • Note: Claude API calls are proxied through Google Apps Script
                 </div>
             </div>
 
@@ -1333,6 +1374,7 @@
         let currentActions = []; // Track actions being added for current issue
         let azureConfig = JSON.parse(localStorage.getItem('azureConfig')) || {};
         let geminiConfig = JSON.parse(localStorage.getItem('geminiConfig')) || {};
+        let claudeConfig = JSON.parse(localStorage.getItem('claudeConfig')) || {};
         let manualMappings = JSON.parse(localStorage.getItem('manualMappings')) || {};
         let definitions = JSON.parse(localStorage.getItem('definitions')) || [];
         let selectedProvider = localStorage.getItem('selectedProvider') || 'gemini'; // Default to free option
@@ -1358,6 +1400,7 @@
             displayHistory(issues);
             loadAzureConfig();
             loadGeminiConfig();
+            loadClaudeConfig();
             selectProvider(selectedProvider);
             renderManualMappings();
             renderManualLibrary(); // Initialize manual library display
@@ -1462,6 +1505,11 @@
                             localStorage.setItem('geminiConfig', JSON.stringify(geminiConfig));
                             loadGeminiConfig();
                         }
+                        if (data.aiConfigs.claudeConfig) {
+                            claudeConfig = data.aiConfigs.claudeConfig;
+                            localStorage.setItem('claudeConfig', JSON.stringify(claudeConfig));
+                            loadClaudeConfig();
+                        }
                         if (data.aiConfigs.manualMappings) {
                             manualMappings = data.aiConfigs.manualMappings;
                             localStorage.setItem('manualMappings', JSON.stringify(manualMappings));
@@ -1565,6 +1613,7 @@
                     configsInput.value = JSON.stringify({
                         azureConfig: azureConfig,
                         geminiConfig: geminiConfig,
+                        claudeConfig: claudeConfig,
                         manualMappings: manualMappings,
                         selectedProvider: selectedProvider
                     });
@@ -2356,13 +2405,16 @@
             // Update UI
             document.getElementById('gemini-card').classList.remove('selected');
             document.getElementById('azure-card').classList.remove('selected');
+            document.getElementById('claude-card').classList.remove('selected');
             document.getElementById(provider + '-card').classList.add('selected');
             
             // Show/hide config sections
-            const geminiConfig = document.getElementById('gemini-config');
-            const azureConfig = document.getElementById('azure-config');
-            if (geminiConfig) geminiConfig.style.display = provider === 'gemini' ? 'block' : 'none';
-            if (azureConfig) azureConfig.style.display = provider === 'azure' ? 'block' : 'none';
+            const geminiConfigEl = document.getElementById('gemini-config');
+            const azureConfigEl = document.getElementById('azure-config');
+            const claudeConfigEl = document.getElementById('claude-config');
+            if (geminiConfigEl) geminiConfigEl.style.display = provider === 'gemini' ? 'block' : 'none';
+            if (azureConfigEl) azureConfigEl.style.display = provider === 'azure' ? 'block' : 'none';
+            if (claudeConfigEl) claudeConfigEl.style.display = provider === 'claude' ? 'block' : 'none';
             
             // Sync to cloud
             syncAIConfigsToCloud();
@@ -2535,17 +2587,26 @@
                 const response = await fetch(GOOGLE_SCRIPT_URL + '?action=load');
                 const data = await response.json();
                 
-                if (data.success && data.aiConfigs && data.aiConfigs.geminiConfig) {
-                    geminiConfig = {
-                        apiKey: data.aiConfigs.geminiConfig.apiKey || '',
-                        model: data.aiConfigs.geminiConfig.model || 'gemini-2.5-flash'
-                    };
-                    localStorage.setItem('geminiConfig', JSON.stringify(geminiConfig));
+                if (data.success && data.aiConfigs) {
+                    if (data.aiConfigs.geminiConfig) {
+                        geminiConfig = {
+                            apiKey: data.aiConfigs.geminiConfig.apiKey || '',
+                            model: data.aiConfigs.geminiConfig.model || 'gemini-2.5-flash'
+                        };
+                        localStorage.setItem('geminiConfig', JSON.stringify(geminiConfig));
+                    }
+                    if (data.aiConfigs.claudeConfig) {
+                        claudeConfig = {
+                            apiKey: data.aiConfigs.claudeConfig.apiKey || '',
+                            model: data.aiConfigs.claudeConfig.model || 'claude-sonnet-4-20250514'
+                        };
+                        localStorage.setItem('claudeConfig', JSON.stringify(claudeConfig));
+                    }
                     
                     // Retry generating work instruction
                     await generateWorkInstruction();
                 } else {
-                    throw new Error('No API key found in Google Sheets');
+                    throw new Error('No API configuration found in Google Sheets');
                 }
             } catch (error) {
                 document.getElementById('generated-instruction').innerHTML = `
@@ -2590,17 +2651,26 @@
                 const response = await fetch(GOOGLE_SCRIPT_URL + '?action=load');
                 const data = await response.json();
                 
-                if (data.success && data.aiConfigs && data.aiConfigs.geminiConfig) {
-                    geminiConfig = {
-                        apiKey: data.aiConfigs.geminiConfig.apiKey || '',
-                        model: data.aiConfigs.geminiConfig.model || 'gemini-2.5-flash'
-                    };
-                    localStorage.setItem('geminiConfig', JSON.stringify(geminiConfig));
+                if (data.success && data.aiConfigs) {
+                    if (data.aiConfigs.geminiConfig) {
+                        geminiConfig = {
+                            apiKey: data.aiConfigs.geminiConfig.apiKey || '',
+                            model: data.aiConfigs.geminiConfig.model || 'gemini-2.5-flash'
+                        };
+                        localStorage.setItem('geminiConfig', JSON.stringify(geminiConfig));
+                    }
+                    if (data.aiConfigs.claudeConfig) {
+                        claudeConfig = {
+                            apiKey: data.aiConfigs.claudeConfig.apiKey || '',
+                            model: data.aiConfigs.claudeConfig.model || 'claude-sonnet-4-20250514'
+                        };
+                        localStorage.setItem('claudeConfig', JSON.stringify(claudeConfig));
+                    }
                     
                     // Retry asking AI
                     await askAIForAssistance();
                 } else {
-                    throw new Error('No API key found in Google Sheets');
+                    throw new Error('No API configuration found in Google Sheets');
                 }
             } catch (error) {
                 aiAssistanceDiv.innerHTML = `
@@ -2764,6 +2834,172 @@
             } catch (error) {
                 alert('❌ Connection failed:\n\n' + error.message);
             }
+        }
+
+        // ====== PROVIDER DISPLAY NAME HELPER ======
+        function getProviderDisplayName(provider) {
+            const names = {
+                'gemini': 'Google Gemini',
+                'azure': 'Azure OpenAI',
+                'claude': 'Anthropic Claude'
+            };
+            return names[provider] || provider;
+        }
+
+        // ====== ANTHROPIC CLAUDE API (via Google Apps Script proxy) ======
+        async function callClaudeAPI(prompt, pdfBase64Array = null) {
+            const model = claudeConfig.model || 'claude-sonnet-4-20250514';
+            
+            // Build the messages content array
+            let contentParts = [];
+            
+            // Add PDF documents if provided
+            if (pdfBase64Array && pdfBase64Array.length > 0) {
+                for (const pdf of pdfBase64Array) {
+                    contentParts.push({
+                        type: 'document',
+                        source: {
+                            type: 'base64',
+                            media_type: 'application/pdf',
+                            data: pdf.data
+                        }
+                    });
+                }
+            }
+            
+            // Add the text prompt
+            contentParts.push({
+                type: 'text',
+                text: prompt
+            });
+            
+            // Call through Google Apps Script proxy
+            const response = await fetch(GOOGLE_SCRIPT_URL + '?action=callClaudeAPI', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'text/plain'
+                },
+                body: JSON.stringify({
+                    action: 'callClaudeAPI',
+                    model: model,
+                    content: contentParts,
+                    apiKey: claudeConfig.apiKey
+                })
+            });
+            
+            if (!response.ok) {
+                throw new Error(`Proxy request failed with status ${response.status}`);
+            }
+            
+            const data = await response.json();
+            
+            if (!data.success) {
+                throw new Error(data.message || 'Claude API call failed');
+            }
+            
+            return data.response;
+        }
+
+        function loadClaudeConfig() {
+            const keyInput = document.getElementById('claude-key');
+            const modelSelect = document.getElementById('claude-model');
+            if (keyInput && claudeConfig.apiKey) {
+                keyInput.value = claudeConfig.apiKey;
+            }
+            if (modelSelect && claudeConfig.model) {
+                modelSelect.value = claudeConfig.model;
+            }
+        }
+
+        function saveClaudeConfig() {
+            const keyInput = document.getElementById('claude-key');
+            const modelSelect = document.getElementById('claude-model');
+            
+            claudeConfig = {
+                apiKey: keyInput ? keyInput.value : '',
+                model: modelSelect ? modelSelect.value : 'claude-sonnet-4-20250514'
+            };
+            
+            localStorage.setItem('claudeConfig', JSON.stringify(claudeConfig));
+            syncAIConfigsToCloud();
+            alert('✓ Anthropic Claude configuration saved and synced to cloud!');
+        }
+
+        async function testClaudeConnection() {
+            if (!claudeConfig.apiKey) {
+                alert('Please save your Claude API key first');
+                return;
+            }
+
+            try {
+                const response = await callClaudeAPI('Hello! Please respond with "Connection successful!"');
+                alert('✓ Connection successful!\n\n' + response);
+            } catch (error) {
+                alert('❌ Connection failed:\n\n' + error.message);
+            }
+        }
+
+        async function syncClaudeAPIKeyFromCloud() {
+            const btn = event.target;
+            btn.textContent = '⏳ Syncing...';
+            btn.disabled = true;
+            
+            try {
+                const response = await fetch(GOOGLE_SCRIPT_URL + '?action=load');
+                const data = await response.json();
+                
+                if (data.success && data.aiConfigs && data.aiConfigs.claudeConfig) {
+                    // Update local config
+                    claudeConfig = {
+                        apiKey: data.aiConfigs.claudeConfig.apiKey || '',
+                        model: data.aiConfigs.claudeConfig.model || 'claude-sonnet-4-20250514'
+                    };
+                    
+                    // Save locally
+                    localStorage.setItem('claudeConfig', JSON.stringify(claudeConfig));
+                    
+                    // Update UI
+                    loadClaudeConfig();
+                    
+                    alert('✓ API Key synced from Google Sheets successfully!');
+                } else {
+                    alert('⚠️ No Claude configuration found in Google Sheets.\n\nSave your API key first, and it will sync to the cloud.');
+                }
+            } catch (error) {
+                alert('❌ Failed to sync: ' + error.message);
+            } finally {
+                btn.textContent = '☁️ Sync API Key from Cloud';
+                btn.disabled = false;
+            }
+        }
+
+        // Helper to get PDF base64 for Claude via Google Apps Script
+        async function getManualPDFsForClaude(manualKey) {
+            const manuals = manualMappings[manualKey];
+            if (!manuals || !Array.isArray(manuals) || manuals.length === 0) {
+                return [];
+            }
+            
+            const pdfArray = [];
+            
+            for (const manual of manuals) {
+                try {
+                    const response = await fetch(GOOGLE_SCRIPT_URL + '?action=downloadPDF&url=' + encodeURIComponent(manual.url));
+                    const data = await response.json();
+                    
+                    if (data.success && data.data) {
+                        pdfArray.push({
+                            data: data.data,
+                            name: manual.name || data.fileName
+                        });
+                    }
+                } catch (error) {
+                    console.error(`Error downloading PDF "${manual.name}" for Claude:`, error);
+                    // Continue with other manuals
+                }
+            }
+            
+            return pdfArray;
         }
 
         // ====== MANUAL MAPPINGS ======
@@ -4129,6 +4365,11 @@ Sent from Manufacturing Issue Tracker v16.0`
                     showConfigurationRequired('Azure OpenAI', 'Configure your Azure OpenAI credentials');
                     return;
                 }
+            } else if (selectedProvider === 'claude') {
+                if (!claudeConfig.apiKey) {
+                    showConfigurationRequired('Anthropic Claude', 'Get your API key at console.anthropic.com');
+                    return;
+                }
             }
 
             // Show loading state
@@ -4139,7 +4380,7 @@ Sent from Manufacturing Issue Tracker v16.0`
                         <div class="loading-spinner"></div>
                         <p style="margin-top: 25px; color: #666; font-size: 15px;">
                             <strong>Retrieving information from equipment manuals and definitions...</strong><br>
-                            <span style="font-size: 14px;">Consulting ${selectedProvider === 'gemini' ? 'Google Gemini' : 'Azure OpenAI'} AI...</span>
+                            <span style="font-size: 14px;">Consulting ${getProviderDisplayName(selectedProvider)} AI...</span>
                         </p>
                     </div>
                 </div>
@@ -4151,6 +4392,7 @@ Sent from Manufacturing Issue Tracker v16.0`
                 const manualsArray = manualMappings[manualKey];
                 let manualContext = '';
                 let geminiFileUris = [];
+                let claudePDFs = [];
                 
                 // Handle both old single-object format and new array format for migration
                 const manuals = manualsArray && Array.isArray(manualsArray) ? manualsArray : 
@@ -4235,11 +4477,39 @@ Sent from Manufacturing Issue Tracker v16.0`
                             `;
                             return; // Stop - don't generate without the manuals
                         }
+                    } else if (selectedProvider === 'claude') {
+                        try {
+                            // Update loading message
+                            document.getElementById('generated-instruction').innerHTML = `
+                                <div class="work-instruction">
+                                    <div class="wi-header">🤖 GENERATING AI WORK INSTRUCTION</div>
+                                    <div style="padding: 60px 20px; text-align: center; background: white;">
+                                        <div class="loading-spinner"></div>
+                                        <p style="margin-top: 25px; color: #666; font-size: 15px;">
+                                            <strong>Fetching ${manuals.length} equipment manual${manuals.length !== 1 ? 's' : ''} from Google Drive...</strong><br>
+                                            <span style="font-size: 14px;">Downloading PDFs for Anthropic Claude analysis...</span>
+                                        </p>
+                                    </div>
+                                </div>
+                            `;
+                            
+                            claudePDFs = await getManualPDFsForClaude(manualKey);
+                            
+                            if (claudePDFs.length > 0) {
+                                manualContext += `\n(${claudePDFs.length} PDF manual${claudePDFs.length !== 1 ? 's' : ''} included and accessible to AI)`;
+                            } else {
+                                manualContext += '\n(Note: Could not download PDF manuals. AI will provide general guidance based on manual references above.)';
+                            }
+                        } catch (error) {
+                            console.error('Error fetching PDFs for Claude:', error);
+                            manualContext += '\n(Note: Could not download PDF manuals. AI will provide general guidance.)';
+                            claudePDFs = [];
+                        }
                     }
                 }
 
                 // Update loading message for AI generation
-                const manualCount = geminiFileUris.length;
+                const manualCount = selectedProvider === 'claude' ? claudePDFs.length : geminiFileUris.length;
                 document.getElementById('generated-instruction').innerHTML = `
                     <div class="work-instruction">
                         <div class="wi-header">🤖 GENERATING AI WORK INSTRUCTION</div>
@@ -4247,7 +4517,7 @@ Sent from Manufacturing Issue Tracker v16.0`
                             <div class="loading-spinner"></div>
                             <p style="margin-top: 25px; color: #666; font-size: 15px;">
                                 <strong>Generating instructions from ${manualCount > 0 ? manualCount + ' equipment manual' + (manualCount !== 1 ? 's' : '') : 'available information'}...</strong><br>
-                                <span style="font-size: 14px;">Consulting ${selectedProvider === 'gemini' ? 'Google Gemini' : 'Azure OpenAI'} AI...</span>
+                                <span style="font-size: 14px;">Consulting ${getProviderDisplayName(selectedProvider)} AI...</span>
                             </p>
                         </div>
                     </div>
@@ -4256,8 +4526,8 @@ Sent from Manufacturing Issue Tracker v16.0`
                 // Get definitions context
                 const definitionsContext = getDefinitionsContext();
                 
-                const hasManuals = geminiFileUris.length > 0;
-                const manualNames = geminiFileUris.map(m => m.name).join(', ');
+                const hasManuals = selectedProvider === 'claude' ? claudePDFs.length > 0 : geminiFileUris.length > 0;
+                const manualNames = selectedProvider === 'claude' ? claudePDFs.map(m => m.name).join(', ') : geminiFileUris.map(m => m.name).join(', ');
 
                 // Create the prompt
                 const prompt = `You are a technical documentation assistant. Your job is to help users find and extract procedures from equipment manuals.
@@ -4342,7 +4612,7 @@ VERIFICATION:
 ${hasManuals ? '[Include ONLY verification steps explicitly stated in the manuals. Reference any inspection photos or measurement diagrams if shown. Cite source manual.]' : '[Consult manual for verification procedures]'}
 
 IMPORTANT NOTES:
-${hasManuals ? `- All information extracted directly from ${geminiFileUris.length} manual${geminiFileUris.length !== 1 ? 's' : ''} without additions: ${manualNames}
+${hasManuals ? `- All information extracted directly from ${manualCount} manual${manualCount !== 1 ? 's' : ''} without additions: ${manualNames}
 - Brief instructions kept brief, detailed instructions kept detailed
 - Missing details noted as "See [Manual Name] for specifications"
 - Diagrams and images actively referenced throughout to aid understanding
@@ -4360,6 +4630,8 @@ CITE which manual each piece of information comes from when you have multiple ma
                 let response;
                 if (selectedProvider === 'gemini') {
                     response = await callGeminiAPI(prompt, geminiFileUris);
+                } else if (selectedProvider === 'claude') {
+                    response = await callClaudeAPI(prompt, claudePDFs.length > 0 ? claudePDFs : null);
                 } else {
                     response = await callAzureOpenAI(prompt);
                 }
@@ -4581,7 +4853,7 @@ CITE which manual each piece of information comes from when you have multiple ma
                         </div>
                         <div class="wi-metadata-item">
                             <span class="wi-metadata-label">AI Provider</span>
-                            <span class="wi-metadata-value">${selectedProvider === 'gemini' ? 'Google Gemini' : 'Azure OpenAI'}</span>
+                            <span class="wi-metadata-value">${getProviderDisplayName(selectedProvider)}</span>
                         </div>
                     </div>
             `;
@@ -4660,6 +4932,11 @@ CITE which manual each piece of information comes from when you have multiple ma
                     showConfigurationRequired('Azure OpenAI', 'Configure your Azure OpenAI credentials');
                     return;
                 }
+            } else if (selectedProvider === 'claude') {
+                if (!claudeConfig.apiKey) {
+                    showConfigurationRequired('Anthropic Claude', 'Get your API key at console.anthropic.com');
+                    return;
+                }
             }
 
             // Create a modal/div to show the AI response (we'll reuse the AI tab's display area)
@@ -4680,7 +4957,7 @@ CITE which manual each piece of information comes from when you have multiple ma
                         <div class="loading-spinner"></div>
                         <p style="margin-top: 25px; color: #666; font-size: 15px;">
                             <strong>Analyzing your issue and actions taken...</strong><br>
-                            <span style="font-size: 14px;">Consulting ${selectedProvider === 'gemini' ? 'Google Gemini' : 'Azure OpenAI'} AI for best course of action...</span>
+                            <span style="font-size: 14px;">Consulting ${getProviderDisplayName(selectedProvider)} AI for best course of action...</span>
                         </p>
                     </div>
                 </div>
@@ -4695,6 +4972,7 @@ CITE which manual each piece of information comes from when you have multiple ma
                 const manualsArray = manualMappings[manualKey];
                 let manualContext = '';
                 let geminiFileUris = [];
+                let claudePDFs = [];
                 
                 // Handle both old single-object format and new array format for migration
                 const manuals = manualsArray && Array.isArray(manualsArray) ? manualsArray : 
@@ -4738,12 +5016,39 @@ CITE which manual each piece of information comes from when you have multiple ma
                             manualContext += `\n(Note: Could not access PDF manuals - ${error.message}. AI will provide general troubleshooting guidance.)`;
                             geminiFileUris = []; // Continue without PDFs
                         }
+                    } else if (selectedProvider === 'claude') {
+                        try {
+                            aiAssistanceDiv.innerHTML = `
+                                <div class="work-instruction">
+                                    <div class="wi-header">🤖 AI ANALYZING YOUR ISSUE</div>
+                                    <div style="padding: 60px 20px; text-align: center; background: white;">
+                                        <div class="loading-spinner"></div>
+                                        <p style="margin-top: 25px; color: #666; font-size: 15px;">
+                                            <strong>Fetching ${manuals.length} equipment manual${manuals.length !== 1 ? 's' : ''} from Google Drive...</strong><br>
+                                            <span style="font-size: 14px;">Downloading PDFs for Anthropic Claude analysis...</span>
+                                        </p>
+                                    </div>
+                                </div>
+                            `;
+                            
+                            claudePDFs = await getManualPDFsForClaude(manualKey);
+                            
+                            if (claudePDFs.length > 0) {
+                                manualContext += `\n(${claudePDFs.length} PDF manual${claudePDFs.length !== 1 ? 's' : ''} included and accessible to AI)`;
+                            } else {
+                                manualContext += '\n(Note: Could not download PDF manuals. AI will provide general troubleshooting guidance.)';
+                            }
+                        } catch (error) {
+                            console.error('Error fetching PDFs for Claude:', error);
+                            manualContext += '\n(Note: Could not download PDF manuals. AI will provide general troubleshooting guidance.)';
+                            claudePDFs = [];
+                        }
                     }
                 }
 
                 // Update loading message for AI analysis
-                const manualCount = geminiFileUris.length;
-                const manualNames = geminiFileUris.map(m => m.name).join(', ');
+                const manualCount = selectedProvider === 'claude' ? claudePDFs.length : geminiFileUris.length;
+                const manualNames = selectedProvider === 'claude' ? claudePDFs.map(m => m.name).join(', ') : geminiFileUris.map(m => m.name).join(', ');
                 aiAssistanceDiv.innerHTML = `
                     <div class="work-instruction">
                         <div class="wi-header">🤖 AI ANALYZING YOUR ISSUE</div>
@@ -4751,7 +5056,7 @@ CITE which manual each piece of information comes from when you have multiple ma
                             <div class="loading-spinner"></div>
                             <p style="margin-top: 25px; color: #666; font-size: 15px;">
                                 <strong>Analyzing issue and actions taken...</strong><br>
-                                <span style="font-size: 14px;">Consulting ${selectedProvider === 'gemini' ? 'Google Gemini' : 'Azure OpenAI'} AI${manualCount > 0 ? ' with ' + manualCount + ' equipment manual' + (manualCount !== 1 ? 's' : '') : ''}...</span>
+                                <span style="font-size: 14px;">Consulting ${getProviderDisplayName(selectedProvider)} AI${manualCount > 0 ? ' with ' + manualCount + ' equipment manual' + (manualCount !== 1 ? 's' : '') : ''}...</span>
                             </p>
                         </div>
                     </div>
@@ -4810,8 +5115,10 @@ Keep it focused and practical - what should the technician do next?`;
                 let response;
                 if (selectedProvider === 'gemini') {
                     response = await callGeminiAPI(prompt, geminiFileUris);
+                } else if (selectedProvider === 'claude') {
+                    response = await callClaudeAPI(prompt, claudePDFs.length > 0 ? claudePDFs : null);
                 } else {
-                    response = await callGeminiAPI(prompt);
+                    response = await callAzureOpenAI(prompt);
                 }
                 
                 // Display the result - pass manuals array for source display
@@ -4999,7 +5306,7 @@ Keep it focused and practical - what should the technician do next?`;
                         </div>
                         <div class="wi-metadata-item">
                             <span class="wi-metadata-label">AI Provider</span>
-                            <span class="wi-metadata-value">${selectedProvider === 'gemini' ? 'Google Gemini' : 'Azure OpenAI'}</span>
+                            <span class="wi-metadata-value">${getProviderDisplayName(selectedProvider)}</span>
                         </div>
                     </div>
                     
