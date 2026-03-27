@@ -1427,60 +1427,33 @@
             }
         }
 
-        function syncToCloud(issue) {
-            return new Promise((resolve) => {
-                showSyncStatus('syncing', '☁️ Syncing to Google Sheets...');
-                
-                try {
-                    let iframe = document.getElementById('sync-iframe');
-                    if (!iframe) {
-                        iframe = document.createElement('iframe');
-                        iframe.id = 'sync-iframe';
-                        iframe.name = 'sync-iframe';
-                        iframe.style.display = 'none';
-                        document.body.appendChild(iframe);
-                    }
-                    
-                    let form = document.getElementById('sync-form');
-                    if (form) form.remove();
-                    
-                    form = document.createElement('form');
-                    form.id = 'sync-form';
-                    form.method = 'POST';
-                    form.action = GOOGLE_SCRIPT_URL;
-                    form.target = 'sync-iframe';
-                    form.style.display = 'none';
-                    
-                    const actionInput = document.createElement('input');
-                    actionInput.type = 'hidden';
-                    actionInput.name = 'action';
-                    actionInput.value = 'save';
-                    form.appendChild(actionInput);
-                    
-                    const issueInput = document.createElement('input');
-                    issueInput.type = 'hidden';
-                    issueInput.name = 'issue';
-                    issueInput.value = JSON.stringify(issue);
-                    form.appendChild(issueInput);
-                    
-                    document.body.appendChild(form);
-                    form.submit();
-                    
-                    setTimeout(() => {
-                        showSyncStatus('success', '✓ Synced to Google Sheets successfully');
-                        resolve(true);
-                    }, 1000);
-                    
-                } catch (error) {
-                    console.error('Sync error:', error);
-                    showSyncStatus('error', '✗ Cloud sync failed - data saved locally');
-                    setTimeout(() => {
-                        showSyncStatus('', '');
-                    }, 5000);
-                    resolve(false);
-                }
+function syncToCloud(issue) {
+    return new Promise(async (resolve) => {
+        showSyncStatus('syncing', '☁️ Syncing to Google Sheets...');
+        
+        try {
+            const response = await fetch(GOOGLE_SCRIPT_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: 'action=save&issue=' + encodeURIComponent(JSON.stringify(issue))
             });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                showSyncStatus('success', '✓ Synced to Google Sheets successfully');
+                resolve(true);
+            } else {
+                throw new Error(data.message || 'Sync failed');
+            }
+        } catch (error) {
+            console.error('Sync error:', error);
+            showSyncStatus('error', '✗ Cloud sync failed - data saved locally');
+            setTimeout(() => { showSyncStatus('', ''); }, 5000);
+            resolve(false);
         }
+    });
+}
 
         async function loadFromCloud() {
             showSyncStatus('syncing', '☁️ Loading from Google Sheets...');
@@ -1554,89 +1527,57 @@
             }
         }
 
-        async function syncAIConfigsToCloud() {
-            // CRITICAL: Don't overwrite cloud data with empty local data
-            // This prevents data loss when opening a new HTML file with empty localStorage
-            const localMappingCount = Object.keys(manualMappings).length;
-            
-            if (localMappingCount === 0) {
-                console.warn('Sync blocked: Local manualMappings is empty. Not overwriting cloud data.');
-                // Check if cloud has data before we erase it
-                try {
-                    const response = await fetch(GOOGLE_SCRIPT_URL + '?action=load');
-                    const data = await response.json();
-                    if (data.success && data.aiConfigs && data.aiConfigs.manualMappings) {
-                        const cloudMappingCount = Object.keys(data.aiConfigs.manualMappings).length;
-                        if (cloudMappingCount > 0) {
-                            console.warn(`Cloud has ${cloudMappingCount} manual mappings. Refusing to overwrite with empty local data.`);
-                            showSyncStatus('error', '⚠️ Sync blocked: Won\'t erase cloud data with empty local data');
-                            return false;
-                        }
-                    }
-                } catch (error) {
-                    console.error('Could not check cloud data before sync:', error);
+async function syncAIConfigsToCloud() {
+    const localMappingCount = Object.keys(manualMappings).length;
+    
+    if (localMappingCount === 0) {
+        console.warn('Sync blocked: Local manualMappings is empty.');
+        try {
+            const response = await fetch(GOOGLE_SCRIPT_URL + '?action=load');
+            const data = await response.json();
+            if (data.success && data.aiConfigs && data.aiConfigs.manualMappings) {
+                const cloudMappingCount = Object.keys(data.aiConfigs.manualMappings).length;
+                if (cloudMappingCount > 0) {
+                    console.warn(`Cloud has ${cloudMappingCount} mappings. Refusing to overwrite.`);
+                    showSyncStatus('error', '⚠️ Sync blocked: Won\'t erase cloud data');
+                    return false;
                 }
             }
-            
-            return new Promise((resolve) => {
-                showSyncStatus('syncing', '☁️ Syncing AI configs to Google Sheets...');
-                
-                try {
-                    let iframe = document.getElementById('sync-iframe');
-                    if (!iframe) {
-                        iframe = document.createElement('iframe');
-                        iframe.id = 'sync-iframe';
-                        iframe.name = 'sync-iframe';
-                        iframe.style.display = 'none';
-                        document.body.appendChild(iframe);
-                    }
-                    
-                    let form = document.getElementById('config-sync-form');
-                    if (form) form.remove();
-                    
-                    form = document.createElement('form');
-                    form.id = 'config-sync-form';
-                    form.method = 'POST';
-                    form.action = GOOGLE_SCRIPT_URL;
-                    form.target = 'sync-iframe';
-                    form.style.display = 'none';
-                    
-                    const actionInput = document.createElement('input');
-                    actionInput.type = 'hidden';
-                    actionInput.name = 'action';
-                    actionInput.value = 'saveAIConfigs';
-                    form.appendChild(actionInput);
-                    
-                    const configsInput = document.createElement('input');
-                    configsInput.type = 'hidden';
-                    configsInput.name = 'aiConfigs';
-                    configsInput.value = JSON.stringify({
-                        azureConfig: azureConfig,
-                        geminiConfig: geminiConfig,
-                        claudeConfig: claudeConfig,
-                        manualMappings: manualMappings,
-                        selectedProvider: selectedProvider
-                    });
-                    form.appendChild(configsInput);
-                    
-                    document.body.appendChild(form);
-                    form.submit();
-                    
-                    setTimeout(() => {
-                        showSyncStatus('success', '✓ AI configs synced to Google Sheets');
-                        resolve(true);
-                    }, 1000);
-                    
-                } catch (error) {
-                    console.error('Config sync error:', error);
-                    showSyncStatus('error', '✗ Config sync failed - saved locally');
-                    setTimeout(() => {
-                        showSyncStatus('', '');
-                    }, 5000);
-                    resolve(false);
-                }
-            });
+        } catch (error) {
+            console.error('Could not check cloud data:', error);
         }
+    }
+    
+    showSyncStatus('syncing', '☁️ Syncing AI configs to Google Sheets...');
+    
+    try {
+        const response = await fetch(GOOGLE_SCRIPT_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: 'action=saveAIConfigs&aiConfigs=' + encodeURIComponent(JSON.stringify({
+                azureConfig: azureConfig,
+                geminiConfig: geminiConfig,
+                claudeConfig: claudeConfig,
+                manualMappings: manualMappings,
+                selectedProvider: selectedProvider
+            }))
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showSyncStatus('success', '✓ AI configs synced to Google Sheets');
+            return true;
+        } else {
+            throw new Error(data.message || 'Sync failed');
+        }
+    } catch (error) {
+        console.error('Config sync error:', error);
+        showSyncStatus('error', '✗ Config sync failed - saved locally');
+        setTimeout(() => { showSyncStatus('', ''); }, 5000);
+        return false;
+    }
+}
 
         // ====== LOCAL STORAGE ======
         function saveLocalData() {
@@ -4241,70 +4182,36 @@ Sent from Manufacturing Issue Tracker v16.0`
             showSyncStatus('success', '✓ Definition deleted and synced!');
         }
 
-        async function syncDefinitionsToCloud() {
-            // CRITICAL: Don't overwrite cloud data with empty local data
-            if (definitions.length === 0) {
-                console.warn('Sync blocked: Local definitions is empty. Not overwriting cloud data.');
-                // Check if cloud has data before we erase it
-                try {
-                    const response = await fetch(GOOGLE_SCRIPT_URL + '?action=load');
-                    const data = await response.json();
-                    if (data.success && data.definitions && data.definitions.length > 0) {
-                        console.warn(`Cloud has ${data.definitions.length} definitions. Refusing to overwrite with empty local data.`);
-                        showSyncStatus('error', '⚠️ Sync blocked: Won\'t erase cloud definitions');
-                        return false;
-                    }
-                } catch (error) {
-                    console.error('Could not check cloud data before sync:', error);
-                }
+async function syncDefinitionsToCloud() {
+    if (definitions.length === 0) {
+        console.warn('Sync blocked: Local definitions is empty.');
+        try {
+            const response = await fetch(GOOGLE_SCRIPT_URL + '?action=load');
+            const data = await response.json();
+            if (data.success && data.definitions && data.definitions.length > 0) {
+                console.warn(`Cloud has ${data.definitions.length} definitions. Refusing to overwrite.`);
+                showSyncStatus('error', '⚠️ Sync blocked: Won\'t erase cloud definitions');
+                return false;
             }
-            
-            return new Promise((resolve) => {
-                try {
-                    let iframe = document.getElementById('sync-iframe');
-                    if (!iframe) {
-                        iframe = document.createElement('iframe');
-                        iframe.id = 'sync-iframe';
-                        iframe.name = 'sync-iframe';
-                        iframe.style.display = 'none';
-                        document.body.appendChild(iframe);
-                    }
-                    
-                    let form = document.getElementById('definitions-sync-form');
-                    if (form) form.remove();
-                    
-                    form = document.createElement('form');
-                    form.id = 'definitions-sync-form';
-                    form.method = 'POST';
-                    form.action = GOOGLE_SCRIPT_URL;
-                    form.target = 'sync-iframe';
-                    form.style.display = 'none';
-                    
-                    const actionInput = document.createElement('input');
-                    actionInput.type = 'hidden';
-                    actionInput.name = 'action';
-                    actionInput.value = 'saveDefinitions';
-                    form.appendChild(actionInput);
-                    
-                    const definitionsInput = document.createElement('input');
-                    definitionsInput.type = 'hidden';
-                    definitionsInput.name = 'definitions';
-                    definitionsInput.value = JSON.stringify(definitions);
-                    form.appendChild(definitionsInput);
-                    
-                    document.body.appendChild(form);
-                    form.submit();
-                    
-                    setTimeout(() => {
-                        resolve(true);
-                    }, 1000);
-                    
-                } catch (error) {
-                    console.error('Definitions sync error:', error);
-                    resolve(false);
-                }
-            });
+        } catch (error) {
+            console.error('Could not check cloud data:', error);
         }
+    }
+    
+    try {
+        const response = await fetch(GOOGLE_SCRIPT_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: 'action=saveDefinitions&definitions=' + encodeURIComponent(JSON.stringify(definitions))
+        });
+        
+        const data = await response.json();
+        return data.success;
+    } catch (error) {
+        console.error('Definitions sync error:', error);
+        return false;
+    }
+}
 
         function getDefinitionsContext() {
             if (definitions.length === 0) return '';
