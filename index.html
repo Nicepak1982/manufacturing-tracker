@@ -809,7 +809,7 @@
             <!-- Version badge - Absolute positioned on right -->
             <div class="version" onclick="showCreator()" style="position: absolute; right: 20px; top: 20px; margin: 0; cursor: pointer; transition: transform 0.2s;" 
                  onmouseover="this.style.transform='scale(1.1)'" 
-                 onmouseout="this.style.transform='scale(1)'">v19.0</div>
+                 onmouseout="this.style.transform='scale(1)'">v20.0</div>
         </div>
 
         <div id="sync-status" class="sync-status"></div>
@@ -1024,6 +1024,12 @@
                         <p style="color: #666; font-size: 14px; margin: 10px 0;">Requires Azure account</p>
                         <p style="color: #002D72; font-weight: bold;">Best for enterprises</p>
                     </div>
+
+                    <div class="provider-card" id="claude-card" onclick="selectProvider('claude')">
+                        <h4>🤖 Claude (Anthropic)</h4>
+                        <p style="color: #666; font-size: 14px; margin: 10px 0;">Requires Anthropic API key</p>
+                        <p style="color: #002D72; font-weight: bold;">Advanced reasoning & analysis</p>
+                    </div>
                 </div>
             </div>
 
@@ -1061,6 +1067,40 @@
                 
                 <div id="available-models-list" style="margin-top: 15px; padding: 10px; border-radius: 5px; display: none; background: #f8f9fa; border: 1px solid #dee2e6;">
                     <!-- Available models will appear here -->
+                </div>
+            </div>
+
+            <div class="config-section" id="claude-config" style="display: none;">
+                <h3>🔑 Claude (Anthropic) Configuration</h3>
+                <div class="alert-box alert-info-box">
+                    <strong>ℹ️ Anthropic API Key Required</strong><br>
+                    Get your API key at: <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a>
+                </div>
+
+                <div class="form-group">
+                    <label for="claude-key">API Key *</label>
+                    <input type="password" id="claude-key" class="form-control" 
+                           placeholder="Your Anthropic API key (starts with sk-ant-...)">
+                    <small style="color: #666;">Found in the Anthropic Console under API Keys</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="claude-model">Model</label>
+                    <select id="claude-model" class="form-control">
+                        <option value="claude-sonnet-4-5">Claude Sonnet 4.5 (Recommended - Fast & Smart)</option>
+                        <option value="claude-opus-4-5">Claude Opus 4.5 (Best quality, slower)</option>
+                        <option value="claude-haiku-4-5">Claude Haiku 4.5 (Fastest, most economical)</option>
+                    </select>
+                </div>
+
+                <button onclick="saveClaudeConfig()" class="btn btn-primary">Save Claude Configuration</button>
+                <button onclick="testClaudeConnection()" class="btn btn-info">Test Connection</button>
+
+                <div class="alert-box alert-warning-box" style="margin-top: 15px;">
+                    <strong>💰 Claude Pricing:</strong><br>
+                    • Haiku: ~$0.01–$0.03 per request<br>
+                    • Sonnet: ~$0.03–$0.15 per request<br>
+                    • Opus: ~$0.15–$0.75 per request
                 </div>
             </div>
 
@@ -1333,6 +1373,7 @@
         let currentActions = []; // Track actions being added for current issue
         let azureConfig = JSON.parse(localStorage.getItem('azureConfig')) || {};
         let geminiConfig = JSON.parse(localStorage.getItem('geminiConfig')) || {};
+        let claudeConfig = JSON.parse(localStorage.getItem('claudeConfig')) || {};
         let manualMappings = JSON.parse(localStorage.getItem('manualMappings')) || {};
         let definitions = JSON.parse(localStorage.getItem('definitions')) || [];
         let selectedProvider = localStorage.getItem('selectedProvider') || 'gemini'; // Default to free option
@@ -1462,6 +1503,11 @@
                             localStorage.setItem('geminiConfig', JSON.stringify(geminiConfig));
                             loadGeminiConfig();
                         }
+                        if (data.aiConfigs.claudeConfig) {
+                            claudeConfig = data.aiConfigs.claudeConfig;
+                            localStorage.setItem('claudeConfig', JSON.stringify(claudeConfig));
+                            loadClaudeConfig();
+                        }
                         if (data.aiConfigs.manualMappings) {
                             manualMappings = data.aiConfigs.manualMappings;
                             localStorage.setItem('manualMappings', JSON.stringify(manualMappings));
@@ -1534,15 +1580,35 @@
                 showSyncStatus('syncing', '☁️ Syncing AI configs to Google Sheets...');
                 
                 try {
+                    let iframe = document.getElementById('sync-iframe');
+                    if (!iframe) {
+                        iframe = document.createElement('iframe');
+                        iframe.id = 'sync-iframe';
+                        iframe.name = 'sync-iframe';
+                        iframe.style.display = 'none';
+                        document.body.appendChild(iframe);
+                    }
+                    
+                    let form = document.getElementById('config-sync-form');
+                    if (form) form.remove();
+                    
+                    form = document.createElement('form');
+                    form.id = 'config-sync-form';
+                    form.method = 'POST';
+                    form.action = GOOGLE_SCRIPT_URL;
+                    form.target = 'sync-iframe';
+                    form.style.display = 'none';
+                    
                     const payload = new URLSearchParams();
                     payload.append('action', 'saveAIConfigs');
                     payload.append('aiConfigs', JSON.stringify({
                         azureConfig: azureConfig,
                         geminiConfig: geminiConfig,
+                        claudeConfig: claudeConfig,
                         manualMappings: manualMappings,
                         selectedProvider: selectedProvider
                     }));
-                    
+
                     fetch(GOOGLE_SCRIPT_URL, {
                         method: 'POST',
                         mode: 'no-cors',
@@ -1558,8 +1624,7 @@
                         showSyncStatus('error', '✗ Cloud sync failed - data saved locally only');
                         resolve(false);
                     });
-                    
-                    // Fallback resolve in case fetch hangs
+
                     setTimeout(() => resolve(true), 8000);
                     
                 } catch (error) {
@@ -2340,13 +2405,16 @@
             // Update UI
             document.getElementById('gemini-card').classList.remove('selected');
             document.getElementById('azure-card').classList.remove('selected');
+            document.getElementById('claude-card').classList.remove('selected');
             document.getElementById(provider + '-card').classList.add('selected');
             
             // Show/hide config sections
-            const geminiConfig = document.getElementById('gemini-config');
-            const azureConfig = document.getElementById('azure-config');
-            if (geminiConfig) geminiConfig.style.display = provider === 'gemini' ? 'block' : 'none';
-            if (azureConfig) azureConfig.style.display = provider === 'azure' ? 'block' : 'none';
+            const geminiConfigEl = document.getElementById('gemini-config');
+            const azureConfigEl = document.getElementById('azure-config');
+            const claudeConfigEl = document.getElementById('claude-config');
+            if (geminiConfigEl) geminiConfigEl.style.display = provider === 'gemini' ? 'block' : 'none';
+            if (azureConfigEl) azureConfigEl.style.display = provider === 'azure' ? 'block' : 'none';
+            if (claudeConfigEl) claudeConfigEl.style.display = provider === 'claude' ? 'block' : 'none';
             
             // Sync to cloud
             syncAIConfigsToCloud();
@@ -2744,6 +2812,55 @@
 
             try {
                 const response = await callAzureOpenAI('Hello! Please respond with "Connection successful!"');
+                alert('✓ Connection successful!\n\n' + response);
+            } catch (error) {
+                alert('❌ Connection failed:\n\n' + error.message);
+            }
+        }
+
+        // ====== ANTHROPIC CLAUDE API (via Google Apps Script proxy) ======
+        async function callClaudeAPI(prompt) {
+            const response = await fetch(GOOGLE_SCRIPT_URL + '?action=callClaude', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({
+                    apiKey: claudeConfig.apiKey,
+                    model: claudeConfig.model || 'claude-sonnet-4-5',
+                    prompt: prompt
+                }).toString()
+            });
+            if (!response.ok) throw new Error(`Proxy request failed: ${response.status}`);
+            const data = await response.json();
+            if (!data.success) throw new Error(data.message || 'Claude API call failed');
+            return data.text;
+        }
+
+        function loadClaudeConfig() {
+            const keyInput = document.getElementById('claude-key');
+            const modelSelect = document.getElementById('claude-model');
+            if (keyInput && claudeConfig.apiKey) keyInput.value = claudeConfig.apiKey;
+            if (modelSelect && claudeConfig.model) modelSelect.value = claudeConfig.model;
+        }
+
+        function saveClaudeConfig() {
+            const keyInput = document.getElementById('claude-key');
+            const modelSelect = document.getElementById('claude-model');
+            claudeConfig = {
+                apiKey: keyInput ? keyInput.value.trim() : '',
+                model: modelSelect ? modelSelect.value : 'claude-sonnet-4-5'
+            };
+            localStorage.setItem('claudeConfig', JSON.stringify(claudeConfig));
+            syncAIConfigsToCloud();
+            alert('✓ Claude configuration saved and synced to cloud!');
+        }
+
+        async function testClaudeConnection() {
+            if (!claudeConfig.apiKey) {
+                alert('Please save your Claude API key first');
+                return;
+            }
+            try {
+                const response = await callClaudeAPI('Hello! Please respond with "Connection successful!"');
                 alert('✓ Connection successful!\n\n' + response);
             } catch (error) {
                 alert('❌ Connection failed:\n\n' + error.message);
@@ -4113,6 +4230,11 @@ Sent from Manufacturing Issue Tracker v16.0`
                     showConfigurationRequired('Azure OpenAI', 'Configure your Azure OpenAI credentials');
                     return;
                 }
+            } else if (selectedProvider === 'claude') {
+                if (!claudeConfig.apiKey) {
+                    showConfigurationRequired('Claude (Anthropic)', 'Get your API key at console.anthropic.com');
+                    return;
+                }
             }
 
             // Show loading state
@@ -4123,7 +4245,7 @@ Sent from Manufacturing Issue Tracker v16.0`
                         <div class="loading-spinner"></div>
                         <p style="margin-top: 25px; color: #666; font-size: 15px;">
                             <strong>Retrieving information from equipment manuals and definitions...</strong><br>
-                            <span style="font-size: 14px;">Consulting ${selectedProvider === 'gemini' ? 'Google Gemini' : 'Azure OpenAI'} AI...</span>
+                            <span style="font-size: 14px;">Consulting ${selectedProvider === 'gemini' ? 'Google Gemini' : selectedProvider === 'claude' ? 'Claude (Anthropic)' : 'Azure OpenAI'} AI...</span>
                         </p>
                     </div>
                 </div>
@@ -4231,7 +4353,7 @@ Sent from Manufacturing Issue Tracker v16.0`
                             <div class="loading-spinner"></div>
                             <p style="margin-top: 25px; color: #666; font-size: 15px;">
                                 <strong>Generating instructions from ${manualCount > 0 ? manualCount + ' equipment manual' + (manualCount !== 1 ? 's' : '') : 'available information'}...</strong><br>
-                                <span style="font-size: 14px;">Consulting ${selectedProvider === 'gemini' ? 'Google Gemini' : 'Azure OpenAI'} AI...</span>
+                                <span style="font-size: 14px;">Consulting ${selectedProvider === 'gemini' ? 'Google Gemini' : selectedProvider === 'claude' ? 'Claude (Anthropic)' : 'Azure OpenAI'} AI...</span>
                             </p>
                         </div>
                     </div>
@@ -4344,6 +4466,8 @@ CITE which manual each piece of information comes from when you have multiple ma
                 let response;
                 if (selectedProvider === 'gemini') {
                     response = await callGeminiAPI(prompt, geminiFileUris);
+                } else if (selectedProvider === 'claude') {
+                    response = await callClaudeAPI(prompt);
                 } else {
                     response = await callAzureOpenAI(prompt);
                 }
@@ -4565,7 +4689,7 @@ CITE which manual each piece of information comes from when you have multiple ma
                         </div>
                         <div class="wi-metadata-item">
                             <span class="wi-metadata-label">AI Provider</span>
-                            <span class="wi-metadata-value">${selectedProvider === 'gemini' ? 'Google Gemini' : 'Azure OpenAI'}</span>
+                            <span class="wi-metadata-value">${selectedProvider === 'gemini' ? 'Google Gemini' : selectedProvider === 'claude' ? 'Claude (Anthropic)' : 'Azure OpenAI'}</span>
                         </div>
                     </div>
             `;
@@ -4644,6 +4768,11 @@ CITE which manual each piece of information comes from when you have multiple ma
                     showConfigurationRequired('Azure OpenAI', 'Configure your Azure OpenAI credentials');
                     return;
                 }
+            } else if (selectedProvider === 'claude') {
+                if (!claudeConfig.apiKey) {
+                    showConfigurationRequired('Claude (Anthropic)', 'Get your API key at console.anthropic.com');
+                    return;
+                }
             }
 
             // Create a modal/div to show the AI response (we'll reuse the AI tab's display area)
@@ -4664,7 +4793,7 @@ CITE which manual each piece of information comes from when you have multiple ma
                         <div class="loading-spinner"></div>
                         <p style="margin-top: 25px; color: #666; font-size: 15px;">
                             <strong>Analyzing your issue and actions taken...</strong><br>
-                            <span style="font-size: 14px;">Consulting ${selectedProvider === 'gemini' ? 'Google Gemini' : 'Azure OpenAI'} AI for best course of action...</span>
+                            <span style="font-size: 14px;">Consulting ${selectedProvider === 'gemini' ? 'Google Gemini' : selectedProvider === 'claude' ? 'Claude (Anthropic)' : 'Azure OpenAI'} AI for best course of action...</span>
                         </p>
                     </div>
                 </div>
@@ -4735,7 +4864,7 @@ CITE which manual each piece of information comes from when you have multiple ma
                             <div class="loading-spinner"></div>
                             <p style="margin-top: 25px; color: #666; font-size: 15px;">
                                 <strong>Analyzing issue and actions taken...</strong><br>
-                                <span style="font-size: 14px;">Consulting ${selectedProvider === 'gemini' ? 'Google Gemini' : 'Azure OpenAI'} AI${manualCount > 0 ? ' with ' + manualCount + ' equipment manual' + (manualCount !== 1 ? 's' : '') : ''}...</span>
+                                <span style="font-size: 14px;">Consulting ${selectedProvider === 'gemini' ? 'Google Gemini' : selectedProvider === 'claude' ? 'Claude (Anthropic)' : 'Azure OpenAI'} AI${manualCount > 0 ? ' with ' + manualCount + ' equipment manual' + (manualCount !== 1 ? 's' : '') : ''}...</span>
                             </p>
                         </div>
                     </div>
@@ -4794,8 +4923,10 @@ Keep it focused and practical - what should the technician do next?`;
                 let response;
                 if (selectedProvider === 'gemini') {
                     response = await callGeminiAPI(prompt, geminiFileUris);
+                } else if (selectedProvider === 'claude') {
+                    response = await callClaudeAPI(prompt);
                 } else {
-                    response = await callGeminiAPI(prompt);
+                    response = await callAzureOpenAI(prompt);
                 }
                 
                 // Display the result - pass manuals array for source display
@@ -4983,7 +5114,7 @@ Keep it focused and practical - what should the technician do next?`;
                         </div>
                         <div class="wi-metadata-item">
                             <span class="wi-metadata-label">AI Provider</span>
-                            <span class="wi-metadata-value">${selectedProvider === 'gemini' ? 'Google Gemini' : 'Azure OpenAI'}</span>
+                            <span class="wi-metadata-value">${selectedProvider === 'gemini' ? 'Google Gemini' : selectedProvider === 'claude' ? 'Claude (Anthropic)' : 'Azure OpenAI'}</span>
                         </div>
                     </div>
                     
