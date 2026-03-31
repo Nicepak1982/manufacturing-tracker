@@ -792,7 +792,7 @@
             
             <div class="version" onclick="showCreator()" style="position: absolute; right: 20px; top: 20px; margin: 0; cursor: pointer; transition: transform 0.2s;" 
                  onmouseover="this.style.transform='scale(1.1)'" 
-                 onmouseout="this.style.transform='scale(1)'">v21.0</div>
+                 onmouseout="this.style.transform='scale(1)'">v21.1</div>
         </div>
 
         <div id="sync-status" class="sync-status"></div>
@@ -2283,7 +2283,7 @@
             statusDiv.style.display = 'block'; statusDiv.style.background = '#e7f3ff'; statusDiv.style.color = '#0c5460'; statusDiv.innerHTML = '⏳ Sending...';
             try {
                 fetch(GOOGLE_SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: new URLSearchParams({ action: 'sendSupportEmail', supportEmails: SUPPORT_EMAILS.join(','), name: name, subject: `[App Support] ${subject}`, message: `From: ${name}\nSubject: ${subject}\n\n${message}\n\n---\nManufacturing Issue Tracker v21.0` }) });
+                    body: new URLSearchParams({ action: 'sendSupportEmail', supportEmails: SUPPORT_EMAILS.join(','), name: name, subject: `[App Support] ${subject}`, message: `From: ${name}\nSubject: ${subject}\n\n${message}\n\n---\nManufacturing Issue Tracker v21.1` }) });
                 await new Promise(resolve => setTimeout(resolve, 2000));
                 statusDiv.style.background = '#E3F2FD'; statusDiv.style.color = '#01579B'; statusDiv.innerHTML = '✅ Message sent!';
                 btn.disabled = false; btn.textContent = '📤 Send Message';
@@ -2657,7 +2657,7 @@ ${hasManuals ? '- Information from: ' + manualNames : '- Consult equipment manua
                 let actionsText = '\n\nACTIONS ALREADY TAKEN ON CURRENT ISSUE:\n';
                 currentActions.forEach((act, i) => { actionsText += `${i+1}. ${act.action}\n   Result: ${act.status}\n`; });
 
-                const prompt = `You are a manufacturing equipment expert and troubleshooting analyst. Analyze the current issue using the historical issue log, operator actions, and equipment manuals.
+                const prompt = `You are a manufacturing equipment expert. Provide direct troubleshooting guidance.
 
 ${definitionsContext}
 CURRENT SITUATION:
@@ -2669,46 +2669,49 @@ ${historyContext}
 
 ${hasManuals ? `REFERENCE MATERIALS: ${manualCount} manual${manualCount !== 1 ? 's' : ''} attached (${manualNames}). Cite relevant sections.` : ''}
 
-YOUR ANALYSIS:
+INSTRUCTIONS:
+- Review the historical issue log to determine what has worked and what hasn't for similar issues
+- Historical data is from operators and may be informal, abbreviated, or misspelled - interpret intelligently
+- Look across ALL production lines for similar issues on this machine type
+- Use historical success/failure data to inform your recommendations
+- Do NOT provide a detailed breakdown of the historical data - just use it to make better recommendations
 
-STEP 1 - HISTORICAL PATTERN ANALYSIS:
-- Issue log is from operators - may be informal, abbreviated, misspelled. Interpret intelligently.
-- Find issues SAME or SIMILAR to current issue, even if described differently
-- Identify which actions were CORRECTED vs NOT CORRECTED
-- Look for patterns across ALL production lines
+CRITICAL - HISTORICAL DATA RELIABILITY:
+The historical issue log is real production data but it is IMPERFECT. Use good judgement:
+- Operators may have done multiple things at once but only recorded one action. A "corrected" action may not be the actual fix - it may just be what was written down.
+- An action may appear to have "corrected" an issue, but the real fix was something else done at the same time (known or unknown) that changed the machine state.
+- Conversely, an action marked "not corrected" might actually be the right fix in different circumstances - it may have failed because of an unrelated underlying problem at the time.
+- Correlation is not causation. Just because an action was done before a fix doesn't mean it caused the fix.
+- Use the historical data as ONE input alongside your technical knowledge, the equipment manuals, and engineering reasoning. Do not blindly trust success/failure rates - think critically about whether the recorded action logically addresses the reported symptom.
+- When historical data conflicts with what the manual says or what engineering logic suggests, weigh all three and use your best judgement. Flag any contradictions briefly if relevant.
 
-STEP 2 - EFFECTIVENESS ANALYSIS:
-- Which actions have HIGHEST success rate?
-- Which NEVER worked?
-- Has operator already tried the best historical solutions?
+RESPONSE FORMAT (in this exact order):
 
-STEP 3 - MANUAL CROSS-REFERENCE:
-${hasManuals ? 'Cross-reference with manual(s) for documented procedures.' : 'No manuals available.'}
+1. SAFETY PRECAUTIONS
+All company policies and LOTO (Lockout/Tagout) procedures must be followed at all times.
+List any specific hazards or precautions for this issue and the recommended actions.
 
-RESPONSE FORMAT:
+2. RECOMMENDED NEXT STEPS (2-4 specific actions)
+Prioritize by likelihood of success based on historical data and manual procedures.
+For each step, if historical data supports it, include a brief note like: "(Historically: tried X times, Y% success rate)" 
+If the operator has already tried a historically successful action, note that and suggest alternatives.
 
-1. HISTORICAL INSIGHTS
-How many similar issues found, which lines, patterns/trends.
-Cite actual dates, operators, and actions from the log.
+3. ACTIONS TO AVOID
+Briefly list any actions from the historical data that were consistently marked "NOT CORRECTED" for similar issues. Keep this to one line per action, e.g.: "Action name (tried X times, never corrected the issue)"
+If no failed actions found in history, skip this section.
 
-2. WHAT HAS WORKED BEFORE
-Actions marked "CORRECTED" for similar issues, ranked by frequency.
+4. LIKELY ROOT CAUSE
+Based on the combination of current symptoms, actions taken, historical patterns, and manual references - what is most likely causing this?
 
-3. WHAT HAS NOT WORKED
-Actions marked "NOT CORRECTED" - avoid these.
+${hasManuals ? '5. MANUAL REFERENCES\nCite relevant sections, diagrams, or pages.\n' : ''}
 
-4. RECOMMENDED NEXT STEPS (2-4 actions)
-Based on historical success rates + what operator already tried + manual procedures.
-
-5. ROOT CAUSE ANALYSIS
-Based on patterns - recurring maintenance, operator training, or wear issue?
-
-6. SAFETY NOTES
-Hazards or precautions.
-
-${hasManuals ? '7. MANUAL REFERENCES\nCite relevant sections/diagrams.\n' : ''}
-
-IMPORTANT: Be SPECIFIC when referencing historical data. Clearly distinguish "proven fixes" from "suggestions". If no similar history exists, state that clearly.`;
+IMPORTANT:
+- Do NOT include sections explaining what you found in the historical data
+- Do NOT list out individual historical records
+- Just USE the historical data to make better, data-driven recommendations
+- Keep it focused and actionable - what should the technician do next?
+- No phrases like "As an expert" or "Based on my analysis"
+- Be direct and technical`;
 
                 let response;
                 if (selectedProvider === 'gemini') response = await callGeminiAPI(prompt, geminiFileUris);
