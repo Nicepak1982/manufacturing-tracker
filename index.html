@@ -792,7 +792,7 @@
             
             <div class="version" onclick="showCreator()" style="position: absolute; right: 20px; top: 20px; margin: 0; cursor: pointer; transition: transform 0.2s;" 
                  onmouseover="this.style.transform='scale(1.1)'" 
-                 onmouseout="this.style.transform='scale(1)'">v21.1</div>
+                 onmouseout="this.style.transform='scale(1)'">v21.2</div>
         </div>
 
         <div id="sync-status" class="sync-status"></div>
@@ -812,12 +812,12 @@
             <form id="issue-form" onsubmit="submitIssue(event)">
                 <div class="form-group">
                     <label for="operator">Operator Name *</label>
-                    <input type="text" id="operator" class="form-control" required>
+                    <input type="text" id="operator" class="form-control" required oninput="checkShowAIButton()">
                 </div>
 
                 <div class="form-group">
                     <label for="line">Production Line *</label>
-                    <select id="line" class="form-control" required onchange="updateMachineOptions(); updateSuggestions();">
+                    <select id="line" class="form-control" required onchange="updateMachineOptions(); updateSuggestions(); checkShowAIButton();">
                         <option value="">Select Line</option>
                         <option value="RX500">RX500</option>
                         <option value="RX300">RX300</option>
@@ -829,13 +829,13 @@
 
                 <div class="form-group">
                     <label for="machine">Machine/Equipment *</label>
-                    <input type="text" id="machine" class="form-control" required list="machine-list" autocomplete="off" onchange="updateSuggestions()">
+                    <input type="text" id="machine" class="form-control" required list="machine-list" autocomplete="off" onchange="updateSuggestions(); checkShowAIButton();" oninput="checkShowAIButton()">
                     <datalist id="machine-list"></datalist>
                 </div>
 
                 <div class="form-group">
                     <label for="description">Issue Description *</label>
-                    <input type="text" id="description" class="form-control" required list="description-suggestions" autocomplete="off">
+                    <input type="text" id="description" class="form-control" required list="description-suggestions" autocomplete="off" oninput="checkShowAIButton()">
                     <datalist id="description-suggestions"></datalist>
                     <small id="description-help" style="color: #666; font-size: 12px;">Select line and machine to see previous issues</small>
                 </div>
@@ -1541,6 +1541,19 @@
                     if (searchBox) { searchBox.value = ''; searchBox.removeAttribute('value'); }
                     renderDefinitions();
                 }, 100);
+            }
+        }
+
+        function checkShowAIButton() {
+            const operator = document.getElementById('operator').value.trim();
+            const line = document.getElementById('line').value;
+            const machine = document.getElementById('machine').value.trim();
+            const description = document.getElementById('description').value.trim();
+            const aiBtn = document.getElementById('ask-ai-btn');
+            if (operator && line && machine && description) {
+                aiBtn.style.display = 'inline-block';
+            } else if (currentActions.length === 0) {
+                aiBtn.style.display = 'none';
             }
         }
 
@@ -2283,7 +2296,7 @@
             statusDiv.style.display = 'block'; statusDiv.style.background = '#e7f3ff'; statusDiv.style.color = '#0c5460'; statusDiv.innerHTML = '⏳ Sending...';
             try {
                 fetch(GOOGLE_SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: new URLSearchParams({ action: 'sendSupportEmail', supportEmails: SUPPORT_EMAILS.join(','), name: name, subject: `[App Support] ${subject}`, message: `From: ${name}\nSubject: ${subject}\n\n${message}\n\n---\nManufacturing Issue Tracker v21.1` }) });
+                    body: new URLSearchParams({ action: 'sendSupportEmail', supportEmails: SUPPORT_EMAILS.join(','), name: name, subject: `[App Support] ${subject}`, message: `From: ${name}\nSubject: ${subject}\n\n${message}\n\n---\nManufacturing Issue Tracker v21.2` }) });
                 await new Promise(resolve => setTimeout(resolve, 2000));
                 statusDiv.style.background = '#E3F2FD'; statusDiv.style.color = '#01579B'; statusDiv.innerHTML = '✅ Message sent!';
                 btn.disabled = false; btn.textContent = '📤 Send Message';
@@ -2594,7 +2607,7 @@ ${hasManuals ? '- Information from: ' + manualNames : '- Consult equipment manua
             const line = document.getElementById('line').value;
             const machine = document.getElementById('machine').value;
             const description = document.getElementById('description').value;
-            if (!line || !machine || !description || currentActions.length === 0) { alert('Please fill in all details and add at least one action first.'); return; }
+            if (!line || !machine || !description) { alert('Please fill in Production Line, Machine, and Issue Description.'); return; }
             if (selectedProvider === 'gemini' && !geminiConfig.apiKey) { showConfigurationRequired('Google Gemini', 'Get your free API key at ai.google.dev'); return; }
             if (selectedProvider === 'azure' && (!azureConfig.endpoint || !azureConfig.apiKey)) { showConfigurationRequired('Azure OpenAI', 'Configure Azure credentials'); return; }
             if (selectedProvider === 'claude' && !claudeConfig.apiKey) { showConfigurationRequired('Anthropic Claude', 'Get key at console.anthropic.com'); return; }
@@ -2654,8 +2667,13 @@ ${hasManuals ? '- Information from: ' + manualNames : '- Consult equipment manua
                 const definitionsContext = getDefinitionsContext();
                 const hasManuals = manualCount > 0;
 
-                let actionsText = '\n\nACTIONS ALREADY TAKEN ON CURRENT ISSUE:\n';
-                currentActions.forEach((act, i) => { actionsText += `${i+1}. ${act.action}\n   Result: ${act.status}\n`; });
+                let actionsText = '';
+                if (currentActions.length > 0) {
+                    actionsText = '\n\nACTIONS ALREADY TAKEN ON CURRENT ISSUE:\n';
+                    currentActions.forEach((act, i) => { actionsText += `${i+1}. ${act.action}\n   Result: ${act.status}\n`; });
+                } else {
+                    actionsText = '\n\nACTIONS ALREADY TAKEN: None yet - operator is requesting guidance before taking action.\n';
+                }
 
                 const prompt = `You are a manufacturing equipment expert. Provide direct troubleshooting guidance.
 
