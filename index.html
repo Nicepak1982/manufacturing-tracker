@@ -792,7 +792,7 @@
             
             <div class="version" onclick="showCreator()" style="position: absolute; right: 20px; top: 20px; margin: 0; cursor: pointer; transition: transform 0.2s;" 
                  onmouseover="this.style.transform='scale(1.1)'" 
-                 onmouseout="this.style.transform='scale(1)'">v21.2</div>
+                 onmouseout="this.style.transform='scale(1)'">v21.3</div>
         </div>
 
         <div id="sync-status" class="sync-status"></div>
@@ -2190,7 +2190,7 @@
             return file.uri;
         }
 
-        function needsCacheRefresh(lastUpdated) { if (!lastUpdated) return true; return (new Date() - new Date(lastUpdated)) / (1000*60*60*24) >= 7; }
+        function needsCacheRefresh(lastUpdated) { if (!lastUpdated) return true; return (new Date() - new Date(lastUpdated)) / (1000*60*60) >= 36; }
 
         async function refreshManualCache(key, manualId, showProgress = true) {
             const manuals = manualMappings[key];
@@ -2223,6 +2223,29 @@
                     if (manual.geminiFileUri && !needsCacheRefresh(manual.lastUpdated)) { fileUris.push({ uri: manual.geminiFileUri, name: manual.name }); }
                     else { const uri = await refreshManualCache(key, manual.id, showProgress); fileUris.push({ uri: uri, name: manual.name }); }
                 } catch (error) { console.error(`Error loading "${manual.name}":`, error); }
+            }
+            return fileUris;
+        }
+
+        // Detects Gemini "file not found / expired URI" errors so we can auto-recover
+        function isStaleGeminiFileError(error) {
+            if (!error) return false;
+            const msg = (error.message || String(error)).toLowerCase();
+            return msg.includes('file') && (msg.includes('not found') || msg.includes('not exist') || msg.includes('permission') || msg.includes('invalid') || msg.includes('expired') || msg.includes('403') || msg.includes('404'));
+        }
+
+        // Force re-upload of all manuals for a given machine key, bypassing the cache age check
+        async function forceRefreshAllManuals(key) {
+            const manuals = manualMappings[key];
+            if (!manuals || !Array.isArray(manuals) || manuals.length === 0) return [];
+            const fileUris = [];
+            for (const manual of manuals) {
+                try {
+                    const uri = await refreshManualCache(key, manual.id, false);
+                    fileUris.push({ uri: uri, name: manual.name });
+                } catch (error) {
+                    console.error(`Force-refresh failed for "${manual.name}":`, error);
+                }
             }
             return fileUris;
         }
@@ -2296,7 +2319,7 @@
             statusDiv.style.display = 'block'; statusDiv.style.background = '#e7f3ff'; statusDiv.style.color = '#0c5460'; statusDiv.innerHTML = '⏳ Sending...';
             try {
                 fetch(GOOGLE_SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: new URLSearchParams({ action: 'sendSupportEmail', supportEmails: SUPPORT_EMAILS.join(','), name: name, subject: `[App Support] ${subject}`, message: `From: ${name}\nSubject: ${subject}\n\n${message}\n\n---\nManufacturing Issue Tracker v21.2` }) });
+                    body: new URLSearchParams({ action: 'sendSupportEmail', supportEmails: SUPPORT_EMAILS.join(','), name: name, subject: `[App Support] ${subject}`, message: `From: ${name}\nSubject: ${subject}\n\n${message}\n\n---\nManufacturing Issue Tracker v21.3` }) });
                 await new Promise(resolve => setTimeout(resolve, 2000));
                 statusDiv.style.background = '#E3F2FD'; statusDiv.style.color = '#01579B'; statusDiv.innerHTML = '✅ Message sent!';
                 btn.disabled = false; btn.textContent = '📤 Send Message';
@@ -2536,7 +2559,19 @@ IMPORTANT NOTES:
 ${hasManuals ? '- Information from: ' + manualNames : '- Consult equipment manual'}`;
 
                 let response;
-                if (selectedProvider === 'gemini') response = await callGeminiAPI(prompt, geminiFileUris);
+                if (selectedProvider === 'gemini') {
+                    try {
+                        response = await callGeminiAPI(prompt, geminiFileUris);
+                    } catch (err) {
+                        if (isStaleGeminiFileError(err) && geminiFileUris.length > 0) {
+                            console.warn('Stale Gemini file URIs detected, auto-refreshing and retrying...', err.message);
+                            geminiFileUris = await forceRefreshAllManuals(manualKey);
+                            response = await callGeminiAPI(prompt, geminiFileUris);
+                        } else {
+                            throw err;
+                        }
+                    }
+                }
                 else if (selectedProvider === 'claude') response = await callClaudeAPI(prompt, claudePDFs.length > 0 ? claudePDFs : null);
                 else response = await callAzureOpenAI(prompt);
                 displayWorkInstruction(response, line, machine, issue);
@@ -2732,7 +2767,19 @@ IMPORTANT:
 - Be direct and technical`;
 
                 let response;
-                if (selectedProvider === 'gemini') response = await callGeminiAPI(prompt, geminiFileUris);
+                if (selectedProvider === 'gemini') {
+                    try {
+                        response = await callGeminiAPI(prompt, geminiFileUris);
+                    } catch (err) {
+                        if (isStaleGeminiFileError(err) && geminiFileUris.length > 0) {
+                            console.warn('Stale Gemini file URIs detected, auto-refreshing and retrying...', err.message);
+                            geminiFileUris = await forceRefreshAllManuals(manualKey);
+                            response = await callGeminiAPI(prompt, geminiFileUris);
+                        } else {
+                            throw err;
+                        }
+                    }
+                }
                 else if (selectedProvider === 'claude') response = await callClaudeAPI(prompt, claudePDFs.length > 0 ? claudePDFs : null);
                 else response = await callAzureOpenAI(prompt);
                 displayAIAssistance(response, line, machine, description, manuals, historyCount);
