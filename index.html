@@ -776,6 +776,128 @@
             color: #6c757d;
             font-style: italic;
         }
+        /* ====== RESPONSIVE: PHONE & NARROW SCREENS ====== */
+        /* These rules only apply to screens under 768px wide (phones).
+           Tablets and desktops are unaffected. */
+        @media (max-width: 767px) {
+            body {
+                padding: 5px;
+            }
+
+            .container {
+                border-radius: 8px;
+            }
+
+            /* Shrink header, stack content below the buttons */
+            .header {
+                padding: 60px 10px 15px 10px; /* top padding reserves space for buttons */
+                text-align: center;
+            }
+
+            .header h1 {
+                font-size: 20px !important;
+                line-height: 1.2;
+            }
+
+            .header p {
+                font-size: 13px;
+            }
+
+            /* Override the inline padding: 0 150px that crowds the title */
+            .header > div[style*="padding: 0 150px"] {
+                padding: 0 !important;
+            }
+
+            /* Move App Support button to top-left, version badge to top-right, smaller */
+            .header .btn {
+                position: absolute !important;
+                top: 8px !important;
+                left: 8px !important;
+                padding: 6px 10px !important;
+                font-size: 12px !important;
+            }
+
+            .version {
+                top: 8px !important;
+                right: 8px !important;
+                padding: 4px 8px !important;
+                font-size: 11px !important;
+            }
+
+            /* Nav tabs: allow wrapping to multiple rows */
+            .nav-tabs {
+                flex-wrap: wrap;
+            }
+
+            .nav-tab {
+                flex: 1 0 33%;           /* three per row on phone */
+                padding: 10px 4px;
+                font-size: 12px;
+                min-width: 0;
+            }
+
+            /* Tab content padding reduced to reclaim horizontal space */
+            .tab-content {
+                padding: 15px;
+                min-height: auto;
+            }
+
+            /* Buttons: a bit smaller */
+            .btn {
+                padding: 10px 16px;
+                font-size: 14px;
+            }
+
+            /* History tab filters: make the inline-width selects stack */
+            #history-tab select.form-control[style*="width: 200px"] {
+                width: 100% !important;
+                display: block !important;
+                margin: 5px 0 !important;
+            }
+
+            #history-tab label {
+                display: block;
+                margin-top: 10px;
+            }
+
+            /* Provider selector: stack the three cards vertically */
+            .provider-selector {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            /* Work instruction metadata: single column on phone */
+            .wi-metadata {
+                grid-template-columns: 1fr;
+                padding: 15px;
+            }
+
+            .wi-section {
+                padding: 15px;
+            }
+
+            .wi-header {
+                font-size: 16px;
+                padding: 15px;
+            }
+
+            /* Modal sizing */
+            .modal-content {
+                margin: 10% auto;
+                padding: 20px;
+                width: 95%;
+            }
+
+            /* Action buttons row inside modals: stack */
+            .action-buttons {
+                flex-direction: column;
+            }
+
+            .action-buttons button {
+                min-width: 0;
+                width: 100%;
+            }
+        }
     </style>
 </head>
 <body>
@@ -792,7 +914,7 @@
             
             <div class="version" onclick="showCreator()" style="position: absolute; right: 20px; top: 20px; margin: 0; cursor: pointer; transition: transform 0.2s;" 
                  onmouseover="this.style.transform='scale(1.1)'" 
-                 onmouseout="this.style.transform='scale(1)'">v21.3</div>
+                 onmouseout="this.style.transform='scale(1)'">v21.4</div>
         </div>
 
         <div id="sync-status" class="sync-status"></div>
@@ -2319,7 +2441,7 @@
             statusDiv.style.display = 'block'; statusDiv.style.background = '#e7f3ff'; statusDiv.style.color = '#0c5460'; statusDiv.innerHTML = '⏳ Sending...';
             try {
                 fetch(GOOGLE_SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: new URLSearchParams({ action: 'sendSupportEmail', supportEmails: SUPPORT_EMAILS.join(','), name: name, subject: `[App Support] ${subject}`, message: `From: ${name}\nSubject: ${subject}\n\n${message}\n\n---\nManufacturing Issue Tracker v21.3` }) });
+                    body: new URLSearchParams({ action: 'sendSupportEmail', supportEmails: SUPPORT_EMAILS.join(','), name: name, subject: `[App Support] ${subject}`, message: `From: ${name}\nSubject: ${subject}\n\n${message}\n\n---\nManufacturing Issue Tracker v21.4` }) });
                 await new Promise(resolve => setTimeout(resolve, 2000));
                 statusDiv.style.background = '#E3F2FD'; statusDiv.style.color = '#01579B'; statusDiv.innerHTML = '✅ Message sent!';
                 btn.disabled = false; btn.textContent = '📤 Send Message';
