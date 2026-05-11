@@ -1085,7 +1085,7 @@
             
             <div class="version" onclick="showCreator()" style="position: absolute; right: 20px; top: 20px; margin: 0; cursor: pointer; transition: transform 0.2s;" 
                  onmouseover="this.style.transform='scale(1.1)'" 
-                 onmouseout="this.style.transform='scale(1)'">v21.27</div>
+                 onmouseout="this.style.transform='scale(1)'">v21.28</div>
         </div>
 
         <div id="sync-status" class="sync-status"></div>
@@ -2012,11 +2012,8 @@
             currentActions.push({ action: action, status: statusMap[status], timestamp: new Date().toISOString(), aiResponse: lastAIResponse || '' });
             updateActionsDisplay();
             closeActionModal();
-            setTimeout(() => {
-                const addAnother = confirm('Action added successfully!\n\nWould you like to add another action?');
-                if (addAnother) { showAddActionModal(); }
-                else { document.getElementById('submit-issue-btn').style.display = 'inline-block'; document.getElementById('ask-ai-btn').style.display = 'inline-block'; }
-            }, 100);
+            document.getElementById('submit-issue-btn').style.display = 'inline-block';
+            document.getElementById('ask-ai-btn').style.display = 'inline-block';
         }
         
         function updateActionsDisplay() {
