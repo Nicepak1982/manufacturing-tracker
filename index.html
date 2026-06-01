@@ -1085,7 +1085,7 @@
             
             <div class="version" onclick="showCreator()" style="position: absolute; right: 20px; top: 20px; margin: 0; cursor: pointer; transition: transform 0.2s;" 
                  onmouseover="this.style.transform='scale(1.1)'" 
-                 onmouseout="this.style.transform='scale(1)'">v21.29</div>
+                 onmouseout="this.style.transform='scale(1)'">v21.31</div>
         </div>
 
         <div id="sync-status" class="sync-status"></div>
@@ -1437,9 +1437,50 @@
                 
                 <div id="sync-verification-result" style="margin-top: 15px;"></div>
             </div>
+
+            <div class="config-section">
+                <h3>📢 Changelog / Update Message</h3>
+                <p style="color: #666; margin-bottom: 15px;">
+                    Set a message users will see every time they log in during the specified date range.
+                    Leave the message blank or set dates in the past to disable.
+                </p>
+                <div class="form-group">
+                    <label for="changelog-message">Message</label>
+                    <textarea id="changelog-message" class="form-control" rows="5" placeholder="Enter the update/changelog message users will see on login..."></textarea>
+                </div>
+                <div style="display:flex; gap:20px; flex-wrap:wrap;">
+                    <div class="form-group" style="flex:1; min-width:200px;">
+                        <label for="changelog-start">Start Date &amp; Time</label>
+                        <input type="datetime-local" id="changelog-start" class="form-control">
+                    </div>
+                    <div class="form-group" style="flex:1; min-width:200px;">
+                        <label for="changelog-end">End Date &amp; Time</label>
+                        <input type="datetime-local" id="changelog-end" class="form-control">
+                    </div>
+                </div>
+                <button onclick="saveChangelogConfig()" class="btn btn-primary">💾 Save &amp; Sync to Cloud</button>
+                <button onclick="clearChangelogConfig()" class="btn btn-warning" style="margin-left:5px;">🗑️ Clear / Disable</button>
+                <div id="changelog-save-result" style="margin-top:12px;"></div>
+            </div>
         </div>
 
-        <!-- MODALS -->
+        <!-- CHANGELOG MODAL -->
+        <div id="changelog-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.75); z-index:11000; align-items:center; justify-content:center; font-family:Arial,sans-serif;">
+            <div style="background:white; border-radius:15px; box-shadow:0 20px 60px rgba(0,0,0,0.4); max-width:560px; width:94%; overflow:hidden;">
+                <div style="background:linear-gradient(135deg,#002D72,#00A3E0); color:white; padding:22px 28px; font-size:18px; font-weight:bold; text-align:center; letter-spacing:0.4px;">
+                    📋 App Update Notice
+                </div>
+                <div style="padding:28px;">
+                    <div id="changelog-modal-message" style="color:#333; font-size:15px; line-height:1.7; white-space:pre-wrap; max-height:300px; overflow-y:auto;"></div>
+                </div>
+                <div style="padding:0 28px 26px; text-align:center;">
+                    <button onclick="dismissChangelog()" style="padding:13px 40px; background:#002D72; color:white; border:none; border-radius:8px; font-size:16px; font-weight:bold; cursor:pointer;">✓ OK, Got It</button>
+                </div>
+            </div>
+        </div>
+        <!-- END CHANGELOG MODAL -->
+
+                <!-- MODALS -->
         <div id="action-modal" class="modal" onclick="handleModalClick(event)">
             <div class="modal-content" onclick="event.stopPropagation()">
                 <h3 style="margin-bottom: 20px; color: #2c3e50;">Add Action Taken</h3>
@@ -1611,6 +1652,7 @@
         let definitions = JSON.parse(localStorage.getItem('definitions')) || [];
         let selectedProvider = localStorage.getItem('selectedProvider') || 'gemini';
         let currentEditingDefinitionId = null;
+        let changelogConfig = { message: '', startDate: '', endDate: '' };
         
         const machinesByLine = {
             'RX500': ['Unwind', 'Festoon', 'Forming Table', 'Pull Station', 'Saw House', 'Diverter', 'Conveyor', 'Lidder', 'Wrapper', 'Case Erector', 'Case Packer', 'Weight Checker', 'Palletizer', 'Printer (Wrapper)', 'Printer (Case)'],
@@ -1638,6 +1680,8 @@
             if (searchBox) searchBox.value = '';
             renderDefinitions();
             isInitializing = false;
+            // Show changelog after cloud data is loaded
+            showChangelogIfActive();
         });
 
         // ====== CLOUD SYNC FUNCTIONS (UPDATED: using fetch instead of iframes) ======
@@ -1717,6 +1761,10 @@
                             localStorage.setItem('selectedProvider', selectedProvider);
                             selectProvider(selectedProvider);
                         }
+                        if (data.aiConfigs.changelogConfig) {
+                            changelogConfig = data.aiConfigs.changelogConfig;
+                            loadChangelogConfigUI();
+                        }
                     }
                     if (data.definitions && Array.isArray(data.definitions)) {
                         definitions = data.definitions;
@@ -1768,7 +1816,8 @@
                         geminiConfig: geminiConfig,
                         claudeConfig: claudeConfig,
                         manualMappings: manualMappings,
-                        selectedProvider: selectedProvider
+                        selectedProvider: selectedProvider,
+                        changelogConfig: changelogConfig
                     }))
                 });
                 const data = await response.json();
@@ -3356,6 +3405,84 @@ IMPORTANT:
             try { await syncAIConfigsToCloud(); setTimeout(() => verifyCloudSync(), 2000); }
             catch (error) { resultDiv.innerHTML = `<div style="background: #ffebee; padding: 15px;"><h4 style="color: #c62828;">❌ Failed</h4><p>${error.message}</p></div>`; }
         }
+
+        // ====== CHANGELOG / UPDATE MESSAGE ======
+
+        function showChangelogIfActive() {
+            if (!changelogConfig || !changelogConfig.message || !changelogConfig.message.trim()) return;
+            const now = new Date();
+            const start = changelogConfig.startDate ? new Date(changelogConfig.startDate) : null;
+            const end = changelogConfig.endDate ? new Date(changelogConfig.endDate) : null;
+            if (start && now < start) return;
+            if (end && now > end) return;
+            document.getElementById('changelog-modal-message').textContent = changelogConfig.message.trim();
+            document.getElementById('changelog-modal').style.display = 'flex';
+        }
+
+        function dismissChangelog() {
+            document.getElementById('changelog-modal').style.display = 'none';
+        }
+
+        function loadChangelogConfigUI() {
+            if (!changelogConfig) return;
+            const msgEl = document.getElementById('changelog-message');
+            const startEl = document.getElementById('changelog-start');
+            const endEl = document.getElementById('changelog-end');
+            if (msgEl) msgEl.value = changelogConfig.message || '';
+            if (startEl) startEl.value = changelogConfig.startDate || '';
+            if (endEl) endEl.value = changelogConfig.endDate || '';
+        }
+
+        async function saveChangelogConfig() {
+            const message = document.getElementById('changelog-message').value.trim();
+            const startDate = document.getElementById('changelog-start').value;
+            const endDate = document.getElementById('changelog-end').value;
+            const resultDiv = document.getElementById('changelog-save-result');
+            if (message && (!startDate || !endDate)) {
+                resultDiv.innerHTML = '<p style="color:#dc3545;">⚠️ Please set both a start and end date/time.</p>';
+                return;
+            }
+            if (startDate && endDate && new Date(startDate) >= new Date(endDate)) {
+                resultDiv.innerHTML = '<p style="color:#dc3545;">⚠️ End date must be after start date.</p>';
+                return;
+            }
+            changelogConfig = { message, startDate, endDate };
+            resultDiv.innerHTML = '<p style="color:#666;">☁️ Saving to Google Sheets...</p>';
+            // Fire sync and verify by re-loading from cloud rather than relying on sync return value
+            await syncAIConfigsToCloud();
+            try {
+                const verifyResp = await fetch(GOOGLE_SCRIPT_URL + '?action=load');
+                const verifyData = await verifyResp.json();
+                if (verifyData.success && verifyData.aiConfigs && verifyData.aiConfigs.changelogConfig &&
+                    verifyData.aiConfigs.changelogConfig.message === message) {
+                    resultDiv.innerHTML = '<p style="color:#002D72;">✓ Changelog saved and verified in cloud.</p>';
+                } else {
+                    resultDiv.innerHTML = '<p style="color:#dc3545;">✗ Cloud sync failed — check your connection.</p>';
+                }
+            } catch(e) {
+                resultDiv.innerHTML = '<p style="color:#dc3545;">✗ Could not verify save — check your connection.</p>';
+            }
+            setTimeout(() => { resultDiv.innerHTML = ''; }, 5000);
+        }
+
+        async function clearChangelogConfig() {
+            if (!confirm('Clear the changelog message? Users will no longer see it on login.')) return;
+            changelogConfig = { message: '', startDate: '', endDate: '' };
+            document.getElementById('changelog-message').value = '';
+            document.getElementById('changelog-start').value = '';
+            document.getElementById('changelog-end').value = '';
+            const resultDiv = document.getElementById('changelog-save-result');
+            resultDiv.innerHTML = '<p style="color:#666;">☁️ Clearing...</p>';
+            const success = await syncAIConfigsToCloud();
+            if (success) {
+                resultDiv.innerHTML = '<p style="color:#002D72;">✓ Changelog cleared and synced.</p>';
+            } else {
+                resultDiv.innerHTML = '<p style="color:#dc3545;">✗ Cloud sync failed — check your connection.</p>';
+            }
+            setTimeout(() => { resultDiv.innerHTML = ''; }, 4000);
+        }
+
+        // ====== END CHANGELOG / UPDATE MESSAGE ======
     </script>
 </body>
 </html>
