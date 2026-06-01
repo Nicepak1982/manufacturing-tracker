@@ -1085,7 +1085,7 @@
             
             <div class="version" onclick="showCreator()" style="position: absolute; right: 20px; top: 20px; margin: 0; cursor: pointer; transition: transform 0.2s;" 
                  onmouseover="this.style.transform='scale(1.1)'" 
-                 onmouseout="this.style.transform='scale(1)'">v21.28</div>
+                 onmouseout="this.style.transform='scale(1)'">v21.29</div>
         </div>
 
         <div id="sync-status" class="sync-status"></div>
@@ -1889,7 +1889,7 @@
                 descriptionHelp.textContent = 'Select line and machine to see previous issues';
                 return;
             }
-            const relevantIssues = issues.filter(issue => issue.line === line && issue.machine.toLowerCase() === machine.toLowerCase());
+            const relevantIssues = issues.filter(issue => issue.line === line && issue.machine && issue.machine.toLowerCase() === machine.toLowerCase());
             const descriptions = new Set();
             relevantIssues.forEach(issue => { if (issue.description && issue.description.trim()) { descriptions.add(issue.description.trim()); } });
             const descriptionList = document.getElementById('description-suggestions');
@@ -1936,9 +1936,9 @@
             keywordList.innerHTML = '';
             if (!machine) { keywordHelp.textContent = 'Select a machine to see previous issues'; return; }
             let relevantIssues;
-            if (allLinesCheckbox.checked) { relevantIssues = issues.filter(issue => issue.machine.toLowerCase() === machine.toLowerCase()); }
-            else if (line) { relevantIssues = issues.filter(issue => issue.line === line && issue.machine.toLowerCase() === machine.toLowerCase()); }
-            else { relevantIssues = issues.filter(issue => issue.machine.toLowerCase() === machine.toLowerCase()); }
+            if (allLinesCheckbox.checked) { relevantIssues = issues.filter(issue => issue.machine && issue.machine.toLowerCase() === machine.toLowerCase()); }
+            else if (line) { relevantIssues = issues.filter(issue => issue.line === line && issue.machine && issue.machine.toLowerCase() === machine.toLowerCase()); }
+            else { relevantIssues = issues.filter(issue => issue.machine && issue.machine.toLowerCase() === machine.toLowerCase()); }
             const descriptions = new Set();
             relevantIssues.forEach(issue => { if (issue.description && issue.description.trim()) { descriptions.add(issue.description.trim()); } });
             descriptions.forEach(desc => { const option = document.createElement('option'); option.value = desc; keywordList.appendChild(option); });
@@ -1989,7 +1989,7 @@
             const machine = document.getElementById('machine').value;
             const description = document.getElementById('description').value;
             if (!line || !machine || !description) { alert('Please fill in Production Line, Machine, and Issue Description first.'); return; }
-            const relevantIssues = issues.filter(issue => issue.line === line && issue.machine.toLowerCase() === machine.toLowerCase() && issue.description.toLowerCase().includes(description.toLowerCase()));
+            const relevantIssues = issues.filter(issue => issue.line === line && issue.machine && issue.machine.toLowerCase() === machine.toLowerCase() && issue.description && issue.description.toLowerCase().includes(description.toLowerCase()));
             const actions = new Set();
             relevantIssues.forEach(issue => { if (issue.solutions && issue.solutions.trim()) { actions.add(issue.solutions.trim()); } });
             const actionList = document.getElementById('action-suggestions');
@@ -2088,8 +2088,8 @@
             const results = issues.filter(issue => {
                 let matchLine;
                 if (searchAllLines && machine) { matchLine = true; } else { matchLine = !line || issue.line === line; }
-                const matchMachine = !machine || issue.machine.toLowerCase().includes(machine);
-                const matchKeyword = !keyword || issue.description.toLowerCase().includes(keyword) || (issue.solutions && issue.solutions.toLowerCase().includes(keyword));
+                const matchMachine = !machine || (issue.machine && issue.machine.toLowerCase().includes(machine));
+                const matchKeyword = !keyword || (issue.description && issue.description.toLowerCase().includes(keyword)) || (issue.solutions && issue.solutions.toLowerCase().includes(keyword));
                 return matchLine && matchMachine && matchKeyword;
             });
             displaySearchResults(results, searchAllLines);
